@@ -24,7 +24,7 @@
 | Database bootstrap idempotency | PASS | Chạy lại 01-init-databases.sh, không DROP DB/volume; ownership/isolation checks pass |
 | EF migration tooling | PASS | dotnet tool restore 8.0.34; dotnet ef dbcontext info --configuration Release nhận CatalogDbContext, Npgsql, catalog_db |
 | Secret and ignore checks | PASS | .env/build outputs ignored; so khớp 10 secret values vừa sinh với source dự kiến commit, không thấy giá trị nào |
-| GitHub Actions remote run | NOT RUN at local sign-off | Workflow sẵn sàng; hosted status xem tab Actions sau khi push, không suy diễn PASS từ local tests |
+| GitHub Actions remote run | PASS | [Hosted run 43677814182](https://github.com/NguyenNhuDai05/lablend-ai/actions/runs/43677814182), implementation commit 884a344: setup SDK/Node, restore/build/tests, npm ci/build, setup env và Compose config đều success |
 
 Lỗi phát hiện và đã sửa: EF Core transitive 8.0.11 vs 8.0.34 gây assembly warnings → central transitive pinning; test host đọc JWT key quá sớm → bound options ValidateOnStart; EF tools cần Design reference ở startup host → thêm PrivateAssets=all vào cả 6 host; Docker entrypoint JSON quoting sai → sửa và kiểm chứng process startup/health thực; PowerShell pipe thêm CR vào bash stdin → chuyển isolation check qua docker compose cp. Docker VM ít RAM → build tuần tự, NuGet cache và compilation stage chung, không tự thay resource settings.
 
@@ -51,7 +51,7 @@ Raw runtime output đã kiểm tra không chứa secret: [core](evidence/runtime
 | gRPC folder/guide và proposal không chốt thay M2 | PASS |
 | Redis event guide/proposal chờ M1/M3 review | PASS |
 | .gitignore/.env.example/README | PASS |
-| GitHub Issues/PR templates và CI source | PASS; hosted run chưa chạy tại local sign-off |
+| GitHub Issues/PR templates và CI source | PASS; hosted CI run 43677814182 cũng success |
 | Handover M2/M3 và next sprint ownership | PASS |
 | Source không chứa 10 local generated secrets | PASS |
 | Không tạo paid resource, không gọi AI/billing | PASS |
