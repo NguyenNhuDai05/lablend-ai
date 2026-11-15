@@ -57,7 +57,7 @@ PUT nhận thêm `isActive`. Seed qua migration: 3 categories `c0000000-…-0000
 | GET /api/inventory/assets/{id} | StaffOrAdmin | 200 / 404 |
 | POST /api/inventory/assets | StaffOrAdmin | 201 + Location; serial trim + upper-case; 409 trùng serial |
 | PUT /api/inventory/assets/{id} | StaffOrAdmin | 200; 404; 409 trùng serial hoặc đổi type khi RESERVED/ON_LOAN |
-| DELETE /api/inventory/assets/{id} | StaffOrAdmin | 204 retire (soft, idempotent); 409 khi RESERVED/ON_LOAN |
+| DELETE /api/inventory/assets/{id} | StaffOrAdmin | 204 retire (soft, idempotent), đang MAINTENANCE thì tự đóng phiếu bảo trì mở; 409 khi RESERVED/ON_LOAN |
 | GET /api/inventory/assets/{id}/maintenance | StaffOrAdmin | 200 lịch sử, mới nhất trước |
 | POST /api/inventory/assets/{id}/maintenance `{reason}` | StaffOrAdmin | 201; 409 nếu unit không AVAILABLE |
 | POST /api/inventory/assets/{id}/maintenance/complete `{notes}` | StaffOrAdmin | 200 `AssetResponse` (AVAILABLE); 409 nếu không trong MAINTENANCE |

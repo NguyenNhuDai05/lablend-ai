@@ -31,11 +31,13 @@ public sealed class AssetService(IAssetRepository assets)
         return ToResponse(asset);
     }
 
-    public async Task RetireAsync(Guid id, CancellationToken ct)
+    public async Task RetireAsync(Guid id, Guid? userId, CancellationToken ct)
     {
         var asset = await RequireAsync(id, ct);
         if (asset.Status == AssetStatus.Retired) return; // DELETE is idempotent
         asset.Retire();
+        // Beyond repair: retiring a unit under maintenance closes its open record instead of leaving it open forever.
+        (await assets.FindOpenMaintenanceAsync(id, ct))?.Complete("Closed: unit retired.", userId);
         await assets.SaveChangesAsync(ct);
     }
 

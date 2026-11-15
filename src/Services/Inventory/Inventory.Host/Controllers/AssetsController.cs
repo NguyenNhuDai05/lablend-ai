@@ -34,13 +34,13 @@ public sealed class AssetsController(AssetService service) : ControllerBase
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public Task<AssetResponse> Update(Guid id, UpdateAssetRequest request, CancellationToken ct) => service.UpdateAsync(id, request, ct);
 
-    /// <summary>Soft delete: status RETIRED. 409 while the unit is RESERVED or ON_LOAN.</summary>
+    /// <summary>Soft delete: status RETIRED and closes an open maintenance record. 409 while the unit is RESERVED or ON_LOAN.</summary>
     [HttpDelete("{id:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Retire(Guid id, CancellationToken ct)
     {
-        await service.RetireAsync(id, ct);
+        await service.RetireAsync(id, UserId, ct);
         return NoContent();
     }
 

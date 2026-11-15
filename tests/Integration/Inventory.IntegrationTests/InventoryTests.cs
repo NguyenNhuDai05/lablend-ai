@@ -46,6 +46,14 @@ public sealed class InventoryTests(InventoryApiFactory factory) : IClassFixture<
 
         Assert.Equal(HttpStatusCode.NoContent, (await staff.DeleteAsync($"/api/inventory/assets/{unit.Id}")).StatusCode);
         Assert.Equal((1, 1), Tuple(await AvailabilityAsync(typeId))); // retired units leave the total
+
+        // Beyond repair: retiring a unit under maintenance closes its open maintenance record.
+        var broken = units[1];
+        Assert.Equal(HttpStatusCode.Created, (await staff.PostAsJsonAsync($"/api/inventory/assets/{broken.Id}/maintenance", new StartMaintenanceRequest("Hỏng mạch nguồn"))).StatusCode);
+        Assert.Equal(HttpStatusCode.NoContent, (await staff.DeleteAsync($"/api/inventory/assets/{broken.Id}")).StatusCode);
+        var closed = (await staff.GetFromJsonAsync<List<MaintenanceResponse>>($"/api/inventory/assets/{broken.Id}/maintenance", Json))!.Single();
+        Assert.NotNull(closed.CompletedAt);
+        Assert.NotNull(closed.CompletedBy);
     }
 
     [Fact] // T27
