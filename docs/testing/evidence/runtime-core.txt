@@ -1,0 +1,17 @@
+PASS: 10 expected containers are running and healthy.
+PASS: Gateway -> identity actual readiness, correlation forwarding and OpenAPI.
+PASS: Gateway -> catalog actual readiness, correlation forwarding and OpenAPI.
+PASS: Gateway -> inventory actual readiness, correlation forwarding and OpenAPI.
+PASS: Gateway -> borrowing actual readiness, correlation forwarding and OpenAPI.
+PASS: Gateway -> notification actual readiness, correlation forwarding and OpenAPI.
+PASS: frontend entry point and nginx -> Gateway health.
+PASS: Borrowing container -> Inventory standard gRPC health (NOT allocation).
+ lablend-ai-postgres-1 Copying infrastructure/database/verify-isolation.sh to lablend-ai-postgres-1:/tmp/lablend-verify-isolation.sh
+ lablend-ai-postgres-1 Copied infrastructure/database/verify-isolation.sh to lablend-ai-postgres-1:/tmp/lablend-verify-isolation.sh
+PASS: identity authenticates to own database and cannot connect to other five databases.
+PASS: catalog authenticates to own database and cannot connect to other five databases.
+PASS: inventory authenticates to own database and cannot connect to other five databases.
+PASS: borrowing authenticates to own database and cannot connect to other five databases.
+PASS: notification authenticates to own database and cannot connect to other five databases.
+PASS: recommendation authenticates to own database and cannot connect to other five databases.
+Sprint 0 runtime checks passed. Business CRUD/RPC/messaging/overdue are still Planned.

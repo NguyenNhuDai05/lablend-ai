@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <ItemGroup>
+    <ProjectReference Include="../Recommendation.Application/Recommendation.Application.csproj" />
+    <ProjectReference Include="../Recommendation.Infrastructure/Recommendation.Infrastructure.csproj" />
+    <ProjectReference Include="../../../BuildingBlocks/Observability/Observability.csproj" />
+  </ItemGroup>
+  <ItemGroup><PackageReference Include="Microsoft.EntityFrameworkCore.Design" PrivateAssets="all" /></ItemGroup>
+</Project>

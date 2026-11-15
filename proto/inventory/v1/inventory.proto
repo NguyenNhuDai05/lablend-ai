@@ -1,0 +1,12 @@
+syntax = "proto3";
+package lablend.inventory.v1;
+option csharp_namespace = "LabLend.Inventory.Contracts.V1";
+
+// PROPOSAL ONLY / OWNER: MEMBER 2.
+// No business messages or service are finalized or generated in Sprint 0.
+// Proposed RPCs for review:
+//   CheckAvailability, ReserveAssets, ConfirmHandover, ReturnAssets,
+//   ReleaseReservations, GetOperationStatus.
+// Review operationId/idempotency, all-or-nothing allocation, deadlines, service credentials
+// and reconciliation semantics with Member 1 before adding the v1 schema.
+// Inventory.Host already exposes standard grpc.health.v1.Health separately.

@@ -1,0 +1,19 @@
+name: Bug report
+description: Lỗi có bước tái hiện và kết quả mong đợi
+body:
+  - type: textarea
+    id: repro
+    attributes:
+      label: Các bước tái hiện và môi trường
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Kết quả thực tế và mong đợi
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Log hoặc correlation ID đã loại secrets

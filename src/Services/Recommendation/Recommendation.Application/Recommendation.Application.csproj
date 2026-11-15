@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="../Recommendation.Domain/Recommendation.Domain.csproj" />
+    <ProjectReference Include="../../../BuildingBlocks/Contracts/Contracts.csproj" />
+  </ItemGroup>
+</Project>
