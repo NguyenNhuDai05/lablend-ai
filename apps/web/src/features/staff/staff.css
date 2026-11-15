@@ -1,0 +1,65 @@
+/* Staff feature styles: everything is scoped under .staff so the shared shell (M3) is unaffected. */
+main.staff { max-width: 1240px; padding: 32px 16px 64px; }
+main.staff.narrow { max-width: 640px; }
+.staff h1 { font-size: clamp(1.8rem, 4vw, 2.6rem); margin: 4px 0 0; }
+.staff section { margin-top: 24px; }
+.staff pre { background: #172e34; color: #e6f2ef; padding: 12px; border-radius: 8px; overflow-x: auto; }
+.staff .muted { color: #5d7378; }
+.staff .small { font-size: .82rem; }
+.staff .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+.staff-header { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: end; gap: 16px; }
+.staff .who { display: flex; align-items: center; gap: 12px; color: #4a6166; font-size: .9rem; }
+.staff .tabs { display: flex; gap: 4px; margin-top: 24px; border-bottom: 1px solid #dce8e4; overflow-x: auto; }
+.staff .tabs button { background: none; color: #4a6166; border-radius: 8px 8px 0 0; border-bottom: 3px solid transparent; white-space: nowrap; }
+.staff .tabs button[aria-current] { color: #175d4d; border-bottom-color: #175d4d; font-weight: 600; }
+.staff .section-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 12px; }
+.staff .section-head h2 { margin: 0; }
+
+.staff button:disabled { cursor: not-allowed; }
+.staff button.ghost { background: transparent; color: #175d4d; border: 1px solid #b9d3cc; padding: 6px 12px; }
+.staff button.ghost:hover:not(:disabled) { background: #eef6f3; }
+.staff button.danger { color: #a52a2a; border-color: #e6c3c3; }
+.staff button.link { background: none; color: inherit; padding: 0 4px; font-size: 1.2rem; line-height: 1; }
+
+.staff .form { display: flex; flex-direction: column; gap: 14px; }
+.staff .filters { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; margin-bottom: 12px; }
+.staff .filters .field { flex: 1 1 160px; max-width: 320px; }
+.staff .nowrap { white-space: nowrap; }
+.staff .field { display: flex; flex-direction: column; gap: 4px; font-size: .85rem; color: #4a6166; }
+.staff .field input, .staff .field select, .staff .field textarea {
+  font: inherit; font-size: 1rem; color: #172e34; padding: 8px 10px; border: 1px solid #c9dad5; border-radius: 8px; background: white; min-width: 0;
+}
+.staff .field :disabled { background: #f1f4f3; color: #5d7378; }
+.staff :is(input, select, textarea):focus-visible { outline: 3px solid #6dc6ad; outline-offset: 1px; }
+.staff .check { display: flex; gap: 8px; align-items: center; font-size: .9rem; padding-bottom: 8px; }
+.staff .actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px; }
+
+.staff .table-wrap { overflow-x: auto; }
+.staff table { width: 100%; min-width: 720px; border-collapse: collapse; font-size: .95rem; }
+.staff th, .staff td { text-align: left; padding: 10px 8px; border-bottom: 1px solid #e7efec; vertical-align: top; }
+.staff th { font-size: .78rem; text-transform: uppercase; letter-spacing: .06em; color: #4a6166; }
+.staff .row-actions { text-align: right; white-space: nowrap; }
+.staff .row-actions button + button { margin-left: 6px; }
+
+.staff .badge { display: inline-block; padding: 2px 8px; margin: 0 4px 4px 0; border-radius: 999px; font-size: .78rem; font-weight: 600; white-space: nowrap; background: #eceeee; color: #4f5a5c; }
+.staff .badge.ok { background: #dff3ea; color: #145c43; }
+.staff .badge.warn { background: #fdf0d5; color: #6e4400; }
+.staff .badge.info { background: #dfeaf8; color: #1f4f8a; }
+.staff .badge.bad { background: #f9dede; color: #8f1f1f; }
+.staff .badge.tag { background: #f0f5f4; color: #2f6a5b; font-weight: 500; }
+
+.staff .notice { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; background: #e5f4ee; }
+.staff .notice.error { background: #fbe9e9; }
+.staff .stock { background: #f4f8f7; border-radius: 8px; padding: 8px 12px; }
+.staff .pager { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: flex-end; margin-top: 12px; font-size: .9rem; }
+.staff .timeline { padding-left: 20px; display: grid; gap: 10px; }
+.staff .modal h3 { margin: 18px 0 8px; font-size: 1rem; }
+
+.staff .modal { border: 0; border-radius: 16px; padding: 24px; width: min(560px, calc(100vw - 32px)); max-height: calc(100vh - 32px); color: inherit; box-shadow: 0 20px 60px rgb(0 0 0 / .2); }
+.staff .modal::backdrop { background: rgb(23 46 52 / .45); }
+
+@media (max-width: 640px) {
+  main.staff { padding: 20px 16px 48px; }
+  .staff section { padding: 18px; }
+}
