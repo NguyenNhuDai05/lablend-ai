@@ -36,6 +36,8 @@ public sealed class AssetService(IAssetRepository assets)
         var asset = await RequireAsync(id, ct);
         if (asset.Status == AssetStatus.Retired) return; // DELETE is idempotent
         asset.Retire(userId);
+        // Beyond repair: retiring a unit under maintenance closes its open record instead of leaving it open forever.
+        (await assets.FindOpenMaintenanceAsync(id, ct))?.Complete("Closed: unit retired.", userId);
         await assets.SaveChangesAsync(ct);
     }
 
