@@ -63,6 +63,11 @@ public static class ServiceDefaults
                 Type = SecuritySchemeType.Http, Scheme = "bearer", BearerFormat = "JWT",
                 Description = "JWT validation is wired; login/issuance is planned for Sprint 1."
             });
+            // Without a requirement Swagger UI shows Authorize but never sends the Bearer header.
+            options.AddSecurityRequirement(new OpenApiSecurityRequirement
+            {
+                [new OpenApiSecurityScheme { Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" } }] = []
+            });
         });
         builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
         {

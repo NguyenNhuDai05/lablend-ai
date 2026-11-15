@@ -24,6 +24,30 @@ Pagination: `items`, `total`, `page` (1-based), `pageSize`. DTO kỹ thuật t�
 | Notification / M3 | GET /api/notifications; PATCH /api/notifications/{id}/read; GET /api/notifications/unread-count | OD-04–05; owner from sub; inbox dedupe; T12–T18 |
 | Recommendation / M3 | POST /api/recommendations; GET /api/recommendations/history | Bonus only; OD-09; 503 AI_UNAVAILABLE / 502 AI_INVALID_RESPONSE; T19/T25/T26 |
 
-**Routes trong bảng là Planned; chưa có business Controller hay business OpenAPI operation.** Gateway routing config chỉ chuẩn bị prefixes. Request tới một business path có thể trả 401 hoặc 404; không có mock HTTP 200 làm giả CRUD.
+## Catalog v1 (Implemented, M2, chờ M3 review OD-07)
+
+| Method / route | Auth | Kết quả |
+|---|---|---|
+| GET /api/categories?includeInactive= | Public | 200 `CategoryResponse[]` theo tên; `includeInactive` chỉ có hiệu lực với LAB_STAFF/ADMIN |
+| GET /api/categories/{id} | Public | 200 / 404 |
+| POST /api/categories | StaffOrAdmin | 201 + Location; 400; 409 trùng tên |
+| PUT /api/categories/{id} | StaffOrAdmin | 200; 404; 409 trùng tên hoặc tắt category còn equipment type active |
+| DELETE /api/categories/{id} | StaffOrAdmin | 204 soft deactivate (idempotent); 409 nếu còn equipment type active |
+| GET /api/equipment-types?keyword=&categoryId=&tag=&includeInactive=&sortBy=name\|createdAt&direction=asc\|desc&page=1&pageSize=10 | Public | 200 `PagedResponse<EquipmentTypeResponse>`; 400 nếu sortBy/direction ngoài whitelist, page<1, pageSize ngoài 1–100 |
+| GET /api/equipment-types/{id} | Public | 200 (kể cả đã deactivate, để loan cũ vẫn tra được) / 404 |
+| POST /api/equipment-types | StaffOrAdmin | 201; 400 category không tồn tại/inactive; 409 trùng tên trong cùng category |
+| PUT /api/equipment-types/{id} | StaffOrAdmin | 200; 400; 404; 409 |
+| DELETE /api/equipment-types/{id} | StaffOrAdmin | 204 soft deactivate (idempotent) |
+
+`keyword` tìm ILIKE trên name/description; `tag` so khớp chính xác sau khi chuẩn hóa lowercase. Tags được trim/lowercase/distinct khi lưu. Body mẫu:
+
+```json
+{ "categoryId": "c0000000-0000-0000-0000-000000000001", "name": "Máy hiện sóng số 100MHz",
+  "description": "...", "specifications": "2 kênh; 100 MHz", "tags": ["oscilloscope"], "imageUrl": null }
+```
+
+PUT nhận thêm `isActive`. Seed qua migration: 3 categories `c0000000-…-00000000000{1..3}` và 5 equipment types `e0000000-…-00000000000{1..5}`, ID cố định để Inventory seed asset theo logical reference. Migrations tự áp dụng khi Catalog khởi động.
+
+**Các route khác trong bảng là Planned.** Gateway routing config chỉ chuẩn bị prefixes. Request tới một business path có thể trả 401 hoặc 404; không có mock HTTP 200 làm giả CRUD.
 
 Swagger ở mỗi REST host: `/swagger`; schema `/swagger/v1/swagger.json`. Gateway allowlist xuất schema qua `/platform/<service>/openapi.json`. Health endpoints không được coi là CRUD operations. Khi thêm controller thực, viết response/status documentation và authorize ở chính service.

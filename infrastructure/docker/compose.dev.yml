@@ -1,8 +1,18 @@
 # Explicit opt-in: only exposes infrastructure on loopback for dotnet run.
+# Docker Engine does not publish ports of containers attached only to an internal network,
+# so the dev override adds a non-internal network just for these loopback ports.
 services:
   postgres:
     ports:
       - "127.0.0.1:${POSTGRES_DEV_PORT:-55432}:5432"
+    networks:
+      - "backend"
+      - "dev-host"
   redis:
     ports:
       - "127.0.0.1:${REDIS_DEV_PORT:-56379}:6379"
+    networks:
+      - "backend"
+      - "dev-host"
+networks:
+  dev-host: {}

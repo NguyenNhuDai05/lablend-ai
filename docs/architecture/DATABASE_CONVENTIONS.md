@@ -11,7 +11,7 @@
 
 Một PostgreSQL instance; mỗi database có owner/login riêng, PUBLIC bị revoke database privileges và schema privileges. Service chỉ nhận connection string của chính mình; không chia sẻ admin login. Worker cùng bounded context Borrowing nên được dùng borrowing_db. DB role bootstrap dùng env password ngẫu nhiên, không có password trong script SQL/source.
 
-Quy tắc: UUID keys, UTC timestamps, local FK chỉ trong cùng database. Cross-service IDs chỉ logical references. Không shared DbContext/domain model; không cross-DB join/FK. Model thật phải có constraints/indexes/idempotency theo use case, không chỉ kiểm tra ở UI. Contexts hiện chưa có DbSet, model nghiệp vụ hoặc migrations: **Scaffolded**.
+Quy tắc: UUID keys, UTC timestamps, local FK chỉ trong cùng database. Cross-service IDs chỉ logical references. Không shared DbContext/domain model; không cross-DB join/FK. Model thật phải có constraints/indexes/idempotency theo use case, không chỉ kiểm tra ở UI. Catalog đã có model + migration `InitialCatalog` + seed (**Implemented**); các context khác vẫn **Scaffolded**.
 
 ## Tạo migration khi đã có model thật
 
@@ -25,7 +25,7 @@ dotnet ef migrations add InitialCreate --project src/Services/Catalog/Catalog.In
 dotnet ef database update --project src/Services/Catalog/Catalog.Infrastructure --startup-project src/Services/Catalog/Catalog.Api
 ```
 
-Thay tên project/env tương ứng service; Inventory startup là `Inventory.Host`. Mỗi migration chỉ ghi DB của service. Không dùng `EnsureCreated` song song migrations. Sprint sau thêm migrations job/script idempotent chạy trước business app, seed lặp lại không phá dữ liệu; chưa auto-migrate/seed schema giả ở Sprint 0.
+Thay tên project/env tương ứng service; Inventory startup là `Inventory.Host`. Mỗi migration chỉ ghi DB của service. Không dùng `EnsureCreated` song song migrations. Sprint sau thêm migrations job/script idempotent chạy trước business app, seed lặp lại không phá dữ liệu; Catalog tự gọi `Database.Migrate()` khi khởi động (idempotent, một instance); seed demo nằm trong migration với ID cố định.
 
 EF tool/EF Core ghim 8.0.34; provider Npgsql EF 8.0.11; Central Package Management pin transitive EF về cùng patch. Không nâng EF lên 9/10 để xử lý restore. Kiểm tra `dotnet list <project> package --include-transitive` khi đổi package.
 
