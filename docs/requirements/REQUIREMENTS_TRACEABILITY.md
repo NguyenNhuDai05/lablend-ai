@@ -13,7 +13,7 @@ Nguồn chuẩn: [PRN232 Final Assignment, 3 trang](PRN232%20-%20Final%20Assignm
 | R05 | Background job | Scaffolded | Workers/.../FoundationWorker là dependency heartbeat; overdue/reminder/reconciliation business jobs Planned |
 | R06 | Kafka hoặc Redis Streams | Scaffolded | Redis container/auth/volume/PING; Stream operations chưa implement |
 | R07 | Producer và consumer thật | Planned | M1 Outbox Publisher + M3 Notification Consumer; cần XADD/XREADGROUP/XACK + Inbox evidence |
-| R08 | Independent gRPC service | Implemented (server) | Inventory.Host: InventoryAllocation v1 (6 RPC, service-token auth, idempotent reserve); evidence Inventory.IntegrationTests T07/T08/T10/T11/T27. OD-01–03 chờ M1 review |
+| R08 | Independent gRPC service | Implemented (server) | Inventory.Host: InventoryAllocation v1 (6 RPC, service-token auth, idempotent reserve); evidence Inventory.IntegrationTests T07–T11/T27, T23 contract + HTTP/2 thật qua Kestrel (GrpcOverHttp2Tests). OD-01–03 chờ M1 review |
 | R09 | REST API gọi gRPC | Planned | Server sẵn sàng; Borrowing REST approve/handover/return → Inventory gRPC client (M1) chưa có; health probe không thay yêu cầu này |
 | R10 | EF Core + relational DB | Partial: Catalog, Inventory Implemented | CatalogDbContext/InitialCatalog trên catalog_db; InventoryDbContext/InitialInventory trên inventory_db (xmin concurrency, partial unique indexes); các context khác Planned |
 | R11 | DI/config/logs/exception handling | Implemented foundation | ServiceDefaults, Infrastructure/DependencyInjection, env scripts, JSON logging, correlation, ProblemDetails; extend business exception mapping later |
