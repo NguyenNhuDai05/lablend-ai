@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { api, assetStatuses, query, useLoad, type Asset, type Availability, type EquipmentType, type Maintenance, type Paged } from './api';
+import { api, assetStatuses, query, useLoad, type Asset, type AssetStatus, type Availability, type EquipmentType, type Maintenance, type Paged, type StockMovement } from './api';
 import { Badge, Field, FormModal, LoadState, Modal, Pager, formatDate, optional, statusLabels, text, useAction } from './ui';
 
 type AssetQuery = { equipmentTypeId: string; status: string; keyword: string; sortBy: string; direction: string; page: number };
@@ -123,16 +123,37 @@ export function InventoryPage({ initialType }: { initialType?: string }) {
   </section>;
 }
 
+// ponytail: no user/loan names until Identity and Borrowing expose them; show the ID prefix.
+const shortId = (id: string) => id.slice(0, 8);
+const status = (s: AssetStatus) => <Badge tone={tones[s]}>{statusLabels[s]}</Badge>;
+
 function HistoryModal({ asset, onClose }: { asset: Asset; onClose: () => void }) {
-  const history = useLoad(() => api<Maintenance[]>(`/api/inventory/assets/${asset.id}/maintenance`), asset.id);
-  return <Modal title={`Lịch sử bảo trì ${asset.serialNumber}`} onClose={onClose}>
-    <LoadState loading={history.loading} error={history.error} empty={history.data?.length === 0} />
-    {!!history.data?.length && <ol className="timeline">{history.data.map(m => <li key={m.id}>
-      <strong>{formatDate(m.openedAt)}</strong> · {m.reason}
-      <div className="muted small">{m.completedAt
-        ? `Hoàn tất ${formatDate(m.completedAt)}${m.completionNotes ? ` · ${m.completionNotes}` : ''}`
-        : 'Đang bảo trì'}</div>
-    </li>)}</ol>}
+  const history = useLoad(() => Promise.all([
+    api<StockMovement[]>(`/api/inventory/assets/${asset.id}/movements`),
+    api<Maintenance[]>(`/api/inventory/assets/${asset.id}/maintenance`)
+  ]), asset.id);
+  const [movements, maintenance] = history.data ?? [];
+  return <Modal title={`Lịch sử ${asset.serialNumber}`} onClose={onClose}>
+    <LoadState loading={history.loading} error={history.error} empty={false} />
+    {movements && <>
+      <h3>Trạng thái</h3>
+      <ol className="timeline">{movements.map(m => <li key={m.id}>
+        <strong>{formatDate(m.occurredAt)}</strong> · {m.fromStatus ? <>{status(m.fromStatus)}→ </> : 'Khởi tạo: '}{status(m.toStatus)}
+        {(m.loanId || m.changedBy) && <div className="muted small">
+          {m.loanId ? `Phiếu mượn ${shortId(m.loanId)}` : `Nhân viên ${shortId(m.changedBy!)}`}
+        </div>}
+      </li>)}</ol>
+    </>}
+    {maintenance && <>
+      <h3>Bảo trì</h3>
+      {maintenance.length === 0 && <p className="muted">Chưa có lần bảo trì nào.</p>}
+      {maintenance.length > 0 && <ol className="timeline">{maintenance.map(m => <li key={m.id}>
+        <strong>{formatDate(m.openedAt)}</strong> · {m.reason}
+        <div className="muted small">{m.completedAt
+          ? `Hoàn tất ${formatDate(m.completedAt)}${m.completionNotes ? ` · ${m.completionNotes}` : ''}`
+          : 'Đang bảo trì'}</div>
+      </li>)}</ol>}
+    </>}
     <div className="actions"><button type="button" onClick={onClose}>Đóng</button></div>
   </Modal>;
 }

@@ -54,6 +54,7 @@ main.staff.narrow { max-width: 640px; }
 .staff .stock { background: #f4f8f7; border-radius: 8px; padding: 8px 12px; }
 .staff .pager { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: flex-end; margin-top: 12px; font-size: .9rem; }
 .staff .timeline { padding-left: 20px; display: grid; gap: 10px; }
+.staff .modal h3 { margin: 18px 0 8px; font-size: 1rem; }
 
 .staff .modal { border: 0; border-radius: 16px; padding: 24px; width: min(560px, calc(100vw - 32px)); max-height: calc(100vh - 32px); color: inherit; box-shadow: 0 20px 60px rgb(0 0 0 / .2); }
 .staff .modal::backdrop { background: rgb(23 46 52 / .45); }

@@ -17,6 +17,10 @@ export type Asset = {
 export type Maintenance = {
   id: string; reason: string; openedAt: string; completedAt: string | null; completionNotes: string | null;
 };
+/** fromStatus null = first known status; loanId set for Borrowing (gRPC) changes, changedBy for staff (REST) changes. */
+export type StockMovement = {
+  id: number; fromStatus: AssetStatus | null; toStatus: AssetStatus; loanId: string | null; changedBy: string | null; occurredAt: string;
+};
 export type Availability = { equipmentTypeId: string; available: number; total: number };
 
 export class ApiError extends Error {
