@@ -2,11 +2,99 @@ syntax = "proto3";
 package lablend.inventory.v1;
 option csharp_namespace = "LabLend.Inventory.Contracts.V1";
 
-// PROPOSAL ONLY / OWNER: MEMBER 2.
-// No business messages or service are finalized or generated in Sprint 0.
-// Proposed RPCs for review:
-//   CheckAvailability, ReserveAssets, ConfirmHandover, ReturnAssets,
-//   ReleaseReservations, GetOperationStatus.
-// Review operationId/idempotency, all-or-nothing allocation, deadlines, service credentials
-// and reconciliation semantics with Member 1 before adding the v1 schema.
-// Inventory.Host already exposes standard grpc.health.v1.Health separately.
+// Internal Borrowing -> Inventory allocation API (OWNER: M2, CONSUMER: M1). Status: v1 proposal, implemented.
+//
+// Conventions (OD-01..03):
+// - Every RPC requires metadata "authorization: Bearer <INVENTORY_SERVICE_TOKEN>" (UNAUTHENTICATED otherwise).
+//   grpc.health.v1.Health stays anonymous.
+// - IDs are UUID strings. One LoanItem = one physical unit; quantity N = N loan items.
+// - Statuses are the same strings as the REST API: asset AVAILABLE|RESERVED|ON_LOAN|MAINTENANCE|LOST|RETIRED,
+//   reservation HELD|HANDED_OVER|RETURNED|RELEASED.
+// - Every RPC is safe to retry. ReserveAssets is idempotent by operation_id; the others by current state.
+// - Errors: INVALID_ARGUMENT (bad ids/items), NOT_FOUND (nothing to hand over/return),
+//   FAILED_PRECONDITION (insufficient stock, wrong state, released operation), ALREADY_EXISTS (operation_id reused with
+//   another payload), ABORTED (concurrent change: retry), UNAUTHENTICATED. Trailer "lablend-code" carries the
+//   machine code, e.g. INSUFFICIENT_STOCK.
+service InventoryAllocation {
+  // Read-only snapshot; does not guarantee stock for a later ReserveAssets.
+  rpc CheckAvailability (CheckAvailabilityRequest) returns (CheckAvailabilityReply);
+  // All items or none, in one Inventory transaction. Borrowing persists APPROVING + operation_id BEFORE calling.
+  rpc ReserveAssets (ReserveAssetsRequest) returns (AllocationReply);
+  // HELD -> HANDED_OVER, unit RESERVED -> ON_LOAN, for every active reservation of the loan.
+  rpc ConfirmHandover (LoanRequest) returns (AllocationReply);
+  // Per item: NORMAL -> AVAILABLE, DAMAGED -> MAINTENANCE (+ maintenance record), LOST -> LOST.
+  rpc ReturnAssets (ReturnAssetsRequest) returns (AllocationReply);
+  // Compensation / pickup expiry: frees every HELD unit of the loan. Unknown loan returns an empty list.
+  rpc ReleaseReservations (LoanRequest) returns (AllocationReply);
+  // For unknown RPC outcomes and reconciliation: found=false means nothing was reserved for this operation.
+  rpc GetOperationStatus (OperationStatusRequest) returns (OperationStatusReply);
+}
+
+message CheckAvailabilityRequest {
+  repeated string equipment_type_ids = 1; // 1..100
+}
+
+message Availability {
+  string equipment_type_id = 1;
+  int32 available = 2;
+  int32 total = 3; // excludes RETIRED and LOST
+}
+
+message CheckAvailabilityReply {
+  repeated Availability items = 1;
+}
+
+message ReserveItem {
+  string loan_item_id = 1;
+  string equipment_type_id = 2;
+}
+
+message ReserveAssetsRequest {
+  string operation_id = 1; // stable per approval attempt
+  string loan_id = 2;
+  repeated ReserveItem items = 3; // 1..50, distinct loan_item_id
+}
+
+message LoanRequest {
+  string loan_id = 1;
+}
+
+enum ReturnCondition {
+  RETURN_CONDITION_UNSPECIFIED = 0;
+  RETURN_CONDITION_NORMAL = 1;
+  RETURN_CONDITION_DAMAGED = 2;
+  RETURN_CONDITION_LOST = 3;
+}
+
+message ReturnItem {
+  string loan_item_id = 1;
+  ReturnCondition condition = 2;
+}
+
+message ReturnAssetsRequest {
+  string loan_id = 1;
+  repeated ReturnItem items = 2; // partial returns allowed
+}
+
+message Allocation {
+  string loan_item_id = 1;
+  string asset_unit_id = 2;
+  string serial_number = 3;
+  string reservation_status = 4;
+  string asset_status = 5;
+}
+
+message AllocationReply {
+  string loan_id = 1;
+  repeated Allocation allocations = 2;
+}
+
+message OperationStatusRequest {
+  string operation_id = 1;
+}
+
+message OperationStatusReply {
+  bool found = 1;
+  string loan_id = 2;
+  repeated Allocation allocations = 3;
+}

@@ -8,5 +8,9 @@
     <PackageReference Include="Grpc.AspNetCore" />
     <PackageReference Include="Grpc.AspNetCore.HealthChecks" />
   </ItemGroup>
+  <ItemGroup>
+    <!-- Both: the server implements it; tests reuse the generated client. Borrowing generates its own Client. -->
+    <Protobuf Include="../../../../proto/inventory/v1/inventory.proto" GrpcServices="Both" Link="Protos/inventory.proto" />
+  </ItemGroup>
   <ItemGroup><PackageReference Include="Microsoft.EntityFrameworkCore.Design" PrivateAssets="all" /></ItemGroup>
 </Project>

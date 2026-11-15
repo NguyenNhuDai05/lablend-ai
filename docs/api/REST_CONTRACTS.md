@@ -19,7 +19,7 @@ Pagination: `items`, `total`, `page` (1-based), `pageSize`. DTO kỹ thuật t�
 |---|---|---|
 | Identity / M1 | POST /api/auth/register, /login, /refresh, /logout; GET /api/auth/me; GET/PUT /api/users/me; admin users/roles | OD-06; password hashing, refresh hash/rotation, T01–T03/T22 |
 | Catalog / M2 | CRUD /api/categories và /api/equipment-types; GET equipment-types?keyword=&categoryId=&sortBy=&direction=&page=&pageSize= | OD-07; real DB + search/filter/sort/page, T04 |
-| Inventory Admin / M2 | GET/POST /api/inventory/assets; GET/PUT/DELETE /api/inventory/assets/{id}; POST /api/inventory/assets/{id}/maintenance; availability read | OD-01–03; serial unique, deactivate policy, Staff/Admin writes |
+| Inventory Admin / M2 | Implemented — xem Inventory v1 bên dưới | OD-01–03 chờ M1 review |
 | Borrowing / M1 | POST /api/loans; GET /api/loans/my; GET /api/loans/{id}; staff list; POST .../{id}/cancel,/reject,/approve,/handover,/returns; GET .../{id}/timeline | OD-08; owner from sub; PENDING→APPROVING→APPROVED; approval calls gRPC, T05–T11/T28 |
 | Notification / M3 | GET /api/notifications; PATCH /api/notifications/{id}/read; GET /api/notifications/unread-count | OD-04–05; owner from sub; inbox dedupe; T12–T18 |
 | Recommendation / M3 | POST /api/recommendations; GET /api/recommendations/history | Bonus only; OD-09; 503 AI_UNAVAILABLE / 502 AI_INVALID_RESPONSE; T19/T25/T26 |
@@ -47,6 +47,22 @@ Pagination: `items`, `total`, `page` (1-based), `pageSize`. DTO kỹ thuật t�
 ```
 
 PUT nhận thêm `isActive`. Seed qua migration: 3 categories `c0000000-…-00000000000{1..3}` và 5 equipment types `e0000000-…-00000000000{1..5}`, ID cố định để Inventory seed asset theo logical reference. Migrations tự áp dụng khi Catalog khởi động.
+
+## Inventory v1 (Implemented, M2)
+
+| Method / route | Auth | Kết quả |
+|---|---|---|
+| GET /api/inventory/availability?equipmentTypeIds=…&equipmentTypeIds=… | Public | 200 `[{equipmentTypeId, available, total}]`, `total` loại RETIRED/LOST; 400 nếu ngoài 1–100 ids |
+| GET /api/inventory/assets?equipmentTypeId=&status=&keyword=&sortBy=serialNumber\|createdAt\|status&direction=&page=1&pageSize=20 | StaffOrAdmin | 200 `PagedResponse<AssetResponse>`; `keyword` ILIKE serial/location; 400 status/sort ngoài whitelist |
+| GET /api/inventory/assets/{id} | StaffOrAdmin | 200 / 404 |
+| POST /api/inventory/assets | StaffOrAdmin | 201 + Location; serial trim + upper-case; 409 trùng serial |
+| PUT /api/inventory/assets/{id} | StaffOrAdmin | 200; 404; 409 trùng serial hoặc đổi type khi RESERVED/ON_LOAN |
+| DELETE /api/inventory/assets/{id} | StaffOrAdmin | 204 retire (soft, idempotent); 409 khi RESERVED/ON_LOAN |
+| GET /api/inventory/assets/{id}/maintenance | StaffOrAdmin | 200 lịch sử, mới nhất trước |
+| POST /api/inventory/assets/{id}/maintenance `{reason}` | StaffOrAdmin | 201; 409 nếu unit không AVAILABLE |
+| POST /api/inventory/assets/{id}/maintenance/complete `{notes}` | StaffOrAdmin | 200 `AssetResponse` (AVAILABLE); 409 nếu không trong MAINTENANCE |
+
+Asset status: AVAILABLE, RESERVED, ON_LOAN, MAINTENANCE, LOST, RETIRED. Reserve/handover/return **không** có REST: chỉ Borrowing gọi qua gRPC ([guide](../grpc/INVENTORY_CONTRACT_GUIDE.md)). Seed 13 units `a0000000-…-0000000000NN` cho 5 equipment types của Catalog; `e…04` (kính hiển vi) chỉ có 1 unit để demo tranh chấp. Lỗi nghiệp vụ trả `code` như `CONFLICT`, `NOT_FOUND`.
 
 **Các route khác trong bảng là Planned.** Gateway routing config chỉ chuẩn bị prefixes. Request tới một business path có thể trả 401 hoặc 404; không có mock HTTP 200 làm giả CRUD.
 

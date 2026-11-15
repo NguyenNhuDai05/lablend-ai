@@ -4,9 +4,9 @@ Tất cả mục dưới đây **OPEN / PROPOSAL**, chưa thay thế review củ
 
 | ID | Quyết định cần chốt | Owner và reviewers | Điều kiện đóng |
 |---|---|---|---|
-| OD-01 | Inventory proto v1: UUID format, LoanItem 1 unit, quantity representation, availability scope | M2 owner; M1 consumer | Proto diff + contract tests được hai bên review |
-| OD-02 | Reserve all-or-nothing, operationId/replay conflict, operation status, hold expiry, compensation | M2 + M1 | Semantics khớp APPROVING/reconciliation và T07–T09/T28 |
-| OD-03 | gRPC service auth: reserved env credential vs short-lived service JWT; health allowance | M2 + M1 | Business RPC auth tests T27; không dùng user role như service credential |
+| OD-01 | Inventory proto v1: UUID format, LoanItem 1 unit, quantity representation, availability scope | M2 owner; M1 consumer | **PROPOSED + implemented (M2), chờ M1 review**: UUID string, 1 LoanItem = 1 unit, quantity N = N items, availability loại RETIRED/LOST |
+| OD-02 | Reserve all-or-nothing, operationId/replay conflict, operation status, hold expiry, compensation | M2 + M1 | **PROPOSED + implemented (M2), chờ M1 review**: SKIP LOCKED all-or-nothing, SHA-256 payload hash → ALREADY_EXISTS, GetOperationStatus, không auto-expiry (Worker gọi Release); T28 còn lại |
+| OD-03 | gRPC service auth: reserved env credential vs short-lived service JWT; health allowance | M2 + M1 | **PROPOSED + implemented (M2), chờ M1 review**: static `INVENTORY_SERVICE_TOKEN` Bearer, health anonymous; T27 pass |
 | OD-04 | Event envelope casing/time format/type names, payload cho 7 loan events | M1 producer + M3 consumer | JSON examples/schema và versioning review hai bên |
 | OD-05 | Stream fields, group, pending/retry/XAUTOCLAIM, max attempts/parking stream | M1 + M3 | Crash replay/duplicate/Redis-down test plan thống nhất |
 | OD-06 | Auth response, refresh transport, logout/revoke, frontend token handling | M1 + M3 | UX/auth contract và CORS/cookie/CSRF policy được thống nhất |
