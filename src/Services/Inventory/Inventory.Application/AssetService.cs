@@ -13,10 +13,10 @@ public sealed class AssetService(IAssetRepository assets)
 
     public async Task<AssetResponse> GetAsync(Guid id, CancellationToken ct) => ToResponse(await RequireAsync(id, ct));
 
-    public async Task<AssetResponse> CreateAsync(CreateAssetRequest request, CancellationToken ct)
+    public async Task<AssetResponse> CreateAsync(CreateAssetRequest request, Guid? userId, CancellationToken ct)
     {
         RequireEquipmentType(request.EquipmentTypeId);
-        var asset = new AssetUnit(request.EquipmentTypeId, request.SerialNumber, request.Location, request.Notes);
+        var asset = new AssetUnit(request.EquipmentTypeId, request.SerialNumber, request.Location, request.Notes, userId);
         assets.Add(asset);
         await assets.SaveChangesAsync(ct);
         return ToResponse(asset);
@@ -31,18 +31,18 @@ public sealed class AssetService(IAssetRepository assets)
         return ToResponse(asset);
     }
 
-    public async Task RetireAsync(Guid id, CancellationToken ct)
+    public async Task RetireAsync(Guid id, Guid? userId, CancellationToken ct)
     {
         var asset = await RequireAsync(id, ct);
         if (asset.Status == AssetStatus.Retired) return; // DELETE is idempotent
-        asset.Retire();
+        asset.Retire(userId);
         await assets.SaveChangesAsync(ct);
     }
 
     public async Task<MaintenanceResponse> StartMaintenanceAsync(Guid id, StartMaintenanceRequest request, Guid? userId, CancellationToken ct)
     {
         var asset = await RequireAsync(id, ct);
-        asset.StartMaintenance();
+        asset.StartMaintenance(userId);
         var record = new MaintenanceRecord(asset.Id, request.Reason, userId);
         assets.Add(record);
         await assets.SaveChangesAsync(ct);
@@ -52,10 +52,19 @@ public sealed class AssetService(IAssetRepository assets)
     public async Task<AssetResponse> CompleteMaintenanceAsync(Guid id, CompleteMaintenanceRequest request, Guid? userId, CancellationToken ct)
     {
         var asset = await RequireAsync(id, ct);
-        asset.CompleteMaintenance();
+        asset.CompleteMaintenance(userId);
         (await assets.FindOpenMaintenanceAsync(id, ct))?.Complete(request.Notes, userId);
         await assets.SaveChangesAsync(ct);
         return ToResponse(asset);
+    }
+
+    /// <summary>Newest first.</summary>
+    public async Task<IReadOnlyList<StockMovementResponse>> ListMovementsAsync(Guid id, CancellationToken ct)
+    {
+        await RequireAsync(id, ct);
+        return (await assets.ListMovementsAsync(id, ct))
+            .Select(m => new StockMovementResponse(m.Id, m.AssetUnitId, m.FromStatus, m.ToStatus, m.LoanId, m.ChangedBy, m.OccurredAt))
+            .ToList();
     }
 
     public async Task<IReadOnlyList<MaintenanceResponse>> ListMaintenanceAsync(Guid id, CancellationToken ct)

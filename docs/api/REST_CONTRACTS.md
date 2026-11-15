@@ -61,8 +61,9 @@ PUT nhận thêm `isActive`. Seed qua migration: 3 categories `c0000000-…-0000
 | GET /api/inventory/assets/{id}/maintenance | StaffOrAdmin | 200 lịch sử, mới nhất trước |
 | POST /api/inventory/assets/{id}/maintenance `{reason}` | StaffOrAdmin | 201; 409 nếu unit không AVAILABLE |
 | POST /api/inventory/assets/{id}/maintenance/complete `{notes}` | StaffOrAdmin | 200 `AssetResponse` (AVAILABLE); 409 nếu không trong MAINTENANCE |
+| GET /api/inventory/assets/{id}/movements | StaffOrAdmin | 200 `[{id, assetUnitId, fromStatus, toStatus, loanId, changedBy, occurredAt}]` mới nhất trước; 404 |
 
-Asset status: AVAILABLE, RESERVED, ON_LOAN, MAINTENANCE, LOST, RETIRED. Reserve/handover/return **không** có REST: chỉ Borrowing gọi qua gRPC ([guide](../grpc/INVENTORY_CONTRACT_GUIDE.md)). Seed 13 units `a0000000-…-0000000000NN` cho 5 equipment types của Catalog; `e…04` (kính hiển vi) chỉ có 1 unit để demo tranh chấp. Lỗi nghiệp vụ trả `code` như `CONFLICT`, `NOT_FOUND`.
+Asset status: AVAILABLE, RESERVED, ON_LOAN, MAINTENANCE, LOST, RETIRED. Mỗi lần đổi status ghi một dòng StockMovements trong cùng transaction: `fromStatus` null = trạng thái đầu tiên (tạo mới, hoặc baseline khi migration chạy); thay đổi qua REST có `changedBy` (JWT `sub`), thay đổi qua gRPC có `loanId`. Replay gRPC và retire lặp lại không ghi thêm dòng. Reserve/handover/return **không** có REST: chỉ Borrowing gọi qua gRPC ([guide](../grpc/INVENTORY_CONTRACT_GUIDE.md)). Seed 13 units `a0000000-…-0000000000NN` cho 5 equipment types của Catalog; `e…04` (kính hiển vi) chỉ có 1 unit để demo tranh chấp. Lỗi nghiệp vụ trả `code` như `CONFLICT`, `NOT_FOUND`.
 
 **Các route khác trong bảng là Planned.** Gateway routing config chỉ chuẩn bị prefixes. Request tới một business path có thể trả 401 hoặc 404; không có mock HTTP 200 làm giả CRUD.
 

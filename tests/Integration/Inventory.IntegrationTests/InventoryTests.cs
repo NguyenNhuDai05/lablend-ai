@@ -81,12 +81,13 @@ public sealed class InventoryTests(InventoryApiFactory factory) : IClassFixture<
     [Fact] // T08
     public async Task Multi_item_reservation_is_all_or_nothing()
     {
-        var (a, _) = await factory.NewStockAsync(1);
+        var (a, aUnits) = await factory.NewStockAsync(1);
         var (b, _) = await factory.NewStockAsync(1);
         var tooMany = Reserve(Guid.NewGuid(), a, b, b);
         var ex = await Assert.ThrowsAsync<RpcException>(() => grpc.ReserveAssetsAsync(tooMany, factory.ServiceAuth).ResponseAsync);
         Assert.Equal(StatusCode.FailedPrecondition, ex.StatusCode);
         Assert.Equal(1, (await AvailabilityAsync(a)).Available); // the unit locked for item 1 was rolled back
+        Assert.Equal(["-→AVAILABLE"], await MovementsAsync(aUnits[0].Id)); // ...and so was its movement row
         Assert.Equal(1, (await AvailabilityAsync(b)).Available);
         var status = await grpc.GetOperationStatusAsync(new V1.OperationStatusRequest { OperationId = tooMany.OperationId }, factory.ServiceAuth);
         Assert.False(status.Found);
@@ -131,15 +132,48 @@ public sealed class InventoryTests(InventoryApiFactory factory) : IClassFixture<
         Assert.Equal(1, (await AvailabilityAsync(typeId)).Available); // the damaged unit cannot be reserved
     }
 
+    [Fact] // StockMovements: every status change, with who (staff) or which loan (gRPC) caused it
+    public async Task Every_status_change_is_recorded_as_a_stock_movement()
+    {
+        var (typeId, units) = await factory.NewStockAsync(1);
+        var unitId = units[0].Id;
+        var reserve = Reserve(Guid.NewGuid(), typeId);
+        var loan = new V1.LoanRequest { LoanId = reserve.LoanId };
+        var returnDamaged = new V1.ReturnAssetsRequest
+        {
+            LoanId = reserve.LoanId,
+            Items = { new V1.ReturnItem { LoanItemId = reserve.Items[0].LoanItemId, Condition = V1.ReturnCondition.Damaged } }
+        };
+        // Each call twice: replays must not write duplicate movements.
+        for (var i = 0; i < 2; i++) await grpc.ReserveAssetsAsync(reserve, factory.ServiceAuth);
+        for (var i = 0; i < 2; i++) await grpc.ConfirmHandoverAsync(loan, factory.ServiceAuth);
+        for (var i = 0; i < 2; i++) await grpc.ReturnAssetsAsync(returnDamaged, factory.ServiceAuth);
+        var staff = factory.ClientAs("LAB_STAFF");
+        (await staff.PostAsJsonAsync($"/api/inventory/assets/{unitId}/maintenance/complete", new CompleteMaintenanceRequest(null))).EnsureSuccessStatusCode();
+        (await staff.DeleteAsync($"/api/inventory/assets/{unitId}")).EnsureSuccessStatusCode();
+        (await staff.DeleteAsync($"/api/inventory/assets/{unitId}")).EnsureSuccessStatusCode(); // idempotent retire
+
+        var movements = (await staff.GetFromJsonAsync<List<StockMovementResponse>>($"/api/inventory/assets/{unitId}/movements", Json))!;
+        movements.Reverse(); // API is newest first
+        Assert.Equal(["-→AVAILABLE", "AVAILABLE→RESERVED", "RESERVED→ON_LOAN", "ON_LOAN→MAINTENANCE", "MAINTENANCE→AVAILABLE", "AVAILABLE→RETIRED"],
+            movements.Select(Arrow));
+        var loanId = Guid.Parse(reserve.LoanId);
+        Assert.All(movements[1..4], m => Assert.Equal((loanId, (Guid?)null), (m.LoanId, m.ChangedBy))); // gRPC: loan, no user
+        Assert.All(movements.Where((_, i) => i is 0 or 4 or 5), m => Assert.True(m.LoanId is null && m.ChangedBy is not null)); // REST: staff user
+        Assert.Equal(HttpStatusCode.NotFound, (await staff.GetAsync($"/api/inventory/assets/{Guid.NewGuid()}/movements")).StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, (await factory.ClientAs("STUDENT").GetAsync($"/api/inventory/assets/{unitId}/movements")).StatusCode);
+    }
+
     [Fact] // compensation used by Borrowing reconciliation (T28 server side)
     public async Task Release_frees_held_units_and_blocks_replaying_the_released_operation()
     {
-        var (typeId, _) = await factory.NewStockAsync(1);
+        var (typeId, units) = await factory.NewStockAsync(1);
         var reserve = Reserve(Guid.NewGuid(), typeId);
         await grpc.ReserveAssetsAsync(reserve, factory.ServiceAuth);
         var loan = new V1.LoanRequest { LoanId = reserve.LoanId };
         Assert.Equal("AVAILABLE", (await grpc.ReleaseReservationsAsync(loan, factory.ServiceAuth)).Allocations.Single().AssetStatus);
         Assert.Empty((await grpc.ReleaseReservationsAsync(loan, factory.ServiceAuth)).Allocations); // idempotent
+        Assert.Equal("RESERVED→AVAILABLE", (await MovementsAsync(units[0].Id))[0]);
         Assert.Equal(StatusCode.FailedPrecondition,
             (await Assert.ThrowsAsync<RpcException>(() => grpc.ReserveAssetsAsync(reserve, factory.ServiceAuth).ResponseAsync)).StatusCode);
         Assert.Equal(StatusCode.NotFound,
@@ -159,4 +193,11 @@ public sealed class InventoryTests(InventoryApiFactory factory) : IClassFixture<
         (await factory.ClientAs(null).GetFromJsonAsync<List<AvailabilityResponse>>($"/api/inventory/availability?equipmentTypeIds={typeId}", Json))!.Single();
 
     private static (int, int) Tuple(AvailabilityResponse a) => (a.Available, a.Total);
+
+    private static string Arrow(StockMovementResponse m) => $"{m.FromStatus ?? "-"}→{m.ToStatus}";
+
+    /// <summary>Movements as "FROM→TO", newest first.</summary>
+    private async Task<List<string>> MovementsAsync(Guid unitId) =>
+        (await factory.ClientAs("ADMIN").GetFromJsonAsync<List<StockMovementResponse>>($"/api/inventory/assets/{unitId}/movements", Json))!
+            .Select(Arrow).ToList();
 }

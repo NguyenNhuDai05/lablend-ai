@@ -17,12 +17,13 @@ public sealed class AssetUnit
 {
     private AssetUnit() { } // EF Core
 
-    public AssetUnit(Guid equipmentTypeId, string serialNumber, string location, string? notes)
+    public AssetUnit(Guid equipmentTypeId, string serialNumber, string location, string? notes, Guid? createdBy)
     {
         Id = Guid.NewGuid();
         Status = AssetStatus.Available;
         CreatedAt = DateTimeOffset.UtcNow;
         Apply(equipmentTypeId, serialNumber, location, notes);
+        movements.Add(new StockMovement(Id, null, Status, null, createdBy));
     }
 
     public Guid Id { get; private set; }
@@ -34,6 +35,10 @@ public sealed class AssetUnit
     public DateTimeOffset CreatedAt { get; private set; }
     public DateTimeOffset UpdatedAt { get; private set; }
 
+    private readonly List<StockMovement> movements = [];
+    /// <summary>Movements recorded on this instance, inserted by SaveChanges. Never loaded: read history via the repository.</summary>
+    public IReadOnlyList<StockMovement> Movements => movements;
+
     private bool Allocated => Status is AssetStatus.Reserved or AssetStatus.OnLoan;
 
     public void UpdateDetails(Guid equipmentTypeId, string serialNumber, string location, string? notes)
@@ -43,48 +48,51 @@ public sealed class AssetUnit
         Apply(equipmentTypeId, serialNumber, location, notes);
     }
 
-    public void StartMaintenance()
+    public void StartMaintenance(Guid? changedBy)
     {
         if (Status != AssetStatus.Available)
             throw new DomainRuleException($"Only AVAILABLE units can enter maintenance (current: {Status}).");
-        SetStatus(AssetStatus.Maintenance);
+        SetStatus(AssetStatus.Maintenance, null, changedBy);
     }
 
-    public void CompleteMaintenance()
+    public void CompleteMaintenance(Guid? changedBy)
     {
         if (Status != AssetStatus.Maintenance)
             throw new DomainRuleException($"Unit is not in maintenance (current: {Status}).");
-        SetStatus(AssetStatus.Available);
+        SetStatus(AssetStatus.Available, null, changedBy);
     }
 
-    public void Retire()
+    public void Retire(Guid? changedBy)
     {
         if (Allocated)
             throw new DomainRuleException("Cannot retire a reserved or loaned unit.");
-        SetStatus(AssetStatus.Retired);
+        SetStatus(AssetStatus.Retired, null, changedBy);
     }
 
-    // Allocation transitions are driven by Reservation (gRPC); Reserve itself is a locked SQL update.
-    public void HandOver() => Transition(AssetStatus.Reserved, AssetStatus.OnLoan);
-    public void Release() => Transition(AssetStatus.Reserved, AssetStatus.Available);
+    // Allocation transitions are driven by Reservation (gRPC); Reserve itself is a locked SQL update
+    // that writes its own movement row (AllocationRepository.TryReserveAsync).
+    public void HandOver(Guid loanId) => Transition(AssetStatus.Reserved, AssetStatus.OnLoan, loanId);
+    public void Release(Guid loanId) => Transition(AssetStatus.Reserved, AssetStatus.Available, loanId);
 
-    public void Return(string condition) => Transition(AssetStatus.OnLoan, condition switch
+    public void Return(string condition, Guid loanId) => Transition(AssetStatus.OnLoan, condition switch
     {
         ReturnCondition.Normal => AssetStatus.Available,
         ReturnCondition.Damaged => AssetStatus.Maintenance,
         ReturnCondition.Lost => AssetStatus.Lost,
         _ => throw new DomainRuleException($"Unknown return condition '{condition}'.")
-    });
+    }, loanId);
 
-    private void Transition(string from, string to)
+    private void Transition(string from, string to, Guid loanId)
     {
         if (Status != from)
             throw new DomainRuleException($"Unit {SerialNumber} is {Status}, expected {from}.");
-        SetStatus(to);
+        SetStatus(to, loanId, null);
     }
 
-    private void SetStatus(string status)
+    // Single choke point for status changes, so every change leaves a movement row.
+    private void SetStatus(string status, Guid? loanId, Guid? changedBy)
     {
+        movements.Add(new StockMovement(Id, Status, status, loanId, changedBy));
         Status = status;
         UpdatedAt = DateTimeOffset.UtcNow;
     }

@@ -47,7 +47,7 @@ public sealed class Reservation
     {
         if (Status == ReservationStatus.HandedOver) return;
         Require(ReservationStatus.Held);
-        AssetUnit!.HandOver();
+        AssetUnit!.HandOver(LoanId);
         SetStatus(ReservationStatus.HandedOver);
     }
 
@@ -55,7 +55,7 @@ public sealed class Reservation
     {
         if (Status == ReservationStatus.Returned) return;
         Require(ReservationStatus.HandedOver);
-        AssetUnit!.Return(condition);
+        AssetUnit!.Return(condition, LoanId);
         ReturnCondition = condition;
         SetStatus(ReservationStatus.Returned);
     }
@@ -64,7 +64,7 @@ public sealed class Reservation
     {
         if (Status == ReservationStatus.Released) return;
         Require(ReservationStatus.Held);
-        AssetUnit!.Release();
+        AssetUnit!.Release(LoanId);
         SetStatus(ReservationStatus.Released);
     }
 

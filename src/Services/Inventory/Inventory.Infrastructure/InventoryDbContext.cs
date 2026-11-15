@@ -12,6 +12,7 @@ public sealed class InventoryDbContext(DbContextOptions<InventoryDbContext> opti
     public DbSet<MaintenanceRecord> MaintenanceRecords => Set<MaintenanceRecord>();
     public DbSet<Reservation> Reservations => Set<Reservation>();
     public DbSet<ReserveOperation> ReserveOperations => Set<ReserveOperation>();
+    public DbSet<StockMovement> StockMovements => Set<StockMovement>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -28,6 +29,14 @@ public sealed class InventoryDbContext(DbContextOptions<InventoryDbContext> opti
             entity.ToTable(t => t.HasCheckConstraint("CK_AssetUnits_Status",
                 "\"Status\" IN ('AVAILABLE', 'RESERVED', 'ON_LOAN', 'MAINTENANCE', 'LOST', 'RETIRED')"));
             entity.HasData(InventorySeed.AssetUnits);
+            // New movements added to AssetUnit.Movements are inserted on SaveChanges (Id unset → Added).
+            entity.HasMany(a => a.Movements).WithOne().HasForeignKey(m => m.AssetUnitId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<StockMovement>(entity =>
+        {
+            entity.Property(m => m.FromStatus).HasMaxLength(20);
+            entity.Property(m => m.ToStatus).HasMaxLength(20);
         });
 
         modelBuilder.Entity<MaintenanceRecord>(entity =>

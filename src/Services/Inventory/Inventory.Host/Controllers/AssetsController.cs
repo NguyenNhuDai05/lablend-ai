@@ -25,7 +25,7 @@ public sealed class AssetsController(AssetService service) : ControllerBase
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<ActionResult<AssetResponse>> Create(CreateAssetRequest request, CancellationToken ct)
     {
-        var created = await service.CreateAsync(request, ct);
+        var created = await service.CreateAsync(request, UserId, ct);
         return Created($"/api/inventory/assets/{created.Id}", created);
     }
 
@@ -40,9 +40,14 @@ public sealed class AssetsController(AssetService service) : ControllerBase
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Retire(Guid id, CancellationToken ct)
     {
-        await service.RetireAsync(id, ct);
+        await service.RetireAsync(id, UserId, ct);
         return NoContent();
     }
+
+    /// <summary>Status history (StockMovements), newest first: every change from creation, staff actions and Borrowing allocations.</summary>
+    [HttpGet("{id:guid}/movements")]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public Task<IReadOnlyList<StockMovementResponse>> ListMovements(Guid id, CancellationToken ct) => service.ListMovementsAsync(id, ct);
 
     [HttpGet("{id:guid}/maintenance")]
     public Task<IReadOnlyList<MaintenanceResponse>> ListMaintenance(Guid id, CancellationToken ct) => service.ListMaintenanceAsync(id, ct);

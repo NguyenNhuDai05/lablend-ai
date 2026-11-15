@@ -10,6 +10,8 @@ public interface IAssetRepository
     Task<IReadOnlyList<AvailabilityResponse>> GetAvailabilityAsync(IReadOnlyCollection<Guid> equipmentTypeIds, CancellationToken ct);
     Task<IReadOnlyList<MaintenanceRecord>> ListMaintenanceAsync(Guid assetUnitId, CancellationToken ct);
     Task<MaintenanceRecord?> FindOpenMaintenanceAsync(Guid assetUnitId, CancellationToken ct);
+    /// <summary>Status history of one unit, newest first.</summary>
+    Task<IReadOnlyList<StockMovement>> ListMovementsAsync(Guid assetUnitId, CancellationToken ct);
     void Add(AssetUnit assetUnit);
     void Add(MaintenanceRecord record);
     Task SaveChangesAsync(CancellationToken ct);

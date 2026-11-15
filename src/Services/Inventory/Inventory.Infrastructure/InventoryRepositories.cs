@@ -55,6 +55,11 @@ internal sealed class AssetRepository(InventoryDbContext db) : IAssetRepository
     public Task<MaintenanceRecord?> FindOpenMaintenanceAsync(Guid assetUnitId, CancellationToken ct) =>
         db.MaintenanceRecords.FirstOrDefaultAsync(m => m.AssetUnitId == assetUnitId && m.CompletedAt == null, ct);
 
+    // ponytail: whole history, unpaged; a unit changes status a few times per loan. Page it if an audit view needs years of data.
+    public async Task<IReadOnlyList<StockMovement>> ListMovementsAsync(Guid assetUnitId, CancellationToken ct) =>
+        await db.StockMovements.AsNoTracking().Where(m => m.AssetUnitId == assetUnitId)
+            .OrderByDescending(m => m.Id).ToListAsync(ct);
+
     public void Add(AssetUnit assetUnit) => db.AssetUnits.Add(assetUnit);
     public void Add(MaintenanceRecord record) => db.MaintenanceRecords.Add(record);
     public Task SaveChangesAsync(CancellationToken ct) => db.SaveMappedAsync(ct);
@@ -106,6 +111,8 @@ internal sealed class AllocationRepository(InventoryDbContext db) : IAllocationR
                 throw InventoryException.InsufficientStock(item.EquipmentTypeId);
             }
             reservations.Add(new Reservation(operation.OperationId, operation.LoanId, item.LoanItemId, unit[0]));
+            // The SQL update bypasses AssetUnit.SetStatus, so record its movement here (same transaction).
+            db.StockMovements.Add(new StockMovement(unit[0], AssetStatus.Available, AssetStatus.Reserved, operation.LoanId, null));
         }
         db.Reservations.AddRange(reservations);
         await db.SaveMappedAsync(ct);

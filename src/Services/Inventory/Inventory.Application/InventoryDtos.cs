@@ -24,6 +24,10 @@ public sealed record CompleteMaintenanceRequest([StringLength(1000)] string? Not
 public sealed record MaintenanceResponse(Guid Id, Guid AssetUnitId, string Reason, Guid? OpenedBy, DateTimeOffset OpenedAt,
     DateTimeOffset? CompletedAt, Guid? CompletedBy, string? CompletionNotes);
 
+/// <summary>One status change. FromStatus null = first known status; LoanId set for allocation (gRPC) changes; ChangedBy set for staff (REST) changes.</summary>
+public sealed record StockMovementResponse(long Id, Guid AssetUnitId, string? FromStatus, string ToStatus, Guid? LoanId,
+    Guid? ChangedBy, DateTimeOffset OccurredAt);
+
 /// <summary>Available = units that can be reserved now; Total excludes RETIRED and LOST units.</summary>
 public sealed record AvailabilityResponse(Guid EquipmentTypeId, int Available, int Total);
 

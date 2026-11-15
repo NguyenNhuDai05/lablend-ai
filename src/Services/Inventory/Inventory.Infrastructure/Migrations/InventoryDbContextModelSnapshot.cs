@@ -321,6 +321,42 @@ namespace Inventory.Infrastructure.Migrations
                     b.ToTable("ReserveOperations");
                 });
 
+            modelBuilder.Entity("Inventory.Domain.StockMovement", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<Guid>("AssetUnitId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("ChangedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("FromStatus")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<Guid?>("LoanId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("OccurredAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ToStatus")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AssetUnitId");
+
+                    b.ToTable("StockMovements");
+                });
+
             modelBuilder.Entity("Inventory.Domain.MaintenanceRecord", b =>
                 {
                     b.HasOne("Inventory.Domain.AssetUnit", null)
@@ -339,6 +375,20 @@ namespace Inventory.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("AssetUnit");
+                });
+
+            modelBuilder.Entity("Inventory.Domain.StockMovement", b =>
+                {
+                    b.HasOne("Inventory.Domain.AssetUnit", null)
+                        .WithMany("Movements")
+                        .HasForeignKey("AssetUnitId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Inventory.Domain.AssetUnit", b =>
+                {
+                    b.Navigation("Movements");
                 });
 #pragma warning restore 612, 618
         }
