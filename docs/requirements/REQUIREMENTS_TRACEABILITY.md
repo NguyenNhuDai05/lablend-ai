@@ -23,7 +23,7 @@ Nguồn chuẩn: [PRN232 Final Assignment, 3 trang](PRN232%20-%20Final%20Assignm
 | R15 | Dockerfiles/Compose | Implemented foundation | Shared multi-stage .NET Dockerfile + web Dockerfile + core/bonus Compose; foundation build/start evidence trong acceptance |
 | R16 | API Swagger/OpenAPI | Partial | Swagger cho mọi REST host + gateway schema proxy; Catalog và Inventory đã có business operations (`/platform/catalog/openapi.json`, `/platform/inventory/openapi.json`), service khác chưa có |
 | R17 | README đủ 6 mục bắt buộc | Implemented for Sprint 0 | Description/architecture/stack/install/deploy/responsibilities + dev/Git/env/troubleshooting; cập nhật khi nghiệm thu cuối |
-| R18 | Demo 7 nội dung bắt buộc | Planned | Cần architecture/REST/job/broker/gRPC/deploy/E2E business demo; foundation runtime script chỉ là một phần deployment evidence |
+| R18 | Demo 7 nội dung bắt buộc | Partial: phần M2 có script | Cần architecture/REST/job/broker/gRPC/deploy/E2E business demo; foundation runtime script chỉ là một phần deployment evidence. M2: `scripts/Demo-Inventory.ps1` (REST Catalog/Inventory qua Gateway + gRPC tranh chấp/idempotency trên Docker) |
 
 Rubric PDF: architecture/design 20%; REST 20%; background 10%; broker 15%; gRPC 15%; deployment 10%; docs/presentation 10%. Không quy đổi trạng thái Sprint 0 thành điểm hoặc ghi đủ 100% MUST khi business còn Planned.
 

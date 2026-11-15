@@ -35,7 +35,14 @@ Compose đã cấp cho Borrowing `Inventory__GrpcAddress=http://inventory:8081` 
 ```powershell
 docker compose exec -T inventory dotnet /probe/HealthProbe.dll grpc http://localhost:8081
 dotnet test tests/Integration/Inventory.IntegrationTests   # cần Docker; T07–T11/T23/T27 + release/replay
+pwsh scripts/Demo-Inventory.ps1                             # demo R18 trên stack Docker đang chạy
 ```
+
+`Demo-Inventory.ps1` (PowerShell 7) chạy trên stack `docker compose up -d`:
+- REST qua Gateway: Catalog và tồn kho công khai, 401/403/200, staff CRUD + bảo trì + StockMovements.
+- gRPC: `Inventory.DemoClient` chạy trong mạng `backend` bằng image của Inventory (cổng gRPC không publish ra host) và đóng vai Borrowing: thiếu token → `UNAUTHENTICATED`, all-or-nothing, 8 phiếu giành chiếc kính hiển vi cuối cùng (đúng 1 thắng), replay cùng `operation_id`, bàn giao rồi trả.
+
+Demo chạy lại được: kính hiển vi về lại AVAILABLE, thiết bị demo được ngừng dùng nên không làm đổi tồn kho.
 
 `GrpcOverHttp2Tests` chạy app trên Kestrel thật (endpoint gRPC chỉ HTTP/2, như Docker) và gọi bằng client sinh từ cùng file proto: đủ 6 RPC + health, kiểm tra mọi response là HTTP/2, T09 timeout và snapshot schema v1 (T23). Snapshot đỏ nghĩa là thay đổi phá client của Borrowing: thêm field mới với số mới thì cập nhật snapshot; đổi tên/số/kiểu field hoặc RPC thì làm `v2`.
 
