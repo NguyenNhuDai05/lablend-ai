@@ -11,13 +11,14 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
+using Npgsql;
 using Testcontainers.PostgreSql;
 using Xunit;
 
 namespace Inventory.IntegrationTests;
 
 // Real PostgreSQL (Testcontainers, needs Docker) + real migrations; REST and gRPC through the in-memory TestServer.
-public sealed class InventoryApiFactory : WebApplicationFactory<AssetsController>, IAsyncLifetime
+public class InventoryApiFactory : WebApplicationFactory<AssetsController>, IAsyncLifetime
 {
     private readonly PostgreSqlContainer postgres = new PostgreSqlBuilder().WithImage("postgres:16-alpine").Build();
     private readonly string signingKey = Convert.ToHexString(RandomNumberGenerator.GetBytes(32));
@@ -27,6 +28,16 @@ public sealed class InventoryApiFactory : WebApplicationFactory<AssetsController
         .UseSetting("Jwt:SigningKey", signingKey)
         .UseSetting("Inventory:ServiceToken", ServiceToken)
         .UseSetting("ConnectionStrings:Database", postgres.GetConnectionString());
+
+    protected string ConnectionString => postgres.GetConnectionString();
+
+    /// <summary>Direct connection to the service database, for tests that hold locks or inspect pg_locks.</summary>
+    public async Task<NpgsqlConnection> OpenDatabaseAsync()
+    {
+        var connection = new NpgsqlConnection(ConnectionString);
+        await connection.OpenAsync();
+        return connection;
+    }
 
     public HttpClient ClientAs(string? role)
     {
@@ -63,6 +74,6 @@ public sealed class InventoryApiFactory : WebApplicationFactory<AssetsController
         return (typeId, created);
     }
 
-    public Task InitializeAsync() => postgres.StartAsync();
+    public virtual Task InitializeAsync() => postgres.StartAsync();
     public new Task DisposeAsync() => postgres.DisposeAsync().AsTask();
 }

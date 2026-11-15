@@ -101,6 +101,21 @@ public sealed class InventoryTests(InventoryApiFactory factory) : IClassFixture<
         Assert.False(status.Found);
     }
 
+    [Fact] // T09: Inventory committed but the reply was lost -> status and replay return the same unit, never a second one
+    public async Task Lost_reply_is_resolved_by_status_and_replay_without_double_allocation()
+    {
+        var (typeId, _) = await factory.NewStockAsync(2);
+        var reserve = Reserve(Guid.NewGuid(), typeId);
+        await grpc.ReserveAssetsAsync(reserve, factory.ServiceAuth); // pretend this reply never reached Borrowing
+
+        var status = await grpc.GetOperationStatusAsync(new V1.OperationStatusRequest { OperationId = reserve.OperationId }, factory.ServiceAuth);
+        Assert.True(status.Found);
+        Assert.Equal(reserve.LoanId, status.LoanId);
+        var replay = await grpc.ReserveAssetsAsync(reserve, factory.ServiceAuth);
+        Assert.Equal(status.Allocations.Single().AssetUnitId, replay.Allocations.Single().AssetUnitId);
+        Assert.Equal((1, 2), Tuple(await AvailabilityAsync(typeId))); // still exactly one of the two units held
+    }
+
     [Fact] // T06 server side, T10, T11, idempotent replay
     public async Task Reserve_handover_return_lifecycle_is_idempotent()
     {

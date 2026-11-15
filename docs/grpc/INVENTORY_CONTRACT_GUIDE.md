@@ -19,6 +19,7 @@ Nguồn chuẩn: [`proto/inventory/v1/inventory.proto`](../../proto/inventory/v1
 - Gọi lại cùng `operation_id` + cùng payload → trả allocations cũ, không reserve thêm. Khác payload → `ALREADY_EXISTS` (`OPERATION_ID_REUSED`). Operation đã release → `FAILED_PRECONDITION`; approve lại cần `operation_id` mới.
 - Hai request trùng `operation_id` chạy song song: request sau chờ request đầu commit rồi replay.
 - Borrowing persist `APPROVING` + `operation_id` **trước** khi gọi; timeout/unknown → `GetOperationStatus` rồi quyết định APPROVED hoặc retry/compensate (T28, M1+M2).
+- Hết deadline giữa chừng: server huỷ câu lệnh DB đang chạy (deadline → `CancellationToken` → PostgreSQL cancel) và rollback, client nhận `DEADLINE_EXCEEDED`; `GetOperationStatus` trả `found=false` và gọi lại cùng `operation_id` sẽ cấp phát bình thường. Mất reply sau khi đã commit: status và replay trả đúng unit cũ, không cấp thêm (T09).
 - Inventory không tự hết hạn HELD; Worker/Borrowing gọi `ReleaseReservations` khi quá hạn nhận.
 
 ## Auth, lỗi, deadline
@@ -33,7 +34,9 @@ Compose đã cấp cho Borrowing `Inventory__GrpcAddress=http://inventory:8081` 
 
 ```powershell
 docker compose exec -T inventory dotnet /probe/HealthProbe.dll grpc http://localhost:8081
-dotnet test tests/Integration/Inventory.IntegrationTests   # cần Docker; T07/T08/T10/T11/T27 + release/replay
+dotnet test tests/Integration/Inventory.IntegrationTests   # cần Docker; T07–T11/T23/T27 + release/replay
 ```
+
+`GrpcOverHttp2Tests` chạy app trên Kestrel thật (endpoint gRPC chỉ HTTP/2, như Docker) và gọi bằng client sinh từ cùng file proto: đủ 6 RPC + health, kiểm tra mọi response là HTTP/2, T09 timeout và snapshot schema v1 (T23). Snapshot đỏ nghĩa là thay đổi phá client của Borrowing: thêm field mới với số mới thì cập nhật snapshot; đổi tên/số/kiểu field hoặc RPC thì làm `v2`.
 
 Còn lại cho R09: M1 thêm gRPC client trong Borrowing approve/handover/return và test end-to-end REST → gRPC.
