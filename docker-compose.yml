@@ -1,0 +1,310 @@
+# Core runs by default. Recommendation is opt-in: --profile bonus.
+name: "lablend-ai"
+services:
+  postgres:
+    image: "postgres:16-alpine"
+    environment:
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "${POSTGRES_ADMIN_PASSWORD:?Run scripts/Initialize-Environment.ps1}"
+      IDENTITY_DB_PASSWORD: "${IDENTITY_DB_PASSWORD:?Generate .env first}"
+      CATALOG_DB_PASSWORD: "${CATALOG_DB_PASSWORD:?Generate .env first}"
+      INVENTORY_DB_PASSWORD: "${INVENTORY_DB_PASSWORD:?Generate .env first}"
+      BORROWING_DB_PASSWORD: "${BORROWING_DB_PASSWORD:?Generate .env first}"
+      NOTIFICATION_DB_PASSWORD: "${NOTIFICATION_DB_PASSWORD:?Generate .env first}"
+      RECOMMENDATION_DB_PASSWORD: "${RECOMMENDATION_DB_PASSWORD:?Generate .env first}"
+    volumes:
+      - "postgres-data:/var/lib/postgresql/data"
+      - "./infrastructure/database/01-init-databases.sh:/docker-entrypoint-initdb.d/01-init-databases.sh:ro"
+    networks:
+      - "backend"
+    healthcheck:
+      test:
+        - "CMD-SHELL"
+        - "pg_isready -U postgres -d postgres"
+      interval: "5s"
+      timeout: "3s"
+      retries: 30
+      start_period: "15s"
+  redis:
+    image: "redis:7.4-alpine"
+    environment:
+      REDIS_PASSWORD: "${REDIS_PASSWORD:?Generate .env first}"
+    command:
+      - "sh"
+      - "-c"
+      - "exec redis-server --appendonly yes --requirepass \"$$REDIS_PASSWORD\""
+    volumes:
+      - "redis-data:/data"
+    networks:
+      - "backend"
+    healthcheck:
+      test:
+        - "CMD-SHELL"
+        - "REDISCLI_AUTH=\"$$REDIS_PASSWORD\" redis-cli ping | grep -q PONG"
+      interval: "5s"
+      timeout: "3s"
+      retries: 20
+  identity:
+    build:
+      context: "."
+      dockerfile: "infrastructure/docker/Dockerfile.dotnet"
+      args:
+        PROJECT_PATH: "src/Services/Identity/Identity.Api/Identity.Api.csproj"
+        ASSEMBLY_NAME: "Identity.Api.dll"
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Development"
+      Jwt__SigningKey: "${JWT_SIGNING_KEY:?Generate .env first}"
+      ConnectionStrings__Database: "Host=postgres;Database=identity_db;Username=identity_user;Password=${IDENTITY_DB_PASSWORD:?Generate .env first};Timeout=3"
+    depends_on:
+      postgres:
+        condition: "service_healthy"
+    networks:
+      - "backend"
+    healthcheck:
+      test:
+        - "CMD"
+        - "dotnet"
+        - "/probe/HealthProbe.dll"
+        - "http"
+        - "http://localhost:8080/health/ready"
+      interval: "10s"
+      timeout: "7s"
+      retries: 12
+      start_period: "20s"
+  catalog:
+    build:
+      context: "."
+      dockerfile: "infrastructure/docker/Dockerfile.dotnet"
+      args:
+        PROJECT_PATH: "src/Services/Catalog/Catalog.Api/Catalog.Api.csproj"
+        ASSEMBLY_NAME: "Catalog.Api.dll"
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Development"
+      Jwt__SigningKey: "${JWT_SIGNING_KEY:?Generate .env first}"
+      ConnectionStrings__Database: "Host=postgres;Database=catalog_db;Username=catalog_user;Password=${CATALOG_DB_PASSWORD:?Generate .env first};Timeout=3"
+    depends_on:
+      postgres:
+        condition: "service_healthy"
+    networks:
+      - "backend"
+    healthcheck:
+      test:
+        - "CMD"
+        - "dotnet"
+        - "/probe/HealthProbe.dll"
+        - "http"
+        - "http://localhost:8080/health/ready"
+      interval: "10s"
+      timeout: "7s"
+      retries: 12
+      start_period: "20s"
+  inventory:
+    build:
+      context: "."
+      dockerfile: "infrastructure/docker/Dockerfile.dotnet"
+      args:
+        PROJECT_PATH: "src/Services/Inventory/Inventory.Host/Inventory.Host.csproj"
+        ASSEMBLY_NAME: "Inventory.Host.dll"
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Development"
+      Jwt__SigningKey: "${JWT_SIGNING_KEY:?Generate .env first}"
+      ConnectionStrings__Database: "Host=postgres;Database=inventory_db;Username=inventory_user;Password=${INVENTORY_DB_PASSWORD:?Generate .env first};Timeout=3"
+      Inventory__ServiceToken: "${INVENTORY_SERVICE_TOKEN:?Generate .env first}"
+    depends_on:
+      postgres:
+        condition: "service_healthy"
+    networks:
+      - "backend"
+    healthcheck:
+      test:
+        - "CMD"
+        - "dotnet"
+        - "/probe/HealthProbe.dll"
+        - "http"
+        - "http://localhost:8080/health/ready"
+      interval: "10s"
+      timeout: "7s"
+      retries: 12
+      start_period: "20s"
+  borrowing:
+    build:
+      context: "."
+      dockerfile: "infrastructure/docker/Dockerfile.dotnet"
+      args:
+        PROJECT_PATH: "src/Services/Borrowing/Borrowing.Api/Borrowing.Api.csproj"
+        ASSEMBLY_NAME: "Borrowing.Api.dll"
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Development"
+      Jwt__SigningKey: "${JWT_SIGNING_KEY:?Generate .env first}"
+      ConnectionStrings__Database: "Host=postgres;Database=borrowing_db;Username=borrowing_user;Password=${BORROWING_DB_PASSWORD:?Generate .env first};Timeout=3"
+      Inventory__GrpcAddress: "http://inventory:8081"
+      Inventory__ServiceToken: "${INVENTORY_SERVICE_TOKEN:?Generate .env first}"
+    depends_on:
+      postgres:
+        condition: "service_healthy"
+    networks:
+      - "backend"
+    healthcheck:
+      test:
+        - "CMD"
+        - "dotnet"
+        - "/probe/HealthProbe.dll"
+        - "http"
+        - "http://localhost:8080/health/ready"
+      interval: "10s"
+      timeout: "7s"
+      retries: 12
+      start_period: "20s"
+  notification:
+    build:
+      context: "."
+      dockerfile: "infrastructure/docker/Dockerfile.dotnet"
+      args:
+        PROJECT_PATH: "src/Services/Notification/Notification.Api/Notification.Api.csproj"
+        ASSEMBLY_NAME: "Notification.Api.dll"
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Development"
+      Jwt__SigningKey: "${JWT_SIGNING_KEY:?Generate .env first}"
+      ConnectionStrings__Database: "Host=postgres;Database=notification_db;Username=notification_user;Password=${NOTIFICATION_DB_PASSWORD:?Generate .env first};Timeout=3"
+      ConnectionStrings__Redis: "redis:6379,password=${REDIS_PASSWORD:?Generate .env first}"
+    depends_on:
+      postgres:
+        condition: "service_healthy"
+      redis:
+        condition: "service_healthy"
+    networks:
+      - "backend"
+    healthcheck:
+      test:
+        - "CMD"
+        - "dotnet"
+        - "/probe/HealthProbe.dll"
+        - "http"
+        - "http://localhost:8080/health/ready"
+      interval: "10s"
+      timeout: "7s"
+      retries: 12
+      start_period: "20s"
+  recommendation:
+    build:
+      context: "."
+      dockerfile: "infrastructure/docker/Dockerfile.dotnet"
+      args:
+        PROJECT_PATH: "src/Services/Recommendation/Recommendation.Api/Recommendation.Api.csproj"
+        ASSEMBLY_NAME: "Recommendation.Api.dll"
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Development"
+      Jwt__SigningKey: "${JWT_SIGNING_KEY:?Generate .env first}"
+      ConnectionStrings__Database: "Host=postgres;Database=recommendation_db;Username=recommendation_user;Password=${RECOMMENDATION_DB_PASSWORD:?Generate .env first};Timeout=3"
+      Gemini__Enabled: "false"
+    depends_on:
+      postgres:
+        condition: "service_healthy"
+    networks:
+      - "backend"
+    healthcheck:
+      test:
+        - "CMD"
+        - "dotnet"
+        - "/probe/HealthProbe.dll"
+        - "http"
+        - "http://localhost:8080/health/ready"
+      interval: "10s"
+      timeout: "7s"
+      retries: 12
+      start_period: "20s"
+    profiles:
+      - "bonus"
+  gateway:
+    build:
+      context: "."
+      dockerfile: "infrastructure/docker/Dockerfile.dotnet"
+      args:
+        PROJECT_PATH: "src/Gateway/LabLend.Gateway/LabLend.Gateway.csproj"
+        ASSEMBLY_NAME: "LabLend.Gateway.dll"
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Development"
+      Jwt__SigningKey: "${JWT_SIGNING_KEY:?Generate .env first}"
+      Cors__AllowedOrigins__0: "http://localhost:5173"
+      Cors__AllowedOrigins__1: "http://localhost:${WEB_PORT:-3000}"
+      ReverseProxy__Clusters__identity__Destinations__primary__Address: "http://identity:8080/"
+      ReverseProxy__Clusters__catalog__Destinations__primary__Address: "http://catalog:8080/"
+      ReverseProxy__Clusters__inventory__Destinations__primary__Address: "http://inventory:8080/"
+      ReverseProxy__Clusters__borrowing__Destinations__primary__Address: "http://borrowing:8080/"
+      ReverseProxy__Clusters__notification__Destinations__primary__Address: "http://notification:8080/"
+      ReverseProxy__Clusters__recommendation__Destinations__primary__Address: "http://recommendation:8080/"
+    ports:
+      - "127.0.0.1:${GATEWAY_PORT:-5080}:8080"
+    networks:
+      - "edge"
+      - "backend"
+    healthcheck:
+      test:
+        - "CMD"
+        - "dotnet"
+        - "/probe/HealthProbe.dll"
+        - "http"
+        - "http://localhost:8080/health/live"
+      interval: "10s"
+      timeout: "7s"
+      retries: 12
+      start_period: "20s"
+  borrowing-worker:
+    build:
+      context: "."
+      dockerfile: "infrastructure/docker/Dockerfile.dotnet"
+      args:
+        PROJECT_PATH: "src/Workers/LabLend.Borrowing.Worker/LabLend.Borrowing.Worker.csproj"
+        ASSEMBLY_NAME: "LabLend.Borrowing.Worker.dll"
+    environment:
+      DOTNET_ENVIRONMENT: "Development"
+      ConnectionStrings__Database: "Host=postgres;Database=borrowing_db;Username=borrowing_user;Password=${BORROWING_DB_PASSWORD:?Generate .env first};Timeout=3"
+      ConnectionStrings__Redis: "redis:6379,password=${REDIS_PASSWORD:?Generate .env first}"
+      Worker__HeartbeatPath: "/tmp/lablend-worker.healthy"
+    depends_on:
+      postgres:
+        condition: "service_healthy"
+      redis:
+        condition: "service_healthy"
+    networks:
+      - "backend"
+    healthcheck:
+      test:
+        - "CMD"
+        - "dotnet"
+        - "/probe/HealthProbe.dll"
+        - "file"
+        - "/tmp/lablend-worker.healthy"
+      interval: "15s"
+      timeout: "5s"
+      retries: 8
+      start_period: "20s"
+  web:
+    build:
+      context: "apps/web"
+      dockerfile: "Dockerfile"
+    ports:
+      - "127.0.0.1:${WEB_PORT:-3000}:8080"
+    depends_on:
+      gateway:
+        condition: "service_healthy"
+    networks:
+      - "edge"
+    healthcheck:
+      test:
+        - "CMD"
+        - "wget"
+        - "-q"
+        - "-O"
+        - "/dev/null"
+        - "http://127.0.0.1:8080/web-health"
+      interval: "10s"
+      timeout: "5s"
+      retries: 8
+networks:
+  backend:
+    internal: true
+  edge: {}
+volumes:
+  postgres-data: {}
+  redis-data: {}

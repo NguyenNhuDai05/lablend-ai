@@ -1,0 +1,2 @@
+PASS: Redis stopped -> Notification readiness=503, liveness=200 through Gateway.
+PASS: Redis restarted -> Notification readiness=200.

@@ -426,3 +426,24 @@ FodyWeavers.xsd
 
 # Official VS Code C# Dev Kit Extension exclusion
 #*.lscache
+
+# LabLend local configuration and frontend outputs
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+**/appsettings.Local.json
+**/appsettings.*.local.json
+**/node_modules/
+**/dist/
+**/coverage/
+**/playwright-report/
+.tmp/
+tmp/
+*.pem
+*.key
+.idea/
+.DS_Store
+*.tsbuildinfo

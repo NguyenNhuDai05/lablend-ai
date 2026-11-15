@@ -1,0 +1,24 @@
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS restore
+WORKDIR /source
+COPY . .
+# Every host shares this layer, so the Linux package cache is downloaded once.
+RUN --mount=type=cache,id=lablend-nuget,target=/root/.nuget/packages,sharing=locked dotnet restore LabLendAI.sln --disable-parallel
+# Compile once with a small MSBuild parallelism budget; each host then publishes its own output.
+RUN --mount=type=cache,id=lablend-nuget,target=/root/.nuget/packages,sharing=locked dotnet build LabLendAI.sln -c Release --no-restore --maxcpucount:2
+RUN --mount=type=cache,id=lablend-nuget,target=/root/.nuget/packages,sharing=locked dotnet publish infrastructure/docker/HealthProbe/HealthProbe.csproj -c Release --no-build --no-restore -o /probe
+
+FROM restore AS build
+ARG PROJECT_PATH
+RUN --mount=type=cache,id=lablend-nuget,target=/root/.nuget/packages,sharing=locked dotnet publish "$PROJECT_PATH" -c Release --no-build --no-restore -o /publish
+
+# Worker also uses this image because the shared technical library references ASP.NET Core.
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
+WORKDIR /app
+ARG ASSEMBLY_NAME
+ENV LABLEND_ASSEMBLY=$ASSEMBLY_NAME
+ENV ASPNETCORE_HTTP_PORTS=8080
+COPY --from=build /publish .
+COPY --from=restore /probe /probe
+USER $APP_UID
+EXPOSE 8080
+ENTRYPOINT ["sh", "-c", "exec dotnet \"$LABLEND_ASSEMBLY\""]

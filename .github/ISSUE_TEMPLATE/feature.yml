@@ -1,0 +1,21 @@
+name: Implementation task
+description: Chia một đầu việc có owner, dependency và acceptance rõ ràng
+title: "[M1/M2/M3] "
+body:
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Kết quả cần đạt và module sở hữu
+    validations:
+      required: true
+  - type: textarea
+    id: contracts
+    attributes:
+      label: Dependencies và contracts cần review
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance và bằng chứng kiểm thử
+      description: Liên kết R01–R18 / T01–T28 khi phù hợp
+    validations:
+      required: true
