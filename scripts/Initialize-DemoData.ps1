@@ -11,9 +11,9 @@ $Gateway = $Gateway.TrimEnd('/')
 function Invoke-Api([string]$Path, [string]$Method = 'GET', $Body = $null, [string]$Token = '') {
     $headers = @{ Origin = $Origin; 'X-LabLend-CSRF' = '1' }
     if ($Token) { $headers.Authorization = "Bearer $Token" }
-    $args = @{ Uri = "$Gateway$Path"; Method = $Method; Headers = $headers; TimeoutSec = 20; SkipHttpErrorCheck = $true }
-    if ($null -ne $Body) { $args.Body = $Body | ConvertTo-Json -Depth 5; $args.ContentType = 'application/json' }
-    $response = Invoke-WebRequest @args
+    $httpArguments = @{ Uri = "$Gateway$Path"; Method = $Method; Headers = $headers; TimeoutSec = 20; SkipHttpErrorCheck = $true }
+    if ($null -ne $Body) { $httpArguments.Body = $Body | ConvertTo-Json -Depth 5; $httpArguments.ContentType = 'application/json' }
+    $response = Invoke-WebRequest @httpArguments
     if ($response.StatusCode -ge 400) { throw "Demo API failed: $Method $Path (HTTP $($response.StatusCode)). Inspect state before rerunning mutations." }
     if ($response.Content) { return $response.Content | ConvertFrom-Json }
 }

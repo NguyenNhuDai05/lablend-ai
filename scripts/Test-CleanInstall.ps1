@@ -93,7 +93,12 @@ services:
             Invoke-Step 'Playwright browser' { npx playwright install chromium }
             Invoke-Step 'three-flow Docker E2E' { node e2e/docker-core.mjs }
         } finally { Pop-Location }
-        Invoke-Step 'database isolation' { Get-Content -Raw infrastructure/database/verify-isolation.sh | docker compose exec -T postgres bash }
+        Invoke-Step 'database isolation' {
+            # Preserve LF bytes; PowerShell's native stdin pipeline can append CRLF and make bash exit 127.
+            docker compose cp infrastructure/database/verify-isolation.sh postgres:/tmp/lablend-t20-verify-isolation.sh
+            if ($LASTEXITCODE -ne 0) { throw 'Could not copy the owned isolation verifier.' }
+            docker compose exec -T postgres bash /tmp/lablend-t20-verify-isolation.sh
+        }
         $env:LABLEND_DEMO_ADMIN_PASSWORD = $env:Bootstrap__AdminPassword
         $env:LABLEND_DEMO_USER_PASSWORD = New-Secret
         Invoke-Step 'prepare reusable demo data' { & ./scripts/Initialize-DemoData.ps1 -Gateway $env:LABLEND_E2E_GATEWAY -Origin $env:LABLEND_E2E_ORIGIN -AdminEmail 'admin@t20.test' -Prefix T20REHEARSAL }
