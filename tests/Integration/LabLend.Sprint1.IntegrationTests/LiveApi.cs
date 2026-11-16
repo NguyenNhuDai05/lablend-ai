@@ -66,5 +66,6 @@ internal sealed class LiveApi : IAsyncDisposable
         if (stdout != null) await stdout;
         if (stderr != null) await stderr;
         process.Dispose();
+        process = null;
     }
 }
