@@ -38,6 +38,6 @@ These are proposed ownership-based speaking assignments. Names, final speaking o
 - OD-04/05 and retention/replay policy need owner approval. At-least-once transport with deduplicated notification effects is the implemented guarantee.
 - Inventory v1 omits reservation ID and historical return condition/time. Borrowing persists its own immutable return intent and supports its documented single-writer workflow. Do not infer historical outcomes from the current physical status.
 - Access JWTs at another service can remain valid until their short expiry after password/role changes. Refresh sessions are revoked.
-- A successful Docker recovery does not prove the root cause of an earlier native exit 139. Keep the captured diagnostic facts separate.
+- The reproduced cold-install exit 139 is explained by the PostgreSQL bootstrap health race and fixed by TCP readiness. The older unrecorded M3 exit cannot be assigned that cause with certainty. Keep these captured facts separate.
 - Gemini is optional, disabled and not a completed live bonus. No billing is needed for core. Dashboard/QR/telemetry remain optional.
 - Automated evidence cannot certify team rehearsal, projector readability, final submission approval or a video that nobody recorded.

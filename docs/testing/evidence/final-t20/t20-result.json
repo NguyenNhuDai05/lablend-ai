@@ -1,0 +1,62 @@
+{
+  "project": "lablend-t20-98c82cde5abe",
+  "clone": "<fresh GitHub clone under ignored .tmp/clean-install>",
+  "revision": "origin/feature/final-c-acceptance",
+  "status": "PASS",
+  "stages": [
+    {
+      "status": "PASS",
+      "name": "daemon"
+    },
+    {
+      "status": "PASS",
+      "name": "clean clone"
+    },
+    {
+      "status": "PASS",
+      "name": "checkout revision"
+    },
+    {
+      "status": "PASS",
+      "name": "generate environment"
+    },
+    {
+      "status": "PASS",
+      "name": "compose configuration"
+    },
+    {
+      "status": "PASS",
+      "name": "build sequential images"
+    },
+    {
+      "status": "PASS",
+      "name": "start private core sequentially"
+    },
+    {
+      "status": "PASS",
+      "name": "frontend dependencies"
+    },
+    {
+      "status": "PASS",
+      "name": "Playwright browser"
+    },
+    {
+      "status": "PASS",
+      "name": "three-flow Docker E2E"
+    },
+    {
+      "status": "PASS",
+      "name": "database isolation"
+    },
+    {
+      "status": "PASS",
+      "name": "prepare reusable demo data"
+    },
+    {
+      "status": "PASS",
+      "name": "repeat demo preparation safely"
+    }
+  ],
+  "commit": "ea868e4f22ebc13fbc2371ca1bfb73ef99435179",
+  "cleanupExitCode": 0
+}

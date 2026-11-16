@@ -1,0 +1,128 @@
+{
+  "capturedAtUtc": "2026-11-16T18:12:20.9470084+00:00",
+  "scope": "existing baseline shared stack; not the final-source T20",
+  "composeExitCode": 0,
+  "daemonExitCode": 0,
+  "containers": [
+    {
+      "name": "lablend-ai-borrowing-1",
+      "state": "running",
+      "health": "healthy",
+      "image": "lablend-ai-borrowing"
+    },
+    {
+      "name": "lablend-ai-borrowing-worker-1",
+      "state": "running",
+      "health": "healthy",
+      "image": "lablend-ai-borrowing-worker"
+    },
+    {
+      "name": "lablend-ai-catalog-1",
+      "state": "running",
+      "health": "healthy",
+      "image": "lablend-ai-catalog"
+    },
+    {
+      "name": "lablend-ai-gateway-1",
+      "state": "running",
+      "health": "healthy",
+      "image": "lablend-ai-gateway"
+    },
+    {
+      "name": "lablend-ai-identity-1",
+      "state": "running",
+      "health": "healthy",
+      "image": "lablend-ai-identity"
+    },
+    {
+      "name": "lablend-ai-inventory-1",
+      "state": "running",
+      "health": "healthy",
+      "image": "lablend-ai-inventory"
+    },
+    {
+      "name": "lablend-ai-notification-1",
+      "state": "running",
+      "health": "healthy",
+      "image": "lablend-ai-notification"
+    },
+    {
+      "name": "lablend-ai-postgres-1",
+      "state": "running",
+      "health": "healthy",
+      "image": "postgres:16-alpine"
+    },
+    {
+      "name": "lablend-ai-recommendation-1",
+      "state": "running",
+      "health": "healthy",
+      "image": "lablend-ai-recommendation"
+    },
+    {
+      "name": "lablend-ai-redis-1",
+      "state": "running",
+      "health": "healthy",
+      "image": "redis:7.4-alpine"
+    },
+    {
+      "name": "lablend-ai-web-1",
+      "state": "running",
+      "health": "healthy",
+      "image": "lablend-ai-web"
+    }
+  ],
+  "workerState": {
+    "Status": "running",
+    "Running": true,
+    "Paused": false,
+    "Restarting": false,
+    "OOMKilled": false,
+    "Dead": false,
+    "Pid": 650,
+    "ExitCode": 0,
+    "Error": "",
+    "StartedAt": "2026-11-16T18:02:38.108569498Z",
+    "FinishedAt": "2026-11-16T12:07:10.137372468Z",
+    "Health": {
+      "Status": "healthy",
+      "FailingStreak": 0,
+      "Log": [
+        {
+          "Start": "2026-11-16T18:11:07.930197369Z",
+          "End": "2026-11-16T18:11:08.362563209Z",
+          "ExitCode": 0,
+          "Output": ""
+        },
+        {
+          "Start": "2026-11-16T18:11:23.364334402Z",
+          "End": "2026-11-16T18:11:24.218900844Z",
+          "ExitCode": 0,
+          "Output": ""
+        },
+        {
+          "Start": "2026-11-16T18:11:39.213225576Z",
+          "End": "2026-11-16T18:11:39.757345344Z",
+          "ExitCode": 0,
+          "Output": ""
+        },
+        {
+          "Start": "2026-11-16T18:11:54.75828862Z",
+          "End": "2026-11-16T18:11:55.032962716Z",
+          "ExitCode": 0,
+          "Output": ""
+        },
+        {
+          "Start": "2026-11-16T18:12:10.029298979Z",
+          "End": "2026-11-16T18:12:10.554794446Z",
+          "ExitCode": 0,
+          "Output": ""
+        }
+      ]
+    }
+  },
+  "resources": {
+    "output": "architecture=x86_64 cpus=8 memoryBytes=3015319552",
+    "exitCode": 0
+  },
+  "historical139": "unresolved; current healthy status does not establish previous native crash cause"
+}

@@ -1,0 +1,82 @@
+[
+  {
+    "Service": "borrowing",
+    "Name": "lablend-t20-98c82cde5abe-borrowing-1",
+    "State": "running",
+    "Health": "healthy",
+    "ExitCode": 0,
+    "Image": "lablend-t20-98c82cde5abe-borrowing"
+  },
+  {
+    "Service": "borrowing-worker",
+    "Name": "lablend-t20-98c82cde5abe-borrowing-worker-1",
+    "State": "running",
+    "Health": "healthy",
+    "ExitCode": 0,
+    "Image": "lablend-t20-98c82cde5abe-borrowing-worker"
+  },
+  {
+    "Service": "catalog",
+    "Name": "lablend-t20-98c82cde5abe-catalog-1",
+    "State": "running",
+    "Health": "healthy",
+    "ExitCode": 0,
+    "Image": "lablend-t20-98c82cde5abe-catalog"
+  },
+  {
+    "Service": "gateway",
+    "Name": "lablend-t20-98c82cde5abe-gateway-1",
+    "State": "running",
+    "Health": "healthy",
+    "ExitCode": 0,
+    "Image": "lablend-t20-98c82cde5abe-gateway"
+  },
+  {
+    "Service": "identity",
+    "Name": "lablend-t20-98c82cde5abe-identity-1",
+    "State": "running",
+    "Health": "healthy",
+    "ExitCode": 0,
+    "Image": "lablend-t20-98c82cde5abe-identity"
+  },
+  {
+    "Service": "inventory",
+    "Name": "lablend-t20-98c82cde5abe-inventory-1",
+    "State": "running",
+    "Health": "healthy",
+    "ExitCode": 0,
+    "Image": "lablend-t20-98c82cde5abe-inventory"
+  },
+  {
+    "Service": "notification",
+    "Name": "lablend-t20-98c82cde5abe-notification-1",
+    "State": "running",
+    "Health": "healthy",
+    "ExitCode": 0,
+    "Image": "lablend-t20-98c82cde5abe-notification"
+  },
+  {
+    "Service": "postgres",
+    "Name": "lablend-t20-98c82cde5abe-postgres-1",
+    "State": "running",
+    "Health": "healthy",
+    "ExitCode": 0,
+    "Image": "postgres:16-alpine"
+  },
+  {
+    "Service": "redis",
+    "Name": "lablend-t20-98c82cde5abe-redis-1",
+    "State": "running",
+    "Health": "healthy",
+    "ExitCode": 0,
+    "Image": "redis:7.4-alpine"
+  },
+  {
+    "Service": "web",
+    "Name": "lablend-t20-98c82cde5abe-web-1",
+    "State": "running",
+    "Health": "healthy",
+    "ExitCode": 0,
+    "Image": "lablend-t20-98c82cde5abe-web"
+  }
+]

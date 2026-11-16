@@ -4,6 +4,8 @@ LabLend AI là nền tảng mượn/trả thiết bị phòng thí nghiệm cho 
 
 **Checkpoint hoàn thiện ngày 17/11/2026:** baseline `68933a1` đã merge M3 qua PR #14. Các thay đổi cuối được chia PR-A/PR-B/PR-C, không tự merge main. Xem [nghiệm thu cuối](docs/testing/FINAL_PRODUCT_ACCEPTANCE.md), [handover](docs/team/FINAL_COMPLETION_HANDOVER.md), [audit source](docs/testing/FINAL_SOURCE_AUDIT.md) và [kiến trúc C4/ERD/state machine hiện hành](docs/architecture/FINAL_ARCHITECTURE.md). Báo cáo ghi riêng PASS/FAIL/BLOCKED/NOT RUN/PROVISIONAL và không dùng số test từ checkpoint cũ để chứng nhận code mới.
 
+**Kết quả đã chạy:** 71 backend + 25 frontend PASS, 0 fail/skip; build production và browser desktop/mobile PASS; T20 từ clone mới PASS đủ 13 bước tại `ea868e4`, cùng nội dung runtime với checkpoint `430ff1b`. [JSON, CI và ảnh thực tế](docs/testing/evidence/FINAL_EVIDENCE.md). Nghiệm thu nộp bài vẫn PROVISIONAL do kiểm tra trực quan slide, diễn tập nhóm và phê duyệt OD còn chờ người phụ trách.
+
 Ba luồng chính: Student tìm/xem thiết bị → chọn số lượng → xem lại → tạo phiếu → timeline/thông báo; Staff duyệt/giữ thiết bị → bàn giao → xem lại và nhận trả từng phần; Staff quản lý loại thiết bị/physical assets → bảo trì → lịch sử trạng thái. Admin tìm toàn bộ tài khoản bằng bộ lọc server. Create Loan có khóa chống trùng phía server, token vẫn chỉ ở memory và refresh cookie HttpOnly.
 
 **Contract review:** OD-04/05 và retention vẫn PROVISIONAL; Inventory gRPC v1 còn gap reservation ID/historical condition/time. [Technical M3 review](docs/events/M3_CONTRACT_REVIEW.md) ghi bằng chứng tương thích, không thay chữ ký phê duyệt nhóm. M1 có transactional Outbox, real gRPC lifecycle/recovery và bốn scheduled jobs; nền tảng/evidence lịch sử: [Sprint 2 M1](docs/testing/SPRINT2_M1_ACCEPTANCE.md), [PR8](docs/testing/PR8_INTEGRATION_ACCEPTANCE.md), [Sprint 1](docs/testing/SPRINT1_ACCEPTANCE.md), [Sprint 0](docs/testing/SPRINT0_ACCEPTANCE.md). Các checkpoint cũ không chứng nhận đầy đủ P0 M3 hiện tại.
@@ -70,13 +72,13 @@ cd lablend-ai
 ./scripts/Initialize-Environment.ps1
 docker compose config --quiet
 ./scripts/Build-Images.ps1
-docker compose up -d --build --wait --wait-timeout 180
+./scripts/Start-Core.ps1  # đợi từng service healthy, phù hợp máy ít RAM
 docker compose ps
 ./scripts/Verify-Sprint0.ps1
 ./scripts/Verify-Sprint2.ps1  # current Borrowing endpoints/migrations, four job passes and readiness
 ```
 
-Script setup sinh `.env` với random credentials, **không in secrets và không ghi đè file đã tồn tại**. Không chỉ copy `.env.example` rồi để password rỗng. Compose core chạy mặc định: web, gateway, identity, catalog, inventory, borrowing, notification, worker, postgres, redis. Optional recommendation host: `docker compose --profile bonus up -d --build --wait`; host này chưa tích hợp AI và không nhận API key trong Sprint 0. Observability dashboard là **Planned**, chưa tạo profile giả. Core không phụ thuộc Gemini hoặc Internet khi đã tải image/package.
+Script setup sinh `.env` với random credentials, **không in secrets và không ghi đè file đã tồn tại**. Không chỉ copy `.env.example` rồi để password rỗng. Compose core chạy mặc định: web, gateway, identity, catalog, inventory, borrowing, notification, worker, postgres, redis. Optional recommendation host sau khi đã build bonus: `./scripts/Start-Core.ps1 -IncludeBonus`; host này chưa tích hợp AI và không nhận API key trong Sprint 0. Observability dashboard là **Planned**, chưa tạo profile giả. Core không phụ thuộc Gemini hoặc Internet khi đã tải image/package.
 
 | URL mặc định | Dùng để làm gì |
 |---|---|
@@ -101,9 +103,27 @@ Chỉ web và gateway publish cổng **loopback**; DB/Redis/API/gRPC nằm trong
 ./scripts/Test-CleanInstall.ps1 -Revision origin/feature/final-c-acceptance
 ```
 
-T20 clone source vào `.tmp/clean-install`, sinh `.env` mới, dùng project `lablend-t20-<random>`, ports/volumes riêng và build tuần tự. Harness chạy production web bằng Playwright, REST qua Gateway, PostgreSQL/Redis/gRPC thật, xác nhận state DB theo ownership, ba flow, nhắc hạn thực, reconnect/restart, phân quyền và mobile. Kết quả ở thư mục `*-evidence`: `t20-result.json`, `docker-e2e.json`, `containers.json` và ảnh. PASS chỉ khi mọi stage hoàn tất. Core integration/browser fixture là gate riêng, không thay T20. Nếu Docker chưa hoạt động, T20 dừng BLOCKED trước khi tạo dữ liệu.
+T20 clone source vào `.tmp/clean-install`, sinh `.env` mới, dùng project `lablend-t20-<random>`, ports/volumes riêng, build và khởi động tuần tự bằng Start-Core. PostgreSQL health dùng TCP để tránh server tạm trong bootstrap báo ready quá sớm. Harness chạy production web bằng Playwright, REST qua Gateway, PostgreSQL/Redis/gRPC thật, xác nhận state DB theo ownership, ba flow, nhắc hạn thực, reconnect/restart, phân quyền và mobile. Kết quả ở thư mục `*-evidence`: `t20-result.json`, `docker-e2e.json`, `containers.json` và ảnh. PASS chỉ khi mọi stage hoàn tất. Core integration/browser fixture là gate riêng, không thay T20. Nếu Docker chưa hoạt động, T20 dừng BLOCKED trước khi tạo dữ liệu.
 
 Mặc định chỉ dừng container/network do T20 sở hữu khi kết thúc, giữ toàn bộ volumes. `-KeepRunning` giữ fixture để đọc evidence. Không xóa shared database/volumes hoặc reset Docker/WSL. Không chạy integration tests và image build nặng cùng lúc trên máy ít RAM.
+
+Với database mới chưa có admin, có thể bootstrap một lần bằng local override. Nếu đã có admin, dùng tài khoản hiện có; bootstrap không đổi password hay nâng quyền người dùng cũ. Không commit credentials cục bộ. Start-Core, preflight, T20 và demo cần PowerShell 7.
+
+```powershell
+$env:LABLEND_DEMO_ADMIN_PASSWORD = Read-Host 'New local admin password (12+ characters)' -MaskInput
+New-Item -ItemType Directory -Force .tmp | Out-Null
+@'
+services:
+  identity:
+    environment:
+      Bootstrap__Enabled: "true"
+      Bootstrap__AdminEmail: "admin@demo.test"
+      Bootstrap__AdminPassword: "${LABLEND_DEMO_ADMIN_PASSWORD:?local admin password required}"
+'@ | Set-Content .tmp/bootstrap-demo.compose.yml
+docker compose -f docker-compose.yml -f .tmp/bootstrap-demo.compose.yml up -d --no-build --wait identity
+# Tắt bootstrap sau khi admin đầu tiên đã được tạo.
+docker compose up -d --no-build --wait identity
+```
 
 Dữ liệu diễn tập dùng lại qua API thật:
 
@@ -230,5 +250,7 @@ Trước khi main có Sprint 0, checkout branch bootstrap rồi tạo feature br
 - Readiness 503: xem `docker compose ps` và log service; readiness không biến dependency lỗi thành HTTP 200.
 - Build lần đầu chậm: tải image/NuGet/npm cần Internet. `Build-Images.ps1` build tuần tự và dùng chung restore cache, phù hợp Docker VM ít RAM; lệnh up --build sau đó dùng cache.
 - Sau clone Windows, shell init cần LF: `.gitattributes` đã ép `*.sh` về LF.
+
+Chẩn đoán startup 139: [bằng chứng PostgreSQL bootstrap/health race và correction](docs/testing/FINAL_DOCKER_DIAGNOSIS.md). Không suy luận OOM từ exit code hoặc xóa volumes để xử lý.
 
 Không có hosting, domain, managed DB/Redis hoặc API trả phí. Gemini chưa được tích hợp; lúc triển khai bonus chỉ dùng Free Tier đủ điều kiện và không bật billing. Trạng thái **Implemented / Scaffolded / Planned / Blocked** phải được cập nhật theo bằng chứng thật, không theo số lượng project.
