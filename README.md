@@ -2,7 +2,9 @@
 
 LabLend AI là nền tảng mượn/trả thiết bị phòng thí nghiệm cho đại học, phục vụ **STUDENT**, **LAB_STAFF** và **ADMIN**. Sinh viên tra cứu và yêu cầu mượn; staff duyệt, bàn giao, nhận trả và bảo trì; admin quản lý tài khoản và quyền. Đây là PRN232 Final Assignment theo [đề chính thức](docs/requirements/PRN232%20-%20Final%20Assignment.pdf) và [Master Plan V4](PRN232_LabLend_AI_Master_Implementation_Plan_V4.docx).
 
-**Trạng thái: nền tảng Sprint 0.** Host, routing, cấu hình và healthcheck không đồng nghĩa CRUD, giữ kho, messaging hoặc overdue job đã hoàn thành. Kết quả kiểm chứng thực tế nằm trong [SPRINT0_ACCEPTANCE](docs/testing/SPRINT0_ACCEPTANCE.md).
+**Trạng thái: Sprint 1 Member 1.** Identity/JWT/refresh/profile/admin và Borrowing Core đã có code, migrations, automated tests. Tạo loan với Catalog thật còn BLOCKED vì Catalog backend trong main vẫn là skeleton. Approval/gRPC allocation, luồng Redis đầy đủ, worker overdue và UI loan hoàn chỉnh vẫn Planned. Bằng chứng: [SPRINT1_ACCEPTANCE](docs/testing/SPRINT1_ACCEPTANCE.md); nền tảng trước đó: [SPRINT0_ACCEPTANCE](docs/testing/SPRINT0_ACCEPTANCE.md).
+
+**Tích hợp M1/M3 ngày 16/11/2026:** frontend routing/auth, staff UI và Notification của M3 đã được ghép với Identity/Borrowing. Auth client đã khớp cookie/CSRF, roles[] và confirmPassword; access token ở memory, refresh được serialize. [Báo cáo tích hợp và kiểm thử](docs/team/M1_M3_INTEGRATION.md). Catalog/Inventory backend ở nhánh M2 chưa thuộc lần merge này; consumer Redis của M3 vẫn dùng contract proposal, chưa có Borrowing producer.
 
 ## Bắt đầu đọc từ đâu
 
@@ -79,7 +81,7 @@ Script setup sinh `.env` với random credentials, **không in secrets và khôn
 |---|---|
 | http://localhost:3000 | Frontend khởi đầu, nút kiểm tra Gateway thật |
 | http://localhost:5080/health/live | Gateway process health |
-| http://localhost:5080/swagger | Gateway OpenAPI UI; business APIs chưa tồn tại |
+| http://localhost:5080/swagger | Gateway OpenAPI UI; xem schema từng service qua platform endpoints |
 | http://localhost:5080/platform/catalog/health/ready | Gateway → Catalog → PostgreSQL SELECT 1 |
 | http://localhost:5080/platform/inventory/health/ready | Inventory REST readiness |
 | http://localhost:5080/platform/notification/health/ready | Notification → PostgreSQL + Redis PING |
@@ -136,13 +138,36 @@ Mở http://localhost:5173. Member 3 tiếp quản frontend shell, routing/auth/
 | `POSTGRES_ADMIN_PASSWORD` | Chỉ container PostgreSQL/init dùng |
 | `IDENTITY_DB_PASSWORD` … `RECOMMENDATION_DB_PASSWORD` | Mỗi service chỉ nhận password DB của mình |
 | `REDIS_PASSWORD` | Redis auth và các host cần Redis |
-| `JWT_SIGNING_KEY` | Random tối thiểu 32 byte; Sprint 0 có validation, Sprint 1 mới phát token |
+| `JWT_SIGNING_KEY` | Random tối thiểu 32 byte; Identity phát JWT và Gateway/REST validate cùng issuer/audience/key |
 | `INVENTORY_SERVICE_TOKEN` | Reserved cho gRPC service authorization Sprint sau, chưa áp vào business RPC |
 | `GEMINI_ENABLED`, `GEMINI_API_KEY`, `GEMINI_MODEL` | Dành cho bonus tương lai; hiện disabled, không truyền key vào container |
 | `GATEWAY_PORT`, `WEB_PORT` | Publish loopback, mặc định 5080/3000 |
 | `POSTGRES_DEV_PORT`, `REDIS_DEV_PORT` | Chỉ file Compose dev dùng, mặc định 55432/56379 |
 
-Database/users, migration commands, init/reapply và reset có chủ đích: [DATABASE_CONVENTIONS](docs/architecture/DATABASE_CONVENTIONS.md). Sprint 0 chưa có model/migrations/seed nghiệp vụ. `docker compose down` giữ volumes. **Không chạy `down -v` nếu chưa chủ động chấp nhận mất dữ liệu development.** Setup/init không tự xóa volume.
+Database/users, migration commands, init/reapply: [DATABASE_CONVENTIONS](docs/architecture/DATABASE_CONVENTIONS.md). Identity/Borrowing Development startup áp dụng migrations thật; production mặc định tắt auto-migrate. Các service khác chưa có model/migrations nghiệp vụ. `docker compose down` giữ volumes. **Không chạy `down -v` nếu chưa chủ động chấp nhận mất dữ liệu development.** Setup/init không tự xóa volume.
+
+## Sprint 1 Identity and Borrowing
+
+Branch `feature/m1-identity-jwt` được tạo từ foundation 3431927 vì main local vẫn chưa có Sprint 0. Chưa push/merge. [Identity contract](docs/api/IDENTITY_API_CONTRACT.md) và [Borrowing contract](docs/api/BORROWING_API_CONTRACT.md) là tài liệu tích hợp hiện hành; [handover](docs/team/SPRINT1_HANDOVER.md) ghi rõ ranh giới M2/M3.
+
+Register/login qua Gateway; mọi POST `/api/auth/*` cần Origin localhost:5173 hoặc localhost:3000 và `X-LabLend-CSRF: 1`. React dùng credentials include, access JWT 10 phút trong memory và refresh HttpOnly cookie 7 ngày; serialize refresh. Local HTTP dùng Development cookie Secure=false, môi trường HTTPS phải bật Secure. Logout thu hồi refresh family; JWT ở service khác vẫn có thể dùng tới expiry + 30 giây skew. Không lưu refresh vào localStorage.
+
+Admin đầu tiên: chỉ Development, truyền `Bootstrap__Enabled=true`, `Bootstrap__AdminEmail`, `Bootstrap__AdminPassword` qua môi trường local rồi khởi động Identity; không có mật khẩu mặc định hay endpoint tạo ADMIN public. Seed không reset/promote user tồn tại. Compose có thể nhận bootstrap tạm thời qua một local override không commit; không đặt credentials vào source. Tắt bootstrap sau lần đầu.
+
+Borrowing chỉ hỗ trợ POST /api/loans, GET /api/loans/my, GET /api/loans/{id}, Staff/Admin GET /api/loans, POST /{id}/cancel và /reject. Due date >now và <=30 ngày; 1–20 items, mỗi item 1 unit. Runtime gọi Catalog thật để xác thực id/isActive, không có fallback cho ID giả. M2 cần cung cấp GET /api/equipment-types/{id}; tests dùng Catalog double có đánh dấu rõ, không thay chứng cứ Catalog thật.
+
+Chạy tất cả tests với PostgreSQL disposable, tách khỏi .env/volumes nhóm (Docker Desktop phải hoạt động):
+
+```powershell
+$env:LABLEND_POSTGRES_TESTS = '1'
+dotnet restore LabLendAI.sln
+dotnet build LabLendAI.sln -c Release
+dotnet test LabLendAI.sln -c Release --no-build --no-restore
+```
+
+Không đặt flag thì PostgreSQL suites báo SKIPPED; đó không phải bằng chứng PASS. Fixture tự tạo project Compose test tên ngẫu nhiên, password tạm thời, identity_db/borrowing_db và DB roles riêng, rồi xóa đúng container test; không nhận connection string thật của nhóm. YARP integration chạy Identity/Borrowing Kestrel thật + Catalog HTTP test double. Hosted CI bật flag; chưa tuyên bố hosted run mới đã PASS khi chưa push.
+
+Runtime verification sau khi Compose đã chạy: `./scripts/Verify-Sprint1.ps1` (thêm `-IncludeBonus` khi Recommendation host đang chạy). Script chỉ đọc readiness/OpenAPI/authorization/migration metadata và kiểm tra isolation; không tạo test user/loan trong database nhóm. Kết quả phiên này: 30 automated tests PASS, Release build 0 warnings/errors, 11 containers healthy; hai migration thật đã áp dụng. [Evidence và giới hạn Catalog](docs/testing/SPRINT1_ACCEPTANCE.md).
 
 ## Team responsibilities
 

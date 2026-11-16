@@ -1,0 +1,14 @@
+ lablend-ai-postgres-1 Copying infrastructure/database/verify-isolation.sh to lablend-ai-postgres-1:/tmp/lablend-verify-isolation.sh
+ lablend-ai-postgres-1 Copied infrastructure/database/verify-isolation.sh to lablend-ai-postgres-1:/tmp/lablend-verify-isolation.sh
+PASS: identity authenticates to own database and cannot connect to other five databases.
+PASS: catalog authenticates to own database and cannot connect to other five databases.
+PASS: inventory authenticates to own database and cannot connect to other five databases.
+PASS: borrowing authenticates to own database and cannot connect to other five databases.
+PASS: notification authenticates to own database and cannot connect to other five databases.
+PASS: recommendation authenticates to own database and cannot connect to other five databases.
+PASS: all 20 Identity/Borrowing operations are present in actual OpenAPI through Gateway.
+PASS: anonymous GET /api/auth/me through running Compose Gateway returns 401.
+PASS: anonymous GET /api/loans/my through running Compose Gateway returns 401.
+PASS: identity_db has applied migration 20261115162335_InitialIdentity (read using identity_user).
+PASS: borrowing_db has applied migration 20261115163138_InitialBorrowing (read using borrowing_user).
+PASS: Sprint 1 runtime checks. Actual Catalog business integration remains pending Member 2.

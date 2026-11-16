@@ -1,0 +1,49 @@
+  Passed LabLend.Platform.UnitTests.LoanRulesTests.Submission_enforces_due_window_and_item_count(days: 0, count: 1) [13 ms]
+  Passed LabLend.Platform.UnitTests.CorrelationIdTests.Unsafe_header_is_replaced_with_safe_generated_id(input: null) [11 ms]
+  Passed LabLend.Platform.UnitTests.CorrelationIdTests.Unsafe_header_is_replaced_with_safe_generated_id(input: "") [< 1 ms]
+  Passed LabLend.Platform.UnitTests.LoanRulesTests.Submission_enforces_due_window_and_item_count(days: 1, count: 21) [< 1 ms]
+  Passed LabLend.Platform.UnitTests.LoanRulesTests.Submission_enforces_due_window_and_item_count(days: 31, count: 1) [< 1 ms]
+  Passed LabLend.Platform.UnitTests.LoanRulesTests.Submission_enforces_due_window_and_item_count(days: -1, count: 1) [< 1 ms]
+  Passed LabLend.Platform.UnitTests.CorrelationIdTests.Unsafe_header_is_replaced_with_safe_generated_id(input: "nonascii-đ") [< 1 ms]
+  Passed LabLend.Platform.UnitTests.CorrelationIdTests.Unsafe_header_is_replaced_with_safe_generated_id(input: "bad\r\nInjected: true") [< 1 ms]
+  Passed LabLend.Platform.UnitTests.CorrelationIdTests.Unsafe_header_is_replaced_with_safe_generated_id(input: "contains space") [< 1 ms]
+  Passed LabLend.Platform.UnitTests.LoanRulesTests.Submission_enforces_due_window_and_item_count(days: 1, count: 0) [< 1 ms]
+  Passed LabLend.Platform.UnitTests.CorrelationIdTests.Header_length_is_bounded_but_valid_ids_are_preserved [8 ms]
+  Passed LabLend.Platform.UnitTests.LoanRulesTests.One_item_represents_one_unit_including_repeated_equipment_types [30 ms]
+Test Run Successful.
+Total tests: 12
+     Passed: 12
+ Total time: 1.7786 Seconds
+  Passed LabLend.Platform.IntegrationTests.JwtSecurityTests.Gateway_rejects_invalid_JWT_before_proxying(defect: "audience") [1 s]
+  Passed LabLend.Platform.IntegrationTests.GatewayTests.Live_health_preserves_safe_correlation_id [1 s]
+  Passed LabLend.Platform.IntegrationTests.GatewayTests.Protected_loan_route_rejects_anonymous_request_before_proxying [21 ms]
+  Passed LabLend.Platform.IntegrationTests.JwtSecurityTests.Gateway_rejects_invalid_JWT_before_proxying(defect: "issuer") [26 ms]
+  Passed LabLend.Platform.IntegrationTests.GatewayTests.Cors_only_allows_configured_react_origin(origin: "http://localhost:5173", allowed: True) [33 ms]
+  Passed LabLend.Platform.IntegrationTests.JwtSecurityTests.Gateway_rejects_invalid_JWT_before_proxying(defect: "subject") [39 ms]
+  Passed LabLend.Platform.IntegrationTests.GatewayTests.Cors_only_allows_configured_react_origin(origin: "https://untrusted.example", allowed: False) [20 ms]
+  Passed LabLend.Platform.IntegrationTests.JwtSecurityTests.Gateway_rejects_invalid_JWT_before_proxying(defect: "signature") [18 ms]
+  Passed LabLend.Platform.IntegrationTests.GatewayTests.Unknown_route_returns_problem_details_with_correlation_id [29 ms]
+  Passed LabLend.Platform.IntegrationTests.JwtSecurityTests.Gateway_rejects_invalid_JWT_before_proxying(defect: "expired") [17 ms]
+Test Run Successful.
+Total tests: 10
+     Passed: 10
+ Total time: 3.2726 Seconds
+  Passed LabLend.Sprint1.IntegrationTests.SchemaTests.Migrations_are_repeatable_unique_email_is_enforced_and_database_accounts_are_isolated [6 s]
+  Passed LabLend.Sprint1.IntegrationTests.IdentityTests.T02_Admin_RBAC_deactivation_last_admin_and_CSRF [2 s]
+  Passed LabLend.Sprint1.IntegrationTests.IdentityTests.T01_Register_Login_Profile_Password_and_lockout_use_real_identity_store [2 s]
+  Passed LabLend.Sprint1.IntegrationTests.IdentityTests.T22_Rotation_replay_concurrent_refresh_expiration_logout_and_hash_storage [1 s]
+  Passed LabLend.Sprint1.IntegrationTests.GatewayFlowTests.YARP_register_login_me_admin_denial_and_cross_student_loan_access_with_real_hosts [27 s]
+  Passed LabLend.Sprint1.IntegrationTests.BorrowingTests.T03_T05_Real_Student_JWT_create_list_ownership_cancel_and_staff_reject [7 s]
+  Passed LabLend.Sprint1.IntegrationTests.BorrowingTests.Invalid_inputs_Catalog_failure_and_real_DB_constraints_do_not_leave_partial_loans [3 s]
+  Passed LabLend.Sprint1.IntegrationTests.BorrowingTests.Concurrent_reject_and_cancel_commit_only_one_terminal_history [3 s]
+Test Run Successful.
+Total tests: 8
+     Passed: 8
+ Total time: 1.4264 Minutes
+
+Final targeted T02 security check with matching passwords and forbidden ADMIN field (exit 0):
+  Passed LabLend.Sprint1.IntegrationTests.IdentityTests.T02_Admin_RBAC_deactivation_last_admin_and_CSRF [9 s]
+Test Run Successful.
+Total tests: 1
+     Passed: 1
+ Total time: 36.7150 Seconds

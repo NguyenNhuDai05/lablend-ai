@@ -1,4 +1,4 @@
-export const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL ?? '').replace(/\/$/, '');
+export const apiBaseUrl = (import.meta.env?.VITE_API_BASE_URL ?? '').replace(/\/$/, '');
 
 export type ProblemDetails = {
   status?: number;
@@ -24,31 +24,55 @@ export class ApiError extends Error {
 
 let accessTokenProvider: () => string | null = () => null;
 let unauthorizedHandler: () => void = () => undefined;
+let refreshHandler: (() => Promise<void>) | undefined;
+let pendingRefresh: Promise<void> | null = null;
+let sessionVersionProvider: () => number = () => 0;
+const cookieCommands = new Set(['/api/auth/login', '/api/auth/register', '/api/auth/refresh', '/api/auth/logout']);
 
 export function configureApiClient(options: {
   getAccessToken: () => string | null;
   onUnauthorized: () => void;
+  refreshAccessToken?: () => Promise<void>;
+  getSessionVersion?: () => number;
 }) {
   accessTokenProvider = options.getAccessToken;
   unauthorizedHandler = options.onUnauthorized;
+  refreshHandler = options.refreshAccessToken;
+  sessionVersionProvider = options.getSessionVersion ?? (() => 0);
 }
 
-export async function apiRequest<T>(path: string, init: RequestInit = {}): Promise<T> {
+export async function apiRequest<T>(path: string, init: RequestInit = {}, retry = true): Promise<T> {
   const headers = new Headers(init.headers);
   const token = accessTokenProvider();
-  if (token) headers.set('Authorization', `Bearer ${token}`);
+  const version = sessionVersionProvider();
+  if (token && !cookieCommands.has(path)) headers.set('Authorization', `Bearer ${token}`);
+  if (cookieCommands.has(path) && init.method?.toUpperCase() === 'POST') headers.set('X-LabLend-CSRF', '1');
   if (init.body && !(init.body instanceof FormData)) headers.set('Content-Type', 'application/json');
   headers.set('Accept', 'application/json');
   headers.set('X-Correlation-ID', crypto.randomUUID());
 
   const controller = new AbortController();
-  const timeout = window.setTimeout(() => controller.abort(), 10_000);
+  const timeout = globalThis.setTimeout(() => controller.abort(), 10_000);
   const abort = () => controller.abort();
   init.signal?.addEventListener('abort', abort, { once: true });
 
   try {
-    const response = await fetch(`${apiBaseUrl}${path}`, { ...init, headers, signal: controller.signal });
-    if (response.status === 401) unauthorizedHandler();
+    if (init.signal?.aborted) controller.abort();
+    const response = await fetch(`${apiBaseUrl}${path}`, { ...init, credentials: 'include', headers, signal: controller.signal });
+    if (!cookieCommands.has(path) && version !== sessionVersionProvider()) {
+      throw new ApiError('Phiên đăng nhập đã thay đổi. Vui lòng thực hiện lại yêu cầu.', 0, 'SESSION_CHANGED');
+    }
+    if (response.status === 401 && !cookieCommands.has(path)) {
+      if (retry && refreshHandler) {
+        // A late response for the previous JWT can use the token another request already renewed.
+        if (!accessTokenProvider() || accessTokenProvider() === token) {
+          pendingRefresh ??= Promise.resolve().then(refreshHandler).finally(() => { pendingRefresh = null; });
+          try { await pendingRefresh; } catch (error) { unauthorizedHandler(); throw error; }
+        }
+        return await apiRequest<T>(path, init, false);
+      }
+      unauthorizedHandler();
+    }
     if (!response.ok) throw await toApiError(response);
     if (response.status === 204) return undefined as T;
     return await response.json() as T;
@@ -57,7 +81,7 @@ export async function apiRequest<T>(path: string, init: RequestInit = {}): Promi
     if (controller.signal.aborted) throw new ApiError('Yêu cầu đã hết thời gian chờ.', 0, 'REQUEST_TIMEOUT');
     throw new ApiError('Không thể kết nối dịch vụ. Vui lòng thử lại.', 0, 'NETWORK_ERROR');
   } finally {
-    window.clearTimeout(timeout);
+    globalThis.clearTimeout(timeout);
     init.signal?.removeEventListener('abort', abort);
   }
 }

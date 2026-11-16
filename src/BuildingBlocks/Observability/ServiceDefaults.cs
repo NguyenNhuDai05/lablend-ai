@@ -19,7 +19,8 @@ public static class ServiceDefaults
     {
         builder.Services.AddOptions<JwtSettings>().BindConfiguration("Jwt")
             .Validate(settings => !string.IsNullOrWhiteSpace(settings.SigningKey)
-                && Encoding.UTF8.GetByteCount(settings.SigningKey) >= 32,
+                && Encoding.UTF8.GetByteCount(settings.SigningKey) >= 32
+                && !string.IsNullOrWhiteSpace(settings.Issuer) && !string.IsNullOrWhiteSpace(settings.Audience),
                 "Jwt__SigningKey must be at least 32 bytes. Run scripts/Initialize-Environment.ps1.")
             .ValidateOnStart();
         builder.Logging.ClearProviders();
@@ -30,13 +31,13 @@ public static class ServiceDefaults
             context.ProblemDetails.Extensions["code"] = context.ProblemDetails.Status switch
             {
                 400 => "VALIDATION_ERROR", 401 => "UNAUTHENTICATED", 403 => "FORBIDDEN",
-                404 => "NOT_FOUND", 409 => "CONFLICT", 429 => "RATE_LIMITED", _ => "HTTP_ERROR"
+                404 => "NOT_FOUND", 409 => "CONFLICT", 429 => "RATE_LIMITED", 503 => "SERVICE_UNAVAILABLE", _ => "HTTP_ERROR"
             };
             if (context.ProblemDetails.Status >= 500)
             {
                 context.ProblemDetails.Title = "The service could not complete the request.";
                 context.ProblemDetails.Detail = null;
-                context.ProblemDetails.Extensions["code"] = "SERVICE_ERROR";
+                context.ProblemDetails.Extensions["code"] = context.ProblemDetails.Status == 503 ? "SERVICE_UNAVAILABLE" : "SERVICE_ERROR";
             }
         });
         builder.Services.AddControllers().ConfigureApiBehaviorOptions(options =>
@@ -57,11 +58,11 @@ public static class ServiceDefaults
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen(options =>
         {
-            options.SwaggerDoc("v1", new OpenApiInfo { Title = $"LabLend {service} / Sprint 0", Version = "v1" });
+            options.SwaggerDoc("v1", new OpenApiInfo { Title = $"LabLend {service}", Version = "v1" });
             options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
             {
                 Type = SecuritySchemeType.Http, Scheme = "bearer", BearerFormat = "JWT",
-                Description = "JWT validation is wired; login/issuance is planned for Sprint 1."
+                Description = "Use the access token issued by POST /api/auth/login."
             });
         });
         builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
@@ -69,6 +70,15 @@ public static class ServiceDefaults
             var signingKey = builder.Configuration["Jwt:SigningKey"]!;
             options.MapInboundClaims = false;
             options.IncludeErrorDetails = false;
+            options.Events = new JwtBearerEvents
+            {
+                OnTokenValidated = context =>
+                {
+                    if (!Guid.TryParse(context.Principal?.FindFirst("sub")?.Value, out var id) || id == Guid.Empty)
+                        context.Fail("A user UUID subject is required.");
+                    return Task.CompletedTask;
+                }
+            };
             options.TokenValidationParameters = new TokenValidationParameters
             {
                 ValidateIssuer = true, ValidateAudience = true, ValidateLifetime = true,

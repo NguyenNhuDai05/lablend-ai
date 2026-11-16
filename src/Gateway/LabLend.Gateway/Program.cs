@@ -8,7 +8,8 @@ if (origins.Length == 0 || origins.Contains("*"))
     throw new InvalidOperationException("Configure explicit Cors:AllowedOrigins; wildcard origins are not allowed.");
 builder.Services.AddCors(options => options.AddPolicy("web", policy => policy.WithOrigins(origins)
     .WithMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
-    .WithHeaders("Authorization", "Content-Type", "X-Correlation-ID", "Idempotency-Key")
+    .WithHeaders("Authorization", "Content-Type", "X-Correlation-ID", "Idempotency-Key", "X-LabLend-CSRF")
+    .AllowCredentials()
     .WithExposedHeaders("X-Correlation-ID")));
 builder.Services.AddReverseProxy().LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"));
 builder.Services.AddRateLimiter(options =>

@@ -1,0 +1,7 @@
+  LabLend.Platform.IntegrationTests -> D:\PRN232\Assigment\lablend-ai\tests\Integration\LabLend.Platform.IntegrationTests\bin\Release\net8.0\LabLend.Platform.IntegrationTests.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:18.89
