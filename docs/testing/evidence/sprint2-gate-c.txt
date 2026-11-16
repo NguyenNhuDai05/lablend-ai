@@ -1,0 +1,41 @@
+  Identity.Domain -> D:\PRN232\Assigment\lablend-ai\src\Services\Identity\Identity.Domain\bin\Debug\net8.0\Identity.Domain.dll
+  Contracts -> D:\PRN232\Assigment\lablend-ai\src\BuildingBlocks\Contracts\bin\Debug\net8.0\Contracts.dll
+  Identity.Application -> D:\PRN232\Assigment\lablend-ai\src\Services\Identity\Identity.Application\bin\Debug\net8.0\Identity.Application.dll
+  Identity.Infrastructure -> D:\PRN232\Assigment\lablend-ai\src\Services\Identity\Identity.Infrastructure\bin\Debug\net8.0\Identity.Infrastructure.dll
+  Observability -> D:\PRN232\Assigment\lablend-ai\src\BuildingBlocks\Observability\bin\Debug\net8.0\Observability.dll
+  Identity.Api -> D:\PRN232\Assigment\lablend-ai\src\Services\Identity\Identity.Api\bin\Debug\net8.0\Identity.Api.dll
+  Borrowing.Domain -> D:\PRN232\Assigment\lablend-ai\src\Services\Borrowing\Borrowing.Domain\bin\Debug\net8.0\Borrowing.Domain.dll
+  Borrowing.Application -> D:\PRN232\Assigment\lablend-ai\src\Services\Borrowing\Borrowing.Application\bin\Debug\net8.0\Borrowing.Application.dll
+  Borrowing.Infrastructure -> D:\PRN232\Assigment\lablend-ai\src\Services\Borrowing\Borrowing.Infrastructure\bin\Debug\net8.0\Borrowing.Infrastructure.dll
+  Borrowing.Api -> D:\PRN232\Assigment\lablend-ai\src\Services\Borrowing\Borrowing.Api\bin\Debug\net8.0\Borrowing.Api.dll
+  Catalog.Domain -> D:\PRN232\Assigment\lablend-ai\src\Services\Catalog\Catalog.Domain\bin\Debug\net8.0\Catalog.Domain.dll
+  Catalog.Application -> D:\PRN232\Assigment\lablend-ai\src\Services\Catalog\Catalog.Application\bin\Debug\net8.0\Catalog.Application.dll
+  Catalog.Infrastructure -> D:\PRN232\Assigment\lablend-ai\src\Services\Catalog\Catalog.Infrastructure\bin\Debug\net8.0\Catalog.Infrastructure.dll
+  Catalog.Api -> D:\PRN232\Assigment\lablend-ai\src\Services\Catalog\Catalog.Api\bin\Debug\net8.0\Catalog.Api.dll
+  Inventory.Domain -> D:\PRN232\Assigment\lablend-ai\src\Services\Inventory\Inventory.Domain\bin\Debug\net8.0\Inventory.Domain.dll
+  Inventory.Application -> D:\PRN232\Assigment\lablend-ai\src\Services\Inventory\Inventory.Application\bin\Debug\net8.0\Inventory.Application.dll
+  Inventory.Infrastructure -> D:\PRN232\Assigment\lablend-ai\src\Services\Inventory\Inventory.Infrastructure\bin\Debug\net8.0\Inventory.Infrastructure.dll
+  Inventory.Host -> D:\PRN232\Assigment\lablend-ai\src\Services\Inventory\Inventory.Host\bin\Debug\net8.0\Inventory.Host.dll
+  Notification.Domain -> D:\PRN232\Assigment\lablend-ai\src\Services\Notification\Notification.Domain\bin\Debug\net8.0\Notification.Domain.dll
+  Notification.Application -> D:\PRN232\Assigment\lablend-ai\src\Services\Notification\Notification.Application\bin\Debug\net8.0\Notification.Application.dll
+  Notification.Infrastructure -> D:\PRN232\Assigment\lablend-ai\src\Services\Notification\Notification.Infrastructure\bin\Debug\net8.0\Notification.Infrastructure.dll
+  Notification.Api -> D:\PRN232\Assigment\lablend-ai\src\Services\Notification\Notification.Api\bin\Debug\net8.0\Notification.Api.dll
+  LabLend.Gateway -> D:\PRN232\Assigment\lablend-ai\src\Gateway\LabLend.Gateway\bin\Debug\net8.0\LabLend.Gateway.dll
+  LabLend.Sprint1.IntegrationTests -> D:\PRN232\Assigment\lablend-ai\tests\Integration\LabLend.Sprint1.IntegrationTests\bin\Debug\net8.0\LabLend.Sprint1.IntegrationTests.dll
+Test run for D:\PRN232\Assigment\lablend-ai\tests\Integration\LabLend.Sprint1.IntegrationTests\bin\Debug\net8.0\LabLend.Sprint1.IntegrationTests.dll (.NETCoreApp,Version=v8.0)
+VSTest version 17.11.1 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.4+50e68bbb8b (64-bit .NET 8.0.29)
+[xUnit.net 00:00:00.39]   Discovering: LabLend.Sprint1.IntegrationTests
+[xUnit.net 00:00:00.51]   Discovered:  LabLend.Sprint1.IntegrationTests
+[xUnit.net 00:00:00.59]   Starting:    LabLend.Sprint1.IntegrationTests
+  Passed LabLend.Sprint1.IntegrationTests.Sprint2MessagingTests.GateC_real_Redis_down_outbox_concurrent_publish_consumer_REST_duplicate_and_pending_replay [40 s]
+  Passed LabLend.Sprint1.IntegrationTests.Sprint2MessagingTests.Outbox_failure_rolls_back_the_entire_real_PostgreSQL_business_transaction [376 ms]
+[xUnit.net 00:00:58.32]   Finished:    LabLend.Sprint1.IntegrationTests
+
+Test Run Successful.
+Total tests: 2
+     Passed: 2
+ Total time: 59.1871 Seconds

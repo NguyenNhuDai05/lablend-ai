@@ -24,10 +24,12 @@ Existing shared stack: eleven healthy containers. Docker memory allocation 3,015
 |---|---|---|
 | A: lifecycle | TESTED / PASS | [Gate A execution](evidence/sprint2-gate-a.txt): one comprehensive real-service test, 47 s; real JWT, Catalog REST, Borrowing REST, Inventory HTTP/2, PostgreSQL. T06/07/08/10/11. First attempt exposed missing Origin in test client, fixed; production auth unchanged. |
 | B: failure recovery | TESTED / PASS | [Gate B](evidence/sprint2-gate-b.txt), 46 s: real reserve/handover/return replies dropped after commit; test-owned Borrowing process killed during local approval commit; same allocation restored; failed local commit compensated; pickup expiry; no release after handover; bad service token; bounded retry to manual review. Initial test cleanup pause was too long and was corrected before the passing run. |
-| C: Streams | PLANNED | Existing M3 consumer unchanged |
+| C: Streams | TESTED / PASS | [Gate C](evidence/sprint2-gate-c.txt): 2 tests, real Redis outage/reconnect, atomic PostgreSQL rollback, concurrent XADD, actual M3 consumer/Notification REST, duplicate EventId and staged post-inbox/pre-XACK recovery with real XAUTOCLAIM. Initial fixture failure traced to Docker changing an ephemeral port on restart; [diagnostic](evidence/sprint2-redis-port-diagnostic.txt), stable private port fixed it. |
 | D: scheduled jobs | PLANNED | Foundation heartbeat still retained until real jobs pass |
 | E: complete E2E / regression / Docker | PLANNED | No acceptance claimed from existing healthy baseline |
 
 No mock response is evidence of E2E acceptance. IMPLEMENTED describes source only; TESTED/PASS requires execution evidence.
 
 Lifecycle PR: [#10](https://github.com/NguyenNhuDai05/lablend-ai/pull/10), commit `5d23245428d22b0f7533adc87d859f9f86898820`. Hosted [CI](https://github.com/NguyenNhuDai05/lablend-ai/actions/runs/43821389658) completed successfully for that exact commit (build, full backend suites with real PostgreSQL, frontend build/tests, Compose validation). No merge performed.
+
+Recovery PR: [#11](https://github.com/NguyenNhuDai05/lablend-ai/pull/11), stacked on #10, commit `315777aede72cae6a82ea860feb89090536dbb3d`. Hosted [CI](https://github.com/NguyenNhuDai05/lablend-ai/actions/runs/43822285722) completed successfully for that exact commit. No merge performed.

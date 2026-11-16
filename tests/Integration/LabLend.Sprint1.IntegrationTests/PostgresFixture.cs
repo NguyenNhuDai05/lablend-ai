@@ -21,11 +21,14 @@ public sealed class PostgresFixture : IAsyncLifetime
 {
     private readonly string project = "lablend-s1-test-" + Guid.NewGuid().ToString("N");
     private readonly string password = Convert.ToHexString(RandomNumberGenerator.GetBytes(32));
+    private readonly int redisPort = FreePort();
     private string? root;
     public string IdentityConnection { get; private set; } = "";
     public string BorrowingConnection { get; private set; } = "";
     public string CatalogConnection { get; private set; } = "";
     public string InventoryConnection { get; private set; } = "";
+    public string NotificationConnection { get; private set; } = "";
+    public string RedisConnection { get; private set; } = "";
     public string SigningKey { get; } = Convert.ToHexString(RandomNumberGenerator.GetBytes(32));
     public string AdminPassword { get; } = "Aa1!" + Convert.ToHexString(RandomNumberGenerator.GetBytes(24));
     public async Task InitializeAsync()
@@ -38,11 +41,13 @@ public sealed class PostgresFixture : IAsyncLifetime
         {
             await Docker("up", "-d", "--wait", "--wait-timeout", "90");
             var address = (await Docker("port", "postgres", "5432")).Trim();
+            var redisAddress = (await Docker("port", "redis", "6379")).Trim();
+            RedisConnection = $"{redisAddress},password={password},abortConnect=false";
             var admin = new NpgsqlConnectionStringBuilder { Host = "127.0.0.1", Port = int.Parse(address.Split(':').Last()),
                 Database = "postgres", Username = "postgres", Password = password, IncludeErrorDetail = false };
             await using var connection = new NpgsqlConnection(admin.ConnectionString);
             await connection.OpenAsync();
-            foreach (var service in new[] { "identity", "borrowing", "catalog", "inventory" })
+            foreach (var service in new[] { "identity", "borrowing", "catalog", "inventory", "notification" })
             {
                 await using var setup = connection.CreateCommand();
                 // Test-generated hex password only. No user input or existing DB is accepted by this fixture.
@@ -60,11 +65,14 @@ public sealed class PostgresFixture : IAsyncLifetime
                     case "borrowing": BorrowingConnection = scoped.ConnectionString; break;
                     case "catalog": CatalogConnection = scoped.ConnectionString; break;
                     case "inventory": InventoryConnection = scoped.ConnectionString; break;
+                    case "notification": NotificationConnection = scoped.ConnectionString; break;
                 }
             }
         }
         catch { await DisposeAsync(); throw; }
     }
+    public Task StopRedis() => Docker("stop", "redis");
+    public Task StartRedis() => Docker("start", "redis");
     public async Task DisposeAsync()
     {
         NpgsqlConnection.ClearAllPools();
@@ -77,6 +85,7 @@ public sealed class PostgresFixture : IAsyncLifetime
         var start = new ProcessStartInfo("docker") { WorkingDirectory = root!, RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false, CreateNoWindow = true };
         foreach (var arg in new[] { "compose", "-p", project, "-f", "infrastructure/docker/compose.tests.yml" }.Concat(args)) start.ArgumentList.Add(arg);
         start.Environment["LABLEND_TEST_DB_PASSWORD"] = password;
+        start.Environment["LABLEND_TEST_REDIS_PORT"] = redisPort.ToString();
         using var process = Process.Start(start)!;
         var output = process.StandardOutput.ReadToEndAsync();
         var error = process.StandardError.ReadToEndAsync();
@@ -91,5 +100,12 @@ public sealed class PostgresFixture : IAsyncLifetime
         var result = await output;
         if (process.ExitCode != 0) throw new InvalidOperationException("Isolated Docker Compose test command failed: " + (await error).Replace(password, "[redacted]"));
         return result;
+    }
+    private static int FreePort()
+    {
+        var listener = new System.Net.Sockets.TcpListener(System.Net.IPAddress.Loopback, 0);
+        listener.Start();
+        try { return ((System.Net.IPEndPoint)listener.LocalEndpoint).Port; }
+        finally { listener.Stop(); }
     }
 }
