@@ -16,8 +16,8 @@ internal sealed class LiveApi : IAsyncDisposable
         var directory = new DirectoryInfo(AppContext.BaseDirectory);
         while (directory != null && !File.Exists(Path.Combine(directory.FullName, "LabLendAI.sln"))) directory = directory.Parent;
         var root = directory?.FullName ?? throw new InvalidOperationException("Repository not found.");
-        var host = service + (service == "Inventory" ? ".Host" : ".Api");
-        var folder = Path.Combine(root, "src", "Services", service, host);
+        var host = service == "Gateway" ? "LabLend.Gateway" : service + (service == "Inventory" ? ".Host" : ".Api");
+        var folder = service == "Gateway" ? Path.Combine(root, "src", "Gateway", host) : Path.Combine(root, "src", "Services", service, host);
         var listener = new TcpListener(IPAddress.Loopback, 0); listener.Start();
         var port = ((IPEndPoint)listener.LocalEndpoint).Port; listener.Stop();
         Address = $"http://127.0.0.1:{port}/";

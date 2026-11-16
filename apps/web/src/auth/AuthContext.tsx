@@ -15,6 +15,7 @@ type AuthContextValue = {
   login: (request: LoginRequest) => Promise<void>;
   register: (request: RegisterRequest) => Promise<void>;
   logout: () => Promise<void>;
+  reloadUser: () => Promise<void>;
 };
 const AuthContext = createContext<AuthContextValue | null>(null);
 
@@ -66,6 +67,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setStatus('authenticated');
     },
     async register(request) { await authApi.register(request); },
+    async reloadUser() { const current = generation.current; const updated = await authApi.currentUser(); if (current === generation.current) setUser(updated); },
     async logout() {
       clearSession();
       const current = generation.current;

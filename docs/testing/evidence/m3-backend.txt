@@ -1,0 +1,40 @@
+Test run for <repo>\tests\Unit\LabLend.Platform.UnitTests\bin\Release\net8.0\LabLend.Platform.UnitTests.dll (.NETCoreApp,Version=v8.0)
+VSTest version 17.11.1 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+Results File: <repo>\.tmp\m3-test-results\Acer_DESKTOP-D7VP774_2026-11-16_17_02_18.trx
+
+Passed!  - Failed:     0, Passed:    20, Skipped:     0, Total:    20, Duration: 364 ms - LabLend.Platform.UnitTests.dll (net8.0)
+Test run for <repo>\tests\Integration\LabLend.Platform.IntegrationTests\bin\Release\net8.0\LabLend.Platform.IntegrationTests.dll (.NETCoreApp,Version=v8.0)
+VSTest version 17.11.1 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+Results File: <repo>\.tmp\m3-test-results\Acer_DESKTOP-D7VP774_2026-11-16_17_02_28.trx
+
+Passed!  - Failed:     0, Passed:    10, Skipped:     0, Total:    10, Duration: 4 s - LabLend.Platform.IntegrationTests.dll (net8.0)
+Test run for <repo>\tests\Integration\Catalog.IntegrationTests\bin\Release\net8.0\Catalog.IntegrationTests.dll (.NETCoreApp,Version=v8.0)
+VSTest version 17.11.1 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+Results File: <repo>\.tmp\m3-test-results\Acer_DESKTOP-D7VP774_2026-11-16_17_02_55.trx
+
+Passed!  - Failed:     0, Passed:     3, Skipped:     0, Total:     3, Duration: 7 s - Catalog.IntegrationTests.dll (net8.0)
+Test run for <repo>\tests\Integration\Inventory.IntegrationTests\bin\Release\net8.0\Inventory.IntegrationTests.dll (.NETCoreApp,Version=v8.0)
+VSTest version 17.11.1 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+Results File: <repo>\.tmp\m3-test-results\Acer_DESKTOP-D7VP774_2026-11-16_17_03_20.trx
+
+Passed!  - Failed:     0, Passed:    11, Skipped:     0, Total:    11, Duration: 7 s - Inventory.IntegrationTests.dll (net8.0)
+Test run for <repo>\tests\Integration\LabLend.Sprint1.IntegrationTests\bin\Release\net8.0\LabLend.Sprint1.IntegrationTests.dll (.NETCoreApp,Version=v8.0)
+VSTest version 17.11.1 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+Results File: <repo>\.tmp\m3-test-results\Acer_DESKTOP-D7VP774_2026-11-16_17_03_25.trx
+
+Passed!  - Failed:     0, Passed:    24, Skipped:     0, Total:    24, Duration: 7 m 50 s - LabLend.Sprint1.IntegrationTests.dll (net8.0)

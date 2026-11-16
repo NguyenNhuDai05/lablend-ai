@@ -1,5 +1,34 @@
 # Requirements traceability
 
+Current M3 P0 delta: real Catalog/Student/Staff loan/Profile/Admin/Notification UI and seven-section demo materials. See [M3 acceptance](../testing/M3_P0_ACCEPTANCE.md) for executed gates and remaining human decisions. Gemini/dashboard deferred; M2 fresh-install T20 is separate. Historical tables below remain provenance and do not override this checkpoint.
+
+## Current P0 checkpoint (M3 implementation branch)
+
+This table is current; older sprint tables below remain historical. Test counts, exact CI SHA and runtime results are recorded in [M3 acceptance](../testing/M3_P0_ACCEPTANCE.md). “Implemented” does not mean human/team final approval.
+
+| ID | Current implementation / evidence | Remaining boundary |
+|---|---|---|
+| R01 REST/CRUD | Identity users/auth, Catalog CRUD/search, Inventory assets/maintenance, Borrowing lifecycle, Notification/read; corresponding integration suites and React browser flow | Recommendation is deferred bonus |
+| R02 Layering | Existing REST controllers → Application services/ports → Infrastructure repositories/EF; M3 UI consumes contracts | No cross-service repository access added |
+| R03 JWT | Memory access token, HttpOnly refresh cookie, CSRF/Origin, role guards, existing 11 auth regressions plus browser re-login | Access JWT expiry window after role/password changes remains documented |
+| R04 Search/filter/sort/page | Public Catalog and loan status/page UI use real server APIs; Admin page/list/detail | Admin search is current-page filtering; global search API absent |
+| R05 Jobs | Four actual Borrowing jobs, persisted reminder keys, restart/two-worker tests and browser due/overdue notifications | Not a foundation heartbeat claim |
+| R06 Broker | Redis Streams XADD/XREADGROUP/XAUTOCLAIM/XACK/parking | Retention/archive horizon OPEN |
+| R07 Real producer/consumer | Transactional Outbox → Redis → Notification+Inbox → REST → UI; real outage/replay gates | OD-04/05 human signoff OPEN; at least once |
+| R08 Independent gRPC | Separate Inventory HTTP2 service, unchanged v1 proto/server and service credential | M2 historical condition/time/reservation-ID gap OPEN |
+| R09 REST→gRPC | Approve/reserve, handover and partial returns, stable operations/recovery; browser confirms real Inventory | No client-invented reservation IDs |
+| R10 EF + relational DB | Existing per-service PostgreSQL contexts and migrations; fixture-owned real DB tests | No cross-service SQL joins |
+| R11 DI/config/log/errors | Existing options/DI/structured logs/correlation/ProblemDetails; UI handles auth/conflict/unavailable | NuGet audit-network warnings reported separately from compile results |
+| R12 Docker/deployment | Updated web image build passed; private real-service E2E passed | Shared-stack recheck pending: worker exit 139 then Docker daemon unavailable; M2 T20 clean-clone/fresh-volume acceptance separate |
+| R13 Source | M1 #10–13 merged; M3 P0 code/tests/docs on review branch; M2 sources preserved | M3 branch merge requires its own review |
+| R14 DB scripts | Existing ownership/bootstrap and Identity/Catalog/Inventory/Borrowing/Notification migrations | No DB reset/volume deletion in this work |
+| R15 Dockerfiles/Compose | Existing multi-stage images, frontend dist image, configured health/dependencies | No paid infrastructure or billing enabled |
+| R16 OpenAPI | Gateway exposes five business-service schemas; runtime verifier checks Borrowing commands and auth | Recommendation remains optional foundation |
+| R17 README | Description, architecture, stack, setup/deploy/responsibilities retained; M3 handover and current matrix added | Team must review final submission packet |
+| R18 Seven-topic demo | Editable slide deck, seven-section runbook, role sequence/fallback/Q&A and real browser screenshots | Human rehearsal/presenter signoff/video recording not asserted |
+
+## Historical M1 Sprint 2 checkpoint
+
 Current M1 Sprint 2 delta: R09 TESTED by Gate A REST→Inventory HTTP/2 lifecycle and Gate B failure recovery; R06/R07 TESTED by Gate C PostgreSQL Outbox→XADD→unchanged M3 consumer→Notification REST, Redis outage and replay; R05 TESTED by real scheduled jobs/two worker processes/restart/notification in Gate D/E. Borrowing migrations add operations/outbox/reminder dedupe only to borrowing_db (R10/R14). R11/R16 extend options/logs/readiness/OpenAPI. R12/R15 Docker upgrade/startup passed with 11 healthy existing-stack containers; no separate destructive clean-volume reinstall. Backend/frontend regression and exact-commit CI evidence are tracked in [Sprint 2 acceptance](../testing/SPRINT2_M1_ACCEPTANCE.md). Historical Sprint 0/1 tables below do not supersede this checkpoint or certify complete-coursework/defense acceptance. M2/M3 contract review remains pending.
 
 Nguồn chuẩn: [PRN232 Final Assignment, 3 trang](PRN232%20-%20Final%20Assignment.pdf). Plan nhóm: [V4](../../PRN232_LabLend_AI_Master_Implementation_Plan_V4.docx). Nếu xung đột, PDF ưu tiên. Mã R01–R18 giữ theo V4 để đối chiếu; PDF không bắt buộc sáu microservice, Gemini hoặc frontend.

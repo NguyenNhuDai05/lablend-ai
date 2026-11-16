@@ -22,15 +22,18 @@ jobs:
           cache-dependency-path: apps/web/package-lock.json
       - run: dotnet restore LabLendAI.sln
       - run: dotnet build LabLendAI.sln -c Release --no-restore
-      - run: dotnet test LabLendAI.sln -c Release --no-build --no-restore
-        env:
-          LABLEND_POSTGRES_TESTS: '1'
       - run: npm ci
+        working-directory: apps/web
+      - run: npx playwright install --with-deps chromium
         working-directory: apps/web
       - run: npm run build
         working-directory: apps/web
       - run: npm test
         working-directory: apps/web
+      - run: dotnet test LabLendAI.sln -c Release --no-build --no-restore
+        env:
+          LABLEND_POSTGRES_TESTS: '1'
+          LABLEND_BROWSER_TESTS: '1'
       - run: ./scripts/Initialize-Environment.ps1
         shell: pwsh
       - run: docker compose config --quiet

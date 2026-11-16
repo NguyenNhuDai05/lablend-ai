@@ -1,5 +1,7 @@
 # Open decisions
 
+M3 P0 technical review (2026-11-16): [producer schema, mapper compatibility, retry/parking and retention audit](../events/M3_CONTRACT_REVIEW.md) added. OD-04/05 remain OPEN; no human owner signoff is asserted. Inventory v1 historical-return/reservation-ID gap below remains OPEN.
+
 ## Sprint 2 M1 consumer audit (2026-11-16)
 
 OD-01–03 reviewed by the M1 implementation against the unchanged v1 proto/server: UUIDs, one item/unit, atomic reserve, stable operation ID and same-payload replay, GetOperationStatus, explicit HELD release, service Bearer metadata and a 5-second deadline are the consumer defaults. This records consumer implementation review, not an invented M2 approval of new contract changes.

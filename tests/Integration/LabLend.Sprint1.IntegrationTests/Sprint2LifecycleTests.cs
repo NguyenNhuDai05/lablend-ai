@@ -75,12 +75,18 @@ internal sealed class Sprint2Stack(PostgresFixture postgres) : IAsyncDisposable
     public HttpClient CatalogStaff { get; private set; } = null!;
     public string InventoryGrpc => inventory.GrpcAddress;
     public string CatalogAddress => catalog.Address;
+    public string IdentityAddress => identity.Address;
+    public string InventoryAddress => inventory.Address;
+    public string BorrowingAddress => borrowing.Address;
+    public string StudentEmail { get; private set; } = "";
+    public string StaffEmail { get; private set; } = "";
+    public string TestPassword { get; private set; } = "";
     private string staffToken = "";
     public Guid StudentId { get; private set; }
     public string StudentToken { get; private set; } = "";
-    public async Task Start(IReadOnlyDictionary<string, string>? settings = null)
+    public async Task Start(IReadOnlyDictionary<string, string>? settings = null, string? webOrigin = null)
     {
-        await identity.Start("Identity", postgres.IdentityConnection, postgres);
+        await identity.Start("Identity", postgres.IdentityConnection, postgres, settings: webOrigin == null ? null : new Dictionary<string, string> { ["SessionCookie__AllowedOrigins__1"] = webOrigin });
         await catalog.Start("Catalog", postgres.CatalogConnection, postgres);
         await inventory.Start("Inventory", postgres.InventoryConnection, postgres);
         var config = new Dictionary<string, string> { ["Inventory__GrpcAddress"] = inventory.GrpcAddress, ["Inventory__ServiceToken"] = postgres.SigningKey };
@@ -93,6 +99,7 @@ internal sealed class Sprint2Stack(PostgresFixture postgres) : IAsyncDisposable
         auth.DefaultRequestHeaders.Authorization = new("Bearer", (string?)admin["accessToken"]);
         var suffix = Guid.NewGuid().ToString("N"); var password = "Aa1!" + suffix;
         var email = suffix + "@sprint2.test";
+        StaffEmail = email; TestPassword = password;
         var user = await Body(await auth.PostAsJsonAsync("api/auth/register", new { email, password, confirmPassword = password, displayName = "Sprint 2 Staff" }));
         await Body(await auth.PutAsJsonAsync($"api/users/{user["id"]}/role", new { role = "LAB_STAFF" }));
         var staff = await Body(await auth.PostAsJsonAsync("api/auth/login", new { email, password }));
@@ -100,6 +107,7 @@ internal sealed class Sprint2Stack(PostgresFixture postgres) : IAsyncDisposable
         staffToken = token;
         Staff = Client(borrowing.Address, token); InventoryStaff = Client(inventory.Address, token); CatalogStaff = Client(catalog.Address, token);
         var studentEmail = "student-" + email;
+        StudentEmail = studentEmail;
         var student = await Body(await auth.PostAsJsonAsync("api/auth/register", new { email = studentEmail, password, confirmPassword = password, displayName = "Sprint 2 Student" }));
         StudentId = student["id"]!.GetValue<Guid>();
         var login = await Body(await auth.PostAsJsonAsync("api/auth/login", new { email = studentEmail, password }));

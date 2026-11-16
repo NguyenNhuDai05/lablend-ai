@@ -1,0 +1,42 @@
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useAuth } from '../auth/AuthContext';
+import { errorText, singleFlight } from '../lib/workflows';
+
+export function useResource<T>(key: string, load: (signal: AbortSignal) => Promise<T>, pollMs = 0) {
+  const { user, status } = useAuth();
+  const loader = useRef(load); loader.current = load;
+  const [version, setVersion] = useState(0);
+  const [state, setState] = useState<{ data?: T; loading: boolean; error?: string }>({ loading: true });
+  useEffect(() => {
+    let alive = true; let current: AbortController | undefined;
+    async function fetchData(initial: boolean) {
+      current?.abort(); current = new AbortController();
+      const controller = current;
+      if (initial) setState({ loading: true });
+      try { const data = await loader.current(controller.signal); if (alive && !controller.signal.aborted) setState({ data, loading: false }); }
+      catch (e) { if (alive && !controller.signal.aborted) setState(s => ({ ...s, loading: false, error: errorText(e) })); }
+    }
+    void fetchData(true);
+    const timer = pollMs ? setInterval(() => { if (document.visibilityState === 'visible') void fetchData(false); }, pollMs) : undefined;
+    return () => { alive = false; current?.abort(); if (timer) clearInterval(timer); };
+  }, [key, user?.id, status, version, pollMs]);
+  return { ...state, reload: useCallback(() => setVersion(v => v + 1), []) };
+}
+export function useCommand() {
+  const flight = useRef(singleFlight());
+  const [busy, setBusy] = useState(false); const [error, setError] = useState('');
+  const alive = useRef(true);
+  useEffect(() => { alive.current = true; return () => { alive.current = false; }; }, []);
+  const run = (work: () => Promise<void>) => flight.current(async () => {
+    setBusy(true); setError('');
+    try { await work(); }
+    catch (e) { if (alive.current) setError(errorText(e)); }
+    finally { if (alive.current) setBusy(false); }
+  });
+  return { busy, error, run, clearError: () => setError('') };
+}
+export function InlineError({ message }: { message?: string }) { return message ? <p className="form-error" role="alert">{message}</p> : null; }
+export function Pager({ page, total, pageSize, onChange }: { page: number; total: number; pageSize: number; onChange: (p: number) => void }) {
+  const pages = Math.max(1, Math.ceil(total / pageSize));
+  return <nav className="pagination" aria-label="Phân trang"><button disabled={page <= 1} onClick={() => onChange(page - 1)}>Trước</button><span>Trang {page}/{pages} · {total} mục</span><button disabled={page >= pages} onClick={() => onChange(page + 1)}>Sau</button></nav>;
+}
