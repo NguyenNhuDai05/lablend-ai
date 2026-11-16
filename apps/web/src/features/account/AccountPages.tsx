@@ -18,10 +18,22 @@ export function ProfilePage() {
 }
 
 export function AdminUsersPage() {
-  const [params, setParams] = useSearchParams(); const page = Math.max(1, Number(params.get('page')) || 1); const [filter, setFilter] = useState('');
-  const state = useResource(`users:${page}`, s => accountApi.list(page, s));
-  const users = state.data?.items.filter(u => `${u.displayName} ${u.email} ${u.roles.join(' ')}`.toLocaleLowerCase('vi').includes(filter.toLocaleLowerCase('vi')));
-  return <section><div className="section-title"><div><p className="eyebrow">QUẢN TRỊ</p><h1>Quản lý tài khoản</h1></div><button onClick={state.reload} disabled={state.loading}>Tải lại</button></div><div className="filters"><label>Lọc trong trang này<input value={filter} onChange={e => setFilter(e.target.value)} placeholder="Tên, email hoặc quyền" /></label><p>Danh sách phân trang từ Identity; bộ lọc chỉ áp dụng cho trang đang mở.</p></div>{state.loading ? <PageLoading /> : state.error ? <ErrorState message={state.error} retry={state.reload} /> : <><div className="surface table-scroll"><table><thead><tr><th>Họ tên</th><th>Email</th><th>Quyền</th><th>Hoạt động</th></tr></thead><tbody>{users?.map(u => <tr key={u.id}><td><Link to={`/admin/users/${u.id}`}>{u.displayName}</Link></td><td>{u.email}</td><td>{u.roles.join(', ')}</td><td>{u.isActive ? 'Đang hoạt động' : 'Đã vô hiệu hóa'}</td></tr>)}</tbody></table>{!users?.length && <EmptyState message="Không có tài khoản phù hợp trên trang này." />}</div>{state.data && <Pager page={page} total={state.data.total} pageSize={state.data.pageSize} onChange={p => setParams({ page: String(p) })} />}</>}</section>;
+  const [params, setParams] = useSearchParams(); const page = Math.max(1, Number(params.get('page')) || 1);
+  const filters = { keyword: params.get('keyword') ?? '', role: params.get('role') ?? '', isActive: params.get('isActive') ?? '' };
+  const state = useResource(`users:${params}`, signal => accountApi.list(page, signal, filters));
+  function search(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault(); const values = new FormData(e.currentTarget);
+    setParams({ page: '1', keyword: String(values.get('keyword') ?? '').trim(), role: String(values.get('role') ?? ''), isActive: String(values.get('isActive') ?? '') });
+  }
+  return <section><div className="section-title"><div><p className="eyebrow">QUẢN TRỊ</p><h1>Quản lý tài khoản</h1></div><button onClick={state.reload} disabled={state.loading}>Tải lại</button></div>
+    <form className="filters" role="search" onSubmit={search} key={JSON.stringify(filters)}>
+      <label>Tìm tài khoản<input name="keyword" defaultValue={filters.keyword} maxLength={100} placeholder="Họ tên hoặc email" /></label>
+      <label>Quyền<select name="role" defaultValue={filters.role}><option value="">Tất cả</option>{roles.map(role => <option key={role} value={role}>{role}</option>)}</select></label>
+      <label>Hoạt động<select name="isActive" defaultValue={filters.isActive}><option value="">Tất cả</option><option value="true">Đang hoạt động</option><option value="false">Đã vô hiệu hóa</option></select></label>
+      <button>Tìm kiếm</button><p>Tìm trên toàn bộ tài khoản. Kết quả và tổng số được phân trang từ máy chủ.</p>
+    </form>
+    {state.loading ? <PageLoading /> : state.error ? <ErrorState message={state.error} retry={state.reload} /> : <><div className="surface table-scroll"><table><thead><tr><th>Họ tên</th><th>Email</th><th>Quyền</th><th>Hoạt động</th></tr></thead><tbody>{state.data?.items.map(u => <tr key={u.id}><td><Link to={`/admin/users/${u.id}`}>{u.displayName}</Link></td><td>{u.email}</td><td>{u.roles.join(', ')}</td><td>{u.isActive ? 'Đang hoạt động' : 'Đã vô hiệu hóa'}</td></tr>)}</tbody></table>{!state.data?.items.length && <EmptyState message="Không có tài khoản phù hợp." />}</div>{state.data && <Pager page={page} total={state.data.total} pageSize={state.data.pageSize} onChange={p => setParams({ ...filters, page: String(p) })} />}</>}
+  </section>;
 }
 export function AdminUserDetailPage() {
   const { id = '' } = useParams(); const auth = useAuth(); const navigate = useNavigate(); const state = useResource(`user:${id}`, s => accountApi.detail(id, s));

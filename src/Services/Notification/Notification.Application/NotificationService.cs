@@ -2,11 +2,11 @@ namespace Notification.Application;
 
 public sealed class NotificationService(INotificationRepository repository, TimeProvider timeProvider)
 {
-    public async Task<NotificationPage> ListAsync(Guid userId, int page, int pageSize, CancellationToken cancellationToken)
+    public async Task<NotificationPage> ListAsync(Guid userId, int page, int pageSize, CancellationToken cancellationToken, Guid? aggregateId = null)
     {
         if (page < 1) throw new ArgumentOutOfRangeException(nameof(page));
         if (pageSize is < 1 or > 100) throw new ArgumentOutOfRangeException(nameof(pageSize));
-        var result = await repository.ListAsync(userId, page, pageSize, cancellationToken);
+        var result = await repository.ListAsync(userId, page, pageSize, cancellationToken, aggregateId?.ToString("D"));
         return new NotificationPage(result.Items.Select(ToDto).ToArray(), result.Total, page, pageSize);
     }
 

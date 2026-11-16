@@ -1,23 +1,34 @@
 using Borrowing.Domain;
 using LabLend.Contracts;
+using System.Security.Cryptography;
+using System.Text.Json;
 
 namespace Borrowing.Application;
 
 public sealed class LoanService(ILoanRepository repository, ICatalogClient catalog)
 {
-    public async Task<LoanDto> Create(Guid studentId, CreateLoanRequest request, string correlationId, CancellationToken ct)
+    public async Task<LoanDto> Create(Guid studentId, CreateLoanRequest request, string correlationId, CancellationToken ct, Guid? submissionKey = null)
     {
         // Validate everything before calling the dependency. No database transaction spans an HTTP call.
         LoanRequest loan;
         if (request.Items == null || request.Items.Any(i => i == null)) throw new LoanFailure(400, "Items must not be null.");
+        var hash = SubmissionHash(request);
+        // Replay is resolved before time-sensitive validation or Catalog reads: a committed request stays retrievable.
+        if (submissionKey is { } key && await repository.FindSubmission(studentId, key, hash, ct) is { } previous) return Dto(previous);
         try { loan = LoanRequest.Create(studentId, request.Purpose, request.DueAt, request.Items.Select(i => i.EquipmentTypeId), DateTimeOffset.UtcNow); }
         catch (ArgumentException) { throw new LoanFailure(400, "Purpose, dueAt or items are invalid."); }
         await catalog.ValidateEquipment(loan.Items.Select(i => i.EquipmentTypeId).Distinct().ToArray(), correlationId, ct);
         // Recheck the due date if the dependency took time.
         if (request.DueAt <= DateTimeOffset.UtcNow) throw new LoanFailure(400, "Due date must be in the future.");
-        await repository.Add(loan, ct, correlationId);
+        if (submissionKey is { } idempotencyKey) loan = await repository.AddSubmission(loan, idempotencyKey, hash, ct, correlationId);
+        else await repository.Add(loan, ct, correlationId);
         return Dto(loan);
     }
+    public static string SubmissionHash(CreateLoanRequest request) => Convert.ToHexString(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(new
+    {
+        purpose = request.Purpose?.Trim(), dueAt = request.DueAt.ToUniversalTime(),
+        equipment = request.Items.Select(i => i.EquipmentTypeId).OrderBy(id => id).ToArray()
+    })));
     public async Task<LoanDto> Detail(Guid id, Guid actor, bool staff, CancellationToken ct)
     {
         var loan = await repository.Get(id, ct) ?? throw new LoanFailure(404, "Loan not found.");

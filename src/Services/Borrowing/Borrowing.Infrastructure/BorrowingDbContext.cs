@@ -6,6 +6,7 @@ namespace Borrowing.Infrastructure;
 public sealed class BorrowingDbContext(DbContextOptions<BorrowingDbContext> options) : DbContext(options)
 {
     public DbSet<LoanRequest> LoanRequests => Set<LoanRequest>();
+    public DbSet<LoanSubmission> LoanSubmissions => Set<LoanSubmission>();
     public DbSet<LoanItem> LoanItems => Set<LoanItem>();
     public DbSet<LoanHistory> LoanHistories => Set<LoanHistory>();
     public DbSet<InventoryOperation> InventoryOperations => Set<InventoryOperation>();
@@ -35,6 +36,12 @@ public sealed class BorrowingDbContext(DbContextOptions<BorrowingDbContext> opti
     }
     protected override void OnModelCreating(ModelBuilder model)
     {
+        model.Entity<LoanSubmission>(b =>
+        {
+            b.HasKey(x => new { x.StudentId, x.Key });
+            b.Property(x => x.RequestHash).HasMaxLength(64).IsRequired();
+            b.HasOne<LoanRequest>().WithMany().HasForeignKey(x => x.LoanId).OnDelete(DeleteBehavior.Restrict);
+        });
         model.Entity<ReminderDispatch>(b =>
         {
             b.HasKey(x => x.EventId); b.Property(x => x.EventId).ValueGeneratedNever();

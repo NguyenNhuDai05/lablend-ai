@@ -15,10 +15,10 @@ public sealed class NotificationsController(NotificationService service) : Contr
     public async Task<ActionResult<NotificationPage>> List(
         [FromQuery, Range(1, int.MaxValue)] int page = 1,
         [FromQuery, Range(1, 100)] int pageSize = 20,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default, Guid? aggregateId = null)
     {
         if (!TryGetUserId(out var userId)) return Unauthorized();
-        return Ok(await service.ListAsync(userId, page, pageSize, cancellationToken));
+        return Ok(await service.ListAsync(userId, page, pageSize, cancellationToken, aggregateId));
     }
 
     [HttpPatch("{id:guid}/read")]

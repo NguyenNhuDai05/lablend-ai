@@ -1,5 +1,11 @@
 # REST standards and proposed service contracts
 
+## Current final checkpoint 2026-11-17
+
+The historical proposal text below remains provenance. Borrowing approve/handover/returns and real producer/consumer are implemented in merged M1 Sprint 2; they are not still planned. Current authoritative details: [Borrowing](BORROWING_API_CONTRACT.md), [Identity](IDENTITY_API_CONTRACT.md), [final audit](../testing/FINAL_SOURCE_AUDIT.md).
+
+Compatible additions: optional create-loan `Idempotency-Key` header; Admin user `keyword/role/isActive` filters; Notification `GET /api/notifications?aggregateId=<loan UUID>` scoped to the current JWT owner. Notification filtering applies before total and pagination, never grants Staff access to another user's inbox, and rejects malformed UUIDs with 400. Omitting these options preserves existing API behavior. No event/protobuf fields or database ownership change.
+
 ## Chuẩn kỹ thuật đã wiring
 
 - Resource paths: `/api/equipment-types`, danh từ số nhiều, kebab-case; UUID trong path.

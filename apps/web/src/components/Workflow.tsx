@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { useAuth } from '../auth/AuthContext';
 import { errorText, singleFlight } from '../lib/workflows';
 
@@ -36,6 +36,17 @@ export function useCommand() {
   return { busy, error, run, clearError: () => setError('') };
 }
 export function InlineError({ message }: { message?: string }) { return message ? <p className="form-error" role="alert">{message}</p> : null; }
+export function ReviewDialog({ title, children, busy, onClose, onConfirm, confirmLabel }: { title: string; children: ReactNode; busy: boolean; onClose: () => void; onConfirm: () => void; confirmLabel: string }) {
+  const dialog = useRef<HTMLDialogElement>(null); const titleId = useId();
+  useEffect(() => {
+    const previous = document.activeElement; const element = dialog.current;
+    element?.showModal();
+    return () => { element?.close(); if (previous instanceof HTMLElement && previous.isConnected) previous.focus(); };
+  }, []);
+  return <dialog ref={dialog} className="review-dialog" aria-labelledby={titleId} onCancel={e => { e.preventDefault(); if (!busy) onClose(); }}>
+    <h2 id={titleId}>{title}</h2>{children}<div className="actions"><button type="button" autoFocus className="button-quiet" disabled={busy} onClick={onClose}>Quay lại chỉnh sửa</button><button type="button" disabled={busy} onClick={onConfirm}>{busy ? 'Đang xử lý…' : confirmLabel}</button></div>
+  </dialog>;
+}
 export function Pager({ page, total, pageSize, onChange }: { page: number; total: number; pageSize: number; onChange: (p: number) => void }) {
   const pages = Math.max(1, Math.ceil(total / pageSize));
   return <nav className="pagination" aria-label="Phân trang"><button disabled={page <= 1} onClick={() => onChange(page - 1)}>Trước</button><span>Trang {page}/{pages} · {total} mục</span><button disabled={page >= pages} onClick={() => onChange(page + 1)}>Sau</button></nav>;

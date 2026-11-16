@@ -19,6 +19,8 @@ public interface ICatalogClient { Task ValidateEquipment(IReadOnlyCollection<Gui
 public interface ILoanRepository
 {
     Task Add(LoanRequest loan, CancellationToken ct, string? correlationId = null);
+    Task<LoanRequest?> FindSubmission(Guid studentId, Guid key, string hash, CancellationToken ct);
+    Task<LoanRequest> AddSubmission(LoanRequest loan, Guid key, string hash, CancellationToken ct, string correlationId);
     Task<LoanRequest?> Get(Guid id, CancellationToken ct);
     Task<PagedResponse<LoanRequest>> List(Guid? studentId, LoanStatus? status, int page, int size, CancellationToken ct);
     Task<LoanRequest> Mutate(Guid id, Action<LoanRequest> mutation, CancellationToken ct, string? correlationId = null);

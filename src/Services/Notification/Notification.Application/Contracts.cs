@@ -14,7 +14,7 @@ public enum ConsumeResult { Created, Duplicate }
 
 public interface INotificationRepository
 {
-    Task<(IReadOnlyList<NotificationItem> Items, long Total)> ListAsync(Guid userId, int page, int pageSize, CancellationToken cancellationToken);
+    Task<(IReadOnlyList<NotificationItem> Items, long Total)> ListAsync(Guid userId, int page, int pageSize, CancellationToken cancellationToken, string? aggregateId = null);
     Task<NotificationItem?> FindOwnedAsync(Guid notificationId, Guid userId, CancellationToken cancellationToken);
     Task<long> UnreadCountAsync(Guid userId, CancellationToken cancellationToken);
     Task SaveChangesAsync(CancellationToken cancellationToken);
