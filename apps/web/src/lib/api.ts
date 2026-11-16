@@ -59,16 +59,16 @@ export async function apiRequest<T>(path: string, init: RequestInit = {}, retry 
   try {
     if (init.signal?.aborted) controller.abort();
     const response = await fetch(`${apiBaseUrl}${path}`, { ...init, credentials: 'include', headers, signal: controller.signal });
-    if (!cookieCommands.has(path) && version !== sessionVersionProvider()) {
-      throw new ApiError('Phiên đăng nhập đã thay đổi. Vui lòng thực hiện lại yêu cầu.', 0, 'SESSION_CHANGED');
-    }
+    if (!cookieCommands.has(path)) assertCurrentSession(version);
     if (response.status === 401 && !cookieCommands.has(path)) {
       if (retry && refreshHandler) {
         // A late response for the previous JWT can use the token another request already renewed.
         if (!accessTokenProvider() || accessTokenProvider() === token) {
           pendingRefresh ??= Promise.resolve().then(refreshHandler).finally(() => { pendingRefresh = null; });
-          try { await pendingRefresh; } catch (error) { unauthorizedHandler(); throw error; }
+          try { await pendingRefresh; }
+          catch (error) { assertCurrentSession(version); unauthorizedHandler(); throw error; }
         }
+        assertCurrentSession(version);
         return await apiRequest<T>(path, init, false);
       }
       unauthorizedHandler();
@@ -83,6 +83,12 @@ export async function apiRequest<T>(path: string, init: RequestInit = {}, retry 
   } finally {
     globalThis.clearTimeout(timeout);
     init.signal?.removeEventListener('abort', abort);
+  }
+}
+
+function assertCurrentSession(version: number) {
+  if (version !== sessionVersionProvider()) {
+    throw new ApiError('Phiên đăng nhập đã thay đổi. Vui lòng thực hiện lại yêu cầu.', 0, 'SESSION_CHANGED');
   }
 }
 

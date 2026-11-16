@@ -40,3 +40,7 @@ To repeat: restore/build; set LABLEND_POSTGRES_TESTS=1 and run dotnet test; sequ
 ## Sprint 2 preparation
 
 Implement reviewed Borrowing→Inventory gRPC and PENDING→APPROVING→APPROVED after atomic reservations; compensation, operation status and reconciliation for unknown outcomes; local Outbox alongside state/history; Redis publisher and M3 inbox consumer; overdue/reminder worker with dedupe and derived overdue display. None is implemented or marked complete in Sprint 1.
+
+## PR #8 integration update (2026-11-16)
+
+The earlier Catalog blocker above describes the original M1 checkpoint. PR #8 integrates M2 Catalog and Inventory, including independent migrations and six-RPC v1 server. MemberIntegrationTests adds real-service Catalog→Borrowing validation and Identity-issued Staff→Catalog/Inventory authorization through Gateway, with no Catalog double. Staff pages use the existing React router/session instead of the retired token-paste shell. See [PR8 acceptance](../testing/PR8_INTEGRATION_ACCEPTANCE.md) for measured results and final PR state. Borrowing approval gRPC client/Outbox and Notification event-contract approval remain Sprint 2/OD-01–05 work.

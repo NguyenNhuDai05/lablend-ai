@@ -1,0 +1,20 @@
+POST /api/auth/login => 200 (2973 ms)
+GET /api/equipment-types?keyword=PR8%20UI&includeInactive=true => 200 (2297 ms)
+GET /api/categories?includeInactive=true => 200 (2095 ms)
+GET /api/inventory/assets?keyword=PR8-UI-001 => 200 (2855 ms)
+GET /api/inventory/assets/32822dc6-aa31-43ba-ad85-52e8039ca356/maintenance => 200 (3392 ms)
+GET /api/inventory/assets/32822dc6-aa31-43ba-ad85-52e8039ca356/movements => 200 (2121 ms)
+Browser-persisted category=d495aa6d-ef72-497e-aa1c-5c6dd4041d5e inactive; type=22f62be5-749f-4b03-8626-9125a844d979 inactive
+Browser-persisted asset=32822dc6-aa31-43ba-ad85-52e8039ca356, serial=PR8-UI-001, status=RETIRED, updated location verified
+Browser StockMovements newest first: RETIRED -> AVAILABLE -> MAINTENANCE -> AVAILABLE
+Browser maintenance completed with actual reason/completion notes; 4 movements and actor IDs persisted.
+POST /api/auth/login => 200 (2494 ms)
+GET /api/inventory/assets => 403 (2212 ms)
+GET /api/notifications => 200 (2481 ms)
+Docker real Student: Inventory admin REST=403; Notification REST=200, total=0
+GET /api/equipment-types/e0000000-0000-0000-0000-000000000001 => 200 (5221 ms)
+POST /api/loans => 201 (3066 ms)
+GET /api/loans/f7bbab4c-be5b-4742-ba61-d681fd06c2af => 200 (2181 ms)
+POST /api/loans => 400 (2174 ms)
+POST /api/loans => 400 (2102 ms)
+Docker nginx->Gateway->Identity/Borrowing->Catalog: actual loan=f7bbab4c-be5b-4742-ba61-d681fd06c2af PENDING (201), owner read=200, missing/inactive type=400. No Catalog double.

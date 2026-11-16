@@ -24,6 +24,8 @@ public sealed class PostgresFixture : IAsyncLifetime
     private string? root;
     public string IdentityConnection { get; private set; } = "";
     public string BorrowingConnection { get; private set; } = "";
+    public string CatalogConnection { get; private set; } = "";
+    public string InventoryConnection { get; private set; } = "";
     public string SigningKey { get; } = Convert.ToHexString(RandomNumberGenerator.GetBytes(32));
     public string AdminPassword { get; } = "Aa1!" + Convert.ToHexString(RandomNumberGenerator.GetBytes(24));
     public async Task InitializeAsync()
@@ -40,7 +42,7 @@ public sealed class PostgresFixture : IAsyncLifetime
                 Database = "postgres", Username = "postgres", Password = password, IncludeErrorDetail = false };
             await using var connection = new NpgsqlConnection(admin.ConnectionString);
             await connection.OpenAsync();
-            foreach (var service in new[] { "identity", "borrowing" })
+            foreach (var service in new[] { "identity", "borrowing", "catalog", "inventory" })
             {
                 await using var setup = connection.CreateCommand();
                 // Test-generated hex password only. No user input or existing DB is accepted by this fixture.
@@ -52,7 +54,13 @@ public sealed class PostgresFixture : IAsyncLifetime
                 setup.CommandText = $"REVOKE CONNECT ON DATABASE {service}_db FROM PUBLIC";
                 await setup.ExecuteNonQueryAsync();
                 var scoped = new NpgsqlConnectionStringBuilder(admin.ConnectionString) { Database = service + "_db", Username = service + "_user" };
-                if (service == "identity") IdentityConnection = scoped.ConnectionString; else BorrowingConnection = scoped.ConnectionString;
+                switch (service)
+                {
+                    case "identity": IdentityConnection = scoped.ConnectionString; break;
+                    case "borrowing": BorrowingConnection = scoped.ConnectionString; break;
+                    case "catalog": CatalogConnection = scoped.ConnectionString; break;
+                    case "inventory": InventoryConnection = scoped.ConnectionString; break;
+                }
             }
         }
         catch { await DisposeAsync(); throw; }

@@ -64,6 +64,11 @@ public static class ServiceDefaults
                 Type = SecuritySchemeType.Http, Scheme = "bearer", BearerFormat = "JWT",
                 Description = "Use the access token issued by POST /api/auth/login."
             });
+            // Without a requirement Swagger UI shows Authorize but never sends the Bearer header.
+            options.AddSecurityRequirement(new OpenApiSecurityRequirement
+            {
+                [new OpenApiSecurityScheme { Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" } }] = []
+            });
         });
         builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
         {

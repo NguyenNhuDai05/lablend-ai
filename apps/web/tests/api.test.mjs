@@ -3,11 +3,13 @@ import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 import ts from 'typescript';
 
-async function sourceModule(path) {
-  const source = await readFile(new URL(path, import.meta.url), 'utf8');
+async function sourceUrl(path, imports = {}) {
+  let source = await readFile(new URL(path, import.meta.url), 'utf8');
+  for (const [specifier, url] of Object.entries(imports)) source = source.replaceAll(`'${specifier}'`, `'${url}'`);
   const { outputText } = ts.transpileModule(source, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } });
-  return import(`data:text/javascript;base64,${Buffer.from(outputText + `\n// ${crypto.randomUUID()}`).toString('base64')}`);
+  return `data:text/javascript;base64,${Buffer.from(outputText + `\n// ${crypto.randomUUID()}`).toString('base64')}`;
 }
+async function sourceModule(path) { return import(await sourceUrl(path)); }
 const json = (body, status = 200) => new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
 
 test('auth POST sends the HttpOnly-cookie transport and CSRF marker without an old bearer token', async t => {
@@ -66,6 +68,23 @@ test('a late response from a previous login cannot retry or clear the current ac
   assert.equal(clears, 0); assert.equal(refreshes, 0);
 });
 
+for (const outcome of ['success', 'failure']) test(`an account switch during refresh ${outcome} cannot retry as or clear the new account`, async t => {
+  const { apiRequest, configureApiClient, ApiError } = await sourceModule('../src/lib/api.ts');
+  let version = 1; let clears = 0; let calls = 0;
+  let beginRefresh, finishRefresh;
+  const started = new Promise(resolve => { beginRefresh = resolve; });
+  const gate = new Promise(resolve => { finishRefresh = resolve; });
+  configureApiClient({ getAccessToken: () => version === 1 ? 'old-account' : 'new-account',
+    getSessionVersion: () => version, onUnauthorized() { clears++; }, refreshAccessToken: async () => {
+      beginRefresh(); await gate;
+      if (outcome === 'failure') throw new ApiError('Old refresh expired', 401, 'UNAUTHENTICATED');
+    } });
+  t.mock.method(globalThis, 'fetch', async () => { calls++; return json({}, 401); });
+  const request = assert.rejects(apiRequest('/api/inventory/assets'), error => error.code === 'SESSION_CHANGED');
+  await started; version++; finishRefresh(); await request;
+  assert.equal(clears, 0); assert.equal(calls, 1);
+});
+
 test('403 preserves the current session and ProblemDetails', async t => {
   const { apiRequest, configureApiClient } = await sourceModule('../src/lib/api.ts');
   let clears = 0;
@@ -83,4 +102,40 @@ test('Identity roles[] maps to the routed UI and unknown/inactive roles fail clo
   assert.equal(toCurrentUser({ ...user, roles: ['STUDENT', 'ADMIN'] }).role, 'ADMIN');
   assert.throws(() => toCurrentUser({ ...user, roles: ['UNKNOWN'] }));
   assert.throws(() => toCurrentUser({ ...user, isActive: false }));
+});
+
+test('Staff StockMovements uses the shared memory JWT and refreshes an expired session', async t => {
+  const url = await sourceUrl('../src/lib/api.ts');
+  const { configureApiClient } = await import(url);
+  const { api } = await import(await sourceUrl('../src/features/staff/api.ts', {
+    '../../lib/api': url, react: import.meta.resolve('react'),
+  }));
+  let token = 'expired'; let refreshes = 0;
+  configureApiClient({ getAccessToken: () => token, onUnauthorized() { assert.fail('session cleared'); },
+    refreshAccessToken: async () => { token = 'real-staff'; refreshes++; } });
+  t.mock.method(globalThis, 'fetch', async (path, init) => {
+    assert.equal(path, '/api/inventory/assets/asset-id/movements');
+    assert.equal(init.credentials, 'include');
+    return init.headers.get('Authorization') === 'Bearer expired'
+      ? json({}, 401) : json([{ toStatus: 'MAINTENANCE' }]);
+  });
+  assert.deepEqual(await api('/api/inventory/assets/asset-id/movements'), [{ toStatus: 'MAINTENANCE' }]);
+  assert.equal(refreshes, 1);
+});
+
+test('Staff mutations preserve validation, forbidden and conflict errors without clearing the session', async t => {
+  const url = await sourceUrl('../src/lib/api.ts');
+  const { configureApiClient } = await import(url);
+  const { api } = await import(await sourceUrl('../src/features/staff/api.ts', {
+    '../../lib/api': url, react: import.meta.resolve('react'),
+  }));
+  configureApiClient({ getAccessToken: () => 'real-staff', onUnauthorized() { assert.fail('session cleared'); } });
+  let status = 400;
+  t.mock.method(globalThis, 'fetch', async (_path, init) => {
+    assert.equal(init.headers.get('Authorization'), 'Bearer real-staff');
+    assert.deepEqual(JSON.parse(init.body), { name: 'Duplicate' });
+    return json({ code: 'STAFF_ERROR', correlationId: 'staff-check', errors: { name: ['Category rejected'] } }, status);
+  });
+  for (status of [400, 403, 409]) await assert.rejects(api('/api/categories', 'POST', { name: 'Duplicate' }),
+    error => error.status === status && error.correlationId === 'staff-check' && error.message === 'Category rejected');
 });

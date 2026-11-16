@@ -1,0 +1,17 @@
+PR8 local quality gates
+dotnet restore LabLendAI.sln --disable-parallel: exit 0
+dotnet build LabLendAI.sln -c Release --no-restore -maxcpucount:2 -nodeReuse:false
+Build succeeded: 0 warnings, 0 errors
+LABLEND_POSTGRES_TESTS=1 dotnet test LabLendAI.sln -c Release --no-build --no-restore -maxcpucount:1
+TRX pr8_net8.0_20261116100757.trx: total=20, passed=20, failed=0, notExecuted=0
+TRX pr8_net8.0_20261116100804.trx: total=10, passed=10, failed=0, notExecuted=0
+TRX pr8_net8.0_20261116100925.trx: total=3, passed=3, failed=0, notExecuted=0
+TRX pr8_net8.0_20261116101125.trx: total=11, passed=11, failed=0, notExecuted=0
+TRX pr8_net8.0_20261116101532.trx: total=9, passed=9, failed=0, notExecuted=0
+TOTAL: passed=53/53; failed=0; skipped=0
+npm ci: exit 0; 0 vulnerabilities
+npm run build: TypeScript + Vite production build PASS
+npm test: 11 passed; 0 failed; 0 skipped
+Frontend final rerun after logout/refresh/redirect race guards: TypeScript/Vite PASS; 11/11 tests, 0 skipped.
+Secret value scan: no local/team/test credentials in tracked sources or new evidence.
+Solution preservation: all 35 repository csproj paths included with unique GUIDs.

@@ -2,9 +2,9 @@
 
 LabLend AI là nền tảng mượn/trả thiết bị phòng thí nghiệm cho đại học, phục vụ **STUDENT**, **LAB_STAFF** và **ADMIN**. Sinh viên tra cứu và yêu cầu mượn; staff duyệt, bàn giao, nhận trả và bảo trì; admin quản lý tài khoản và quyền. Đây là PRN232 Final Assignment theo [đề chính thức](docs/requirements/PRN232%20-%20Final%20Assignment.pdf) và [Master Plan V4](PRN232_LabLend_AI_Master_Implementation_Plan_V4.docx).
 
-**Trạng thái: Sprint 1 Member 1.** Identity/JWT/refresh/profile/admin và Borrowing Core đã có code, migrations, automated tests. Tạo loan với Catalog thật còn BLOCKED vì Catalog backend trong main vẫn là skeleton. Approval/gRPC allocation, luồng Redis đầy đủ, worker overdue và UI loan hoàn chỉnh vẫn Planned. Bằng chứng: [SPRINT1_ACCEPTANCE](docs/testing/SPRINT1_ACCEPTANCE.md); nền tảng trước đó: [SPRINT0_ACCEPTANCE](docs/testing/SPRINT0_ACCEPTANCE.md).
+**Trạng thái: tích hợp Sprint 1 M1 + M2 + M3 (PR #8).** Identity/JWT/refresh/profile/admin, Borrowing Core, Catalog/Inventory và Notification có code/migrations thật. Xem [PR8 integration acceptance](docs/testing/PR8_INTEGRATION_ACCEPTANCE.md) để biết kết quả kiểm thử và trạng thái merge thực tế. Approval/gRPC allocation, luồng Redis đầy đủ, worker overdue và UI loan hoàn chỉnh vẫn Planned. Bằng chứng: [SPRINT1_ACCEPTANCE](docs/testing/SPRINT1_ACCEPTANCE.md); nền tảng trước đó: [SPRINT0_ACCEPTANCE](docs/testing/SPRINT0_ACCEPTANCE.md).
 
-**Tích hợp M1/M3 ngày 16/11/2026:** frontend routing/auth, staff UI và Notification của M3 đã được ghép với Identity/Borrowing. Auth client đã khớp cookie/CSRF, roles[] và confirmPassword; access token ở memory, refresh được serialize. [Báo cáo tích hợp và kiểm thử](docs/team/M1_M3_INTEGRATION.md). Catalog/Inventory backend ở nhánh M2 chưa thuộc lần merge này; consumer Redis của M3 vẫn dùng contract proposal, chưa có Borrowing producer.
+**Tích hợp M1/M3 ngày 16/11/2026:** frontend routing/auth, staff UI và Notification của M3 đã được ghép với Identity/Borrowing. Auth client đã khớp cookie/CSRF, roles[] và confirmPassword; access token ở memory, refresh được serialize. [Báo cáo tích hợp và kiểm thử](docs/team/M1_M3_INTEGRATION.md). Checkpoint này có trước PR #8; Catalog/Inventory được tích hợp riêng qua PR #8; consumer Redis của M3 vẫn dùng contract proposal, chưa có Borrowing producer.
 
 ## Bắt đầu đọc từ đâu
 
@@ -40,7 +40,7 @@ flowchart LR
   Recommendation --> DB
 ```
 
-Mỗi service có `Host/Api → Application → Domain`; Infrastructure triển khai repository interfaces và DbContext riêng. Các mũi tên nghiệp vụ nét đứt là **Planned**. Inventory được deploy riêng với Borrowing; gRPC health HTTP/2 được chuẩn bị riêng, proto nghiệp vụ chưa chốt. Một PostgreSQL instance chứa 6 database với 6 login riêng; không FK/SQL join/DbContext xuyên service.
+Mỗi service có `Host/Api → Application → Domain`; Infrastructure triển khai repository interfaces và DbContext riêng. Các mũi tên nghiệp vụ nét đứt là **Planned**. Inventory được deploy riêng với Borrowing; gRPC health HTTP/2 được chuẩn bị riêng, proto allocation v1 có sáu RPC; R09 Borrowing REST→Inventory business gRPC vẫn Planned. Một PostgreSQL instance chứa 6 database với 6 login riêng; không FK/SQL join/DbContext xuyên service.
 
 ## Technology stack
 
@@ -128,7 +128,7 @@ npm run dev
 npm run build
 ```
 
-Mở http://localhost:5173. Frontend đã có routing, register/login/session restore, notifications và staff UI của M3; backend Catalog/Inventory trong main vẫn chờ nhánh M2. `VITE_API_BASE_URL` là URL public, mặc định trong env mẫu `http://localhost:5080`. Docker frontend dùng relative requests qua nginx → Gateway. Mọi `VITE_*` đều có thể lộ ra browser; tuyệt đối không đặt Gemini key/JWT secret tại đây.
+Mở http://localhost:5173. Frontend đã có routing, register/login/session restore, notifications và staff UI của M3; Staff Catalog/Inventory dùng API thật của M2 và JWT Identity trong memory. `/staff` chuyển vào Catalog, LAB_STAFF/ADMIN có quyền; Student bị chặn. `VITE_API_BASE_URL` là URL public, mặc định trong env mẫu `http://localhost:5080`. Docker frontend dùng relative requests qua nginx → Gateway. Mọi `VITE_*` đều có thể lộ ra browser; tuyệt đối không đặt Gemini key/JWT secret tại đây.
 
 ## Database and environment variables
 
@@ -143,7 +143,7 @@ Mở http://localhost:5173. Frontend đã có routing, register/login/session re
 | `GATEWAY_PORT`, `WEB_PORT` | Publish loopback, mặc định 5080/3000 |
 | `POSTGRES_DEV_PORT`, `REDIS_DEV_PORT` | Chỉ file Compose dev dùng, mặc định 55432/56379 |
 
-Database/users, migration commands, init/reapply: [DATABASE_CONVENTIONS](docs/architecture/DATABASE_CONVENTIONS.md). Identity/Borrowing/Notification Development startup áp dụng migrations thật; production mặc định tắt auto-migrate. Catalog/Inventory/Recommendation backend trong main vẫn là skeleton. `docker compose down` giữ volumes. **Không chạy `down -v` nếu chưa chủ động chấp nhận mất dữ liệu development.** Setup/init không tự xóa volume.
+Database/users, migration commands, init/reapply: [DATABASE_CONVENTIONS](docs/architecture/DATABASE_CONVENTIONS.md). Identity/Borrowing/Notification Development startup áp dụng migrations thật; production mặc định tắt auto-migrate. Catalog/Inventory áp dụng migrations + seed idempotent của M2 khi host khởi động; Recommendation vẫn skeleton. `docker compose down` giữ volumes. **Không chạy `down -v` nếu chưa chủ động chấp nhận mất dữ liệu development.** Setup/init không tự xóa volume.
 
 ## Sprint 1 Identity and Borrowing
 
@@ -153,7 +153,7 @@ Register/login qua Gateway; mọi POST `/api/auth/*` cần Origin localhost:5173
 
 Admin đầu tiên: chỉ Development, truyền `Bootstrap__Enabled=true`, `Bootstrap__AdminEmail`, `Bootstrap__AdminPassword` qua môi trường local rồi khởi động Identity; không có mật khẩu mặc định hay endpoint tạo ADMIN public. Seed không reset/promote user tồn tại. Compose có thể nhận bootstrap tạm thời qua một local override không commit; không đặt credentials vào source. Tắt bootstrap sau lần đầu.
 
-Borrowing chỉ hỗ trợ POST /api/loans, GET /api/loans/my, GET /api/loans/{id}, Staff/Admin GET /api/loans, POST /{id}/cancel và /reject. Due date >now và <=30 ngày; 1–20 items, mỗi item 1 unit. Runtime gọi Catalog thật để xác thực id/isActive, không có fallback cho ID giả. M2 cần cung cấp GET /api/equipment-types/{id}; tests dùng Catalog double có đánh dấu rõ, không thay chứng cứ Catalog thật.
+Borrowing chỉ hỗ trợ POST /api/loans, GET /api/loans/my, GET /api/loans/{id}, Staff/Admin GET /api/loans, POST /{id}/cancel và /reject. Due date >now và <=30 ngày; 1–20 items, mỗi item 1 unit. Runtime gọi Catalog thật để xác thực id/isActive, không có fallback cho ID giả. M2 cung cấp GET /api/equipment-types/{id} với id/isActive. `MemberIntegrationTests` khởi chạy Catalog thật, xác nhận type hợp lệ, missing và inactive; các unit/dependency tests cũ vẫn giữ double được đánh dấu rõ.
 
 Chạy tất cả tests với PostgreSQL disposable, tách khỏi .env/volumes nhóm (Docker Desktop phải hoạt động):
 
@@ -164,9 +164,9 @@ dotnet build LabLendAI.sln -c Release
 dotnet test LabLendAI.sln -c Release --no-build --no-restore
 ```
 
-Không đặt flag thì PostgreSQL suites báo SKIPPED; đó không phải bằng chứng PASS. Fixture tự tạo project Compose test tên ngẫu nhiên, password tạm thời, identity_db/borrowing_db và DB roles riêng, rồi xóa đúng container test; không nhận connection string thật của nhóm. YARP integration chạy Identity/Borrowing Kestrel thật + Catalog HTTP test double. Hosted CI bật flag; chưa tuyên bố hosted run mới đã PASS khi chưa push.
+Không đặt flag thì PostgreSQL suites báo SKIPPED; đó không phải bằng chứng PASS. Fixture tự tạo project Compose test tên ngẫu nhiên, password tạm thời, identity_db/borrowing_db/catalog_db/inventory_db và DB roles riêng, rồi xóa đúng container test; không nhận connection string thật của nhóm. YARP regression cũ dùng Catalog double có nhãn; MemberIntegrationTests bổ sung Identity/Catalog/Inventory/Borrowing executables thật, không mock Catalog. M2 Catalog/Inventory tests dùng Testcontainers PostgreSQL và gRPC Kestrel HTTP/2 thật. Hosted CI bật flag; chưa tuyên bố hosted run mới đã PASS khi chưa push.
 
-Runtime verification sau khi Compose đã chạy: `./scripts/Verify-Sprint1.ps1` (thêm `-IncludeBonus` khi Recommendation host đang chạy). Script chỉ đọc readiness/OpenAPI/authorization/migration metadata và kiểm tra isolation; không tạo test user/loan trong database nhóm. Sau tích hợp M1/M3: 38 tests .NET và 7 tests frontend PASS, Release build 0 warnings/errors, 11 containers healthy; Identity/Borrowing/Notification migrations đã áp dụng. [Checkpoint M1 và giới hạn Catalog](docs/testing/SPRINT1_ACCEPTANCE.md), [kết quả tích hợp](docs/team/M1_M3_INTEGRATION.md).
+Runtime verification sau khi Compose đã chạy: `./scripts/Verify-Sprint1.ps1` (thêm `-IncludeBonus` khi Recommendation host đang chạy). Script chỉ đọc readiness/OpenAPI/authorization/migration metadata và kiểm tra isolation; không tạo test user/loan trong database nhóm. Checkpoint trước PR #8 (M1/M3): 38 tests .NET và 7 tests frontend PASS, Release build 0 warnings/errors, 11 containers healthy; Identity/Borrowing/Notification migrations đã áp dụng. [Checkpoint M1 và giới hạn Catalog](docs/testing/SPRINT1_ACCEPTANCE.md), [kết quả tích hợp](docs/team/M1_M3_INTEGRATION.md).
 
 ## Team responsibilities
 

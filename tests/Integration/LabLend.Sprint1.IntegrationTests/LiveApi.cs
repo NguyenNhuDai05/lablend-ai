@@ -15,7 +15,8 @@ internal sealed class LiveApi : IAsyncDisposable
         var directory = new DirectoryInfo(AppContext.BaseDirectory);
         while (directory != null && !File.Exists(Path.Combine(directory.FullName, "LabLendAI.sln"))) directory = directory.Parent;
         var root = directory?.FullName ?? throw new InvalidOperationException("Repository not found.");
-        var folder = Path.Combine(root, "src", "Services", service, service + ".Api");
+        var host = service + (service == "Inventory" ? ".Host" : ".Api");
+        var folder = Path.Combine(root, "src", "Services", service, host);
         var listener = new TcpListener(IPAddress.Loopback, 0); listener.Start();
         var port = ((IPEndPoint)listener.LocalEndpoint).Port; listener.Stop();
         Address = $"http://127.0.0.1:{port}/";
@@ -23,7 +24,7 @@ internal sealed class LiveApi : IAsyncDisposable
             RedirectStandardError = true, UseShellExecute = false, CreateNoWindow = true };
         // Use the exact binaries tested by this configuration; no recursive build/test subprocess.
         var configuration = new DirectoryInfo(AppContext.BaseDirectory).Parent!.Name;
-        start.ArgumentList.Add(Path.Combine(folder, "bin", configuration, "net8.0", service + ".Api.dll"));
+        start.ArgumentList.Add(Path.Combine(folder, "bin", configuration, "net8.0", host + ".dll"));
         foreach (var (name, value) in new Dictionary<string, string>
         {
             ["ASPNETCORE_URLS"] = Address, ["ASPNETCORE_ENVIRONMENT"] = "Development", ["DOTNET_ENVIRONMENT"] = "Development",
@@ -33,6 +34,14 @@ internal sealed class LiveApi : IAsyncDisposable
             ["Bootstrap__AdminEmail"] = "admin@sprint1.test", ["Bootstrap__AdminPassword"] = fixture.AdminPassword,
             ["Catalog__BaseAddress"] = catalog ?? "http://127.0.0.1:1/"
         }) start.Environment[name] = value;
+        if (service == "Inventory")
+        {
+            start.Environment["Inventory__ServiceToken"] = fixture.SigningKey;
+            start.Environment["Kestrel__Endpoints__Rest__Url"] = Address;
+            var grpcListener = new TcpListener(IPAddress.Loopback, 0); grpcListener.Start();
+            var grpcPort = ((IPEndPoint)grpcListener.LocalEndpoint).Port; grpcListener.Stop();
+            start.Environment["Kestrel__Endpoints__Grpc__Url"] = $"http://127.0.0.1:{grpcPort}";
+        }
         process = Process.Start(start)!;
         stdout = process.StandardOutput.ReadToEndAsync(); stderr = process.StandardError.ReadToEndAsync();
         using var http = new HttpClient { BaseAddress = new Uri(Address), Timeout = TimeSpan.FromSeconds(1) };

@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Demo only (scripts/Demo-Inventory.ps1): reuses the client generated in Inventory.Host, like the integration tests. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Inventory.Host/Inventory.Host.csproj" />
+  </ItemGroup>
+</Project>

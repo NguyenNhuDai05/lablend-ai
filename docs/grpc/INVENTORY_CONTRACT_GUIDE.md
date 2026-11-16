@@ -1,26 +1,49 @@
 # Inventory gRPC contract guide
 
-**Owner schema: Member 2. Consumer/reviewer: Member 1. Status: PROPOSAL.**
+**Owner schema: Member 2. Consumer/reviewer: Member 1. Status: v1 IMPLEMENTED (server), chờ M1 review OD-01–03.**
 
-`proto/inventory/v1/inventory.proto` hiện chỉ chứa syntax/package/namespace và danh sách RPC dự kiến bằng comment. Chưa có business messages/service được chốt hoặc generate. M2 thêm schema và package Grpc.Tools/Google.Protobuf khi review OD-01–03 xong; ghim version hỗ trợ net8.0 bằng Central Package Management.
+Nguồn chuẩn: [`proto/inventory/v1/inventory.proto`](../../proto/inventory/v1/inventory.proto) (package `lablend.inventory.v1`, C# `LabLend.Inventory.Contracts.V1`). Inventory.Host generate server + client (`GrpcServices="Both"`); Borrowing thêm `<Protobuf Include=... GrpcServices="Client" />` trỏ cùng file, không copy proto.
 
-| Proposed RPC | Ý nghĩa cần thống nhất |
+| RPC | Semantics đã implement |
 |---|---|
-| CheckAvailability | Read-only, không reserve; batch equipment types, snapshot time; không đảm bảo stock cho lần approve sau |
-| ReserveAssets | Đủ mọi LoanItem trong local transaction hoặc rollback tất cả; ổn định operationId; không giữ Borrowing transaction qua network |
-| ConfirmHandover | Reservation → on-loan; idempotent; xác thực loan/reservation ownership |
-| ReturnAssets | Trả từng physical unit với NORMAL/DAMAGED/LOST; record movements và trạng thái inventory phù hợp |
-| ReleaseReservations | Compensation/expiry idempotent; chỉ giải phóng đúng loan/operation |
-| GetOperationStatus | Giải quyết timeout/unknown result, phục vụ reconciliation |
+| CheckAvailability | Read-only snapshot, 1–100 type ids; `total` loại RETIRED/LOST. Không giữ chỗ cho lần reserve sau |
+| ReserveAssets | 1–50 items, `loan_item_id` không trùng. Một transaction Inventory: mỗi item lấy 1 unit AVAILABLE bằng `FOR UPDATE SKIP LOCKED`; thiếu 1 item → rollback tất cả, `FAILED_PRECONDITION` + `INSUFFICIENT_STOCK` |
+| ConfirmHandover | Mọi reservation HELD của loan → HANDED_OVER, unit → ON_LOAN. Replay trả kết quả hiện tại; loan không có reservation active → `NOT_FOUND` |
+| ReturnAssets | Trả từng phần theo `loan_item_id`: NORMAL → AVAILABLE, DAMAGED → MAINTENANCE + maintenance record, LOST → LOST. Replay an toàn |
+| ReleaseReservations | Compensation/hết hạn nhận: giải phóng mọi HELD của loan. Không có gì → danh sách rỗng (idempotent) |
+| GetOperationStatus | `found=false` nghĩa là operation chưa reserve gì (đã rollback hoặc chưa tới) → Borrowing được retry cùng `operation_id` |
 
-Đề xuất chung cần review: UUID strings; UTC timestamp format; operationId, loanId, loanItemId; stable payload hash cho replay conflict; clear error mapping (InvalidArgument, NotFound, FailedPrecondition, ResourceExhausted/Aborted, DeadlineExceeded, Unauthenticated). Không fix field numbers/schema cuối cùng ở Sprint 0.
+## Idempotency và reconciliation
 
-Client/server phải thống nhất deadline, retry chỉ khi idempotent, correlation metadata và service authentication. Env `INVENTORY_SERVICE_TOKEN` mới là reserved configuration, chưa phải implementation auth business RPC. Business credentials thiếu/sai phải fail T27; public Gateway không proxy cổng gRPC.
+- `operation_id` ổn định cho một lần approve. Server lưu SHA-256 của `loan_id` + cặp `loan_item_id:equipment_type_id` đã sort.
+- Gọi lại cùng `operation_id` + cùng payload → trả allocations cũ, không reserve thêm. Khác payload → `ALREADY_EXISTS` (`OPERATION_ID_REUSED`). Operation đã release → `FAILED_PRECONDITION`; approve lại cần `operation_id` mới.
+- Hai request trùng `operation_id` chạy song song: request sau chờ request đầu commit rồi replay.
+- Borrowing persist `APPROVING` + `operation_id` **trước** khi gọi; timeout/unknown → `GetOperationStatus` rồi quyết định APPROVED hoặc retry/compensate (T28, M1+M2).
+- Hết deadline giữa chừng: server huỷ câu lệnh DB đang chạy (deadline → `CancellationToken` → PostgreSQL cancel) và rollback, client nhận `DEADLINE_EXCEEDED`; `GetOperationStatus` trả `found=false` và gọi lại cùng `operation_id` sẽ cấp phát bình thường. Mất reply sau khi đã commit: status và replay trả đúng unit cũ, không cấp thêm (T09).
+- Inventory không tự hết hạn HELD; Worker/Borrowing gọi `ReleaseReservations` khi quá hạn nhận.
 
-Inventory.Host hiện dùng HTTP/1 REST 8080 và HTTP/2 plaintext internal 8081 cho local isolated Docker; local SDK dùng 5103 và 5181. Có **standard grpc.health.v1.Health**, không có allocation. Kiểm tra transport thật:
+## Auth, lỗi, deadline
+
+- Mọi business RPC cần metadata `authorization: Bearer <INVENTORY_SERVICE_TOKEN>` (so sánh constant-time). Thiếu/sai → `UNAUTHENTICATED` (T27). `grpc.health.v1.Health` anonymous. Không dùng JWT người dùng làm service credential.
+- Mã lỗi: `INVALID_ARGUMENT` (UUID/items sai), `NOT_FOUND`, `FAILED_PRECONDITION` (hết hàng, sai trạng thái), `ALREADY_EXISTS`, `ABORTED` (`CONCURRENCY_CONFLICT`, retry được), `UNAUTHENTICATED`. Trailer `lablend-code` mang mã máy (`INSUFFICIENT_STOCK`, `OPERATION_ID_REUSED`, …).
+- Đề xuất client: deadline 5 s; chỉ retry `UNAVAILABLE`/`DEADLINE_EXCEEDED`/`ABORTED`, luôn cùng `operation_id`; propagate `X-Correlation-ID` qua metadata.
+
+## Wiring và kiểm tra
+
+Compose đã cấp cho Borrowing `Inventory__GrpcAddress=http://inventory:8081` và `Inventory__ServiceToken`; local SDK dùng `http://localhost:5181` (`scripts/Set-LocalEnvironment.ps1`). Inventory từ chối khởi động nếu token < 32 ký tự. Public Gateway không proxy cổng gRPC.
 
 ```powershell
 docker compose exec -T inventory dotnet /probe/HealthProbe.dll grpc http://localhost:8081
+dotnet test tests/Integration/Inventory.IntegrationTests   # cần Docker; T07–T11/T23/T27 + release/replay
+pwsh scripts/Demo-Inventory.ps1                             # demo R18 trên stack Docker đang chạy
 ```
 
-Kết quả health không chứng minh R08/R09 nghiệp vụ hoàn tất. Sprint sau Borrowing approve phải gọi ReserveAssets thực, persist APPROVING/operationId trước RPC và reconcile/compensate theo V4; M2 viết T06–T09/T23/T27, M1+M2 viết T28.
+`Demo-Inventory.ps1` (PowerShell 7) chạy trên stack `docker compose up -d`:
+- REST qua Gateway: Catalog và tồn kho công khai, 401/403/200, staff CRUD + bảo trì + StockMovements.
+- gRPC: `Inventory.DemoClient` chạy trong mạng `backend` bằng image của Inventory (cổng gRPC không publish ra host) và đóng vai Borrowing: thiếu token → `UNAUTHENTICATED`, all-or-nothing, 8 phiếu giành chiếc kính hiển vi cuối cùng (đúng 1 thắng), replay cùng `operation_id`, bàn giao rồi trả.
+
+Demo chạy lại được: kính hiển vi về lại AVAILABLE, thiết bị demo được ngừng dùng nên không làm đổi tồn kho.
+
+`GrpcOverHttp2Tests` chạy app trên Kestrel thật (endpoint gRPC chỉ HTTP/2, như Docker) và gọi bằng client sinh từ cùng file proto: đủ 6 RPC + health, kiểm tra mọi response là HTTP/2, T09 timeout và snapshot schema v1 (T23). Snapshot đỏ nghĩa là thay đổi phá client của Borrowing: thêm field mới với số mới thì cập nhật snapshot; đổi tên/số/kiểu field hoặc RPC thì làm `v2`.
+
+Còn lại cho R09: M1 thêm gRPC client trong Borrowing approve/handover/return và test end-to-end REST → gRPC.

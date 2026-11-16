@@ -15,7 +15,8 @@ using Xunit.Abstractions;
 
 namespace LabLend.Sprint1.IntegrationTests;
 
-public sealed class LiveGatewayFactory(PostgresFixture fixture, string identity, string borrowing) : WebApplicationFactory<GatewayMarker>
+public sealed class LiveGatewayFactory(PostgresFixture fixture, string identity, string borrowing,
+    string? catalog = null, string? inventory = null) : WebApplicationFactory<GatewayMarker>
 {
     protected override void ConfigureWebHost(IWebHostBuilder builder) => builder.ConfigureAppConfiguration((_, config) =>
         config.AddInMemoryCollection(new Dictionary<string, string?>
@@ -23,6 +24,8 @@ public sealed class LiveGatewayFactory(PostgresFixture fixture, string identity,
             ["Jwt:SigningKey"] = fixture.SigningKey,
             ["ReverseProxy:Clusters:identity:Destinations:primary:Address"] = identity,
             ["ReverseProxy:Clusters:borrowing:Destinations:primary:Address"] = borrowing,
+            ["ReverseProxy:Clusters:catalog:Destinations:primary:Address"] = catalog ?? "http://127.0.0.1:1/",
+            ["ReverseProxy:Clusters:inventory:Destinations:primary:Address"] = inventory ?? "http://127.0.0.1:1/",
             ["Logging:LogLevel:Default"] = "Warning"
         }));
 }

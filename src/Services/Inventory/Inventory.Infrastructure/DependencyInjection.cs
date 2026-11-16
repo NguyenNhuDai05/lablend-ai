@@ -1,3 +1,4 @@
+using Inventory.Application;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,6 +13,15 @@ public static class DependencyInjection
         if (string.IsNullOrWhiteSpace(connection))
             throw new InvalidOperationException("ConnectionStrings__Database is required for Inventory.");
         services.AddDbContext<InventoryDbContext>(options => options.UseNpgsql(connection));
+        services.AddScoped<IAssetRepository, AssetRepository>();
+        services.AddScoped<IAllocationRepository, AllocationRepository>();
         return services;
+    }
+
+    // ponytail: migrate on startup, fine for one Inventory instance; switch to a migration job if it ever scales out.
+    public static void MigrateInventoryDatabase(this IServiceProvider services)
+    {
+        using var scope = services.CreateScope();
+        scope.ServiceProvider.GetRequiredService<InventoryDbContext>().Database.Migrate();
     }
 }

@@ -69,4 +69,4 @@ try {
         Write-Output "PASS: $database has applied migration $expected (read using $user)."
     }
 } finally { Pop-Location }
-Write-Output 'PASS: Sprint 1 runtime checks. Actual Catalog business integration remains pending Member 2.'
+Write-Output 'PASS: Sprint 1 Identity/Borrowing runtime checks. Real Catalog integration evidence: PR8_INTEGRATION_ACCEPTANCE.md and MemberIntegrationTests.'

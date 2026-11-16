@@ -7,10 +7,11 @@ const messageOf = (error: unknown) => error instanceof ApiError ? error.message 
 export function LoginPage() {
   const auth = useAuth(); const navigate = useNavigate(); const location = useLocation();
   const [error, setError] = useState(''); const [busy, setBusy] = useState(false);
-  if (auth.status === 'authenticated') return <Navigate to="/" replace />;
+  const destination = (location.state as { from?: { pathname?: string } } | null)?.from?.pathname ?? '/';
+  if (auth.status === 'authenticated') return <Navigate to={destination} replace />;
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); setBusy(true); setError(''); const data = new FormData(event.currentTarget);
-    try { await auth.login({ email: String(data.get('email')), password: String(data.get('password')) }); const from = (location.state as { from?: { pathname?: string } } | null)?.from?.pathname; navigate(from ?? '/', { replace: true }); }
+    try { await auth.login({ email: String(data.get('email')), password: String(data.get('password')) }); navigate(destination, { replace: true }); }
     catch (e) { setError(messageOf(e)); } finally { setBusy(false); }
   }
   return <AuthCard title="Đăng nhập" footer={<>Chưa có tài khoản? <Link to="/register">Đăng ký</Link></>}><form onSubmit={event => void submit(event)}><label>Email<input name="email" type="email" autoComplete="email" required /></label><label>Mật khẩu<input name="password" type="password" autoComplete="current-password" required /></label>{error && <p className="form-error" role="alert">{error}</p>}<button disabled={busy}>{busy ? 'Đang đăng nhập…' : 'Đăng nhập'}</button></form></AuthCard>;

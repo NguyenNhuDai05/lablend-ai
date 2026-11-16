@@ -4,7 +4,10 @@ import { authApi } from './auth-api';
 import type { CurrentUser, LoginRequest, RegisterRequest } from './types';
 
 function removeLegacyToken() {
-  try { sessionStorage.removeItem('lablend.access-token'); } catch { /* Storage may be disabled; tokens stay in memory. */ }
+  try {
+    sessionStorage.removeItem('lablend.access-token');
+    sessionStorage.removeItem('lablend.staffToken');
+  } catch { /* Storage may be disabled; tokens stay in memory. */ }
 }
 type AuthContextValue = {
   user: CurrentUser | null;
@@ -63,7 +66,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setStatus('authenticated');
     },
     async register(request) { await authApi.register(request); },
-    async logout() { clearSession(); try { await authApi.logout(); } finally { clearSession(); } },
+    async logout() {
+      clearSession();
+      const current = generation.current;
+      try { await authApi.logout(); }
+      finally { if (current === generation.current) clearSession(); }
+    },
   }), [clearSession, status, user]);
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

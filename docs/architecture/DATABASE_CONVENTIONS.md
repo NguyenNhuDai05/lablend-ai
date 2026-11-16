@@ -11,7 +11,7 @@
 
 Một PostgreSQL instance; mỗi database có owner/login riêng, PUBLIC bị revoke database privileges và schema privileges. Service chỉ nhận connection string của chính mình; không chia sẻ admin login. Worker cùng bounded context Borrowing nên được dùng borrowing_db. DB role bootstrap dùng env password ngẫu nhiên, không có password trong script SQL/source.
 
-Quy tắc: UUID keys, UTC timestamps, local FK chỉ trong cùng database. Cross-service IDs chỉ logical references. Không shared DbContext/domain model; không cross-DB join/FK. Sprint 1: Identity/Borrowing có entities, constraints, repositories và migrations thật; contexts M2/M3 vẫn Scaffolded.
+Quy tắc: UUID keys, UTC timestamps, local FK chỉ trong cùng database. Cross-service IDs chỉ logical references. Không shared DbContext/domain model; không cross-DB join/FK. Sprint 1: Identity/Borrowing có entities, constraints, repositories và migrations thật; Catalog, Inventory và Notification cũng có model/migrations thật; Recommendation vẫn scaffolded. Catalog InitialCatalog seed categories/equipment types; Inventory InitialInventory và AddStockMovements giữ constraints/locking và lịch sử trạng thái; Notification InitialNotification giữ inbox deduplication độc lập.
 
 Identity migration InitialIdentity tạo ASP.NET Identity tables + RefreshTokens/UserAuditEvents, normalized email unique, refresh hash unique, family/expiry indexes, xmin refresh concurrency. Borrowing InitialBorrowing tạo LoanRequests/LoanItems/LoanHistories, local FKs, purpose/due/status checks, owner/status/time indexes và xmin. Development startup của hai host chạy MigrateAsync khi Database:ApplyMigrations=true; production mặc định false, chạy migration có kiểm soát bằng user DB riêng. Không EnsureCreated.
 
@@ -29,7 +29,7 @@ dotnet ef migrations add InitialCreate --project src/Services/Catalog/Catalog.In
 dotnet ef database update --project src/Services/Catalog/Catalog.Infrastructure --startup-project src/Services/Catalog/Catalog.Api
 ```
 
-Thay tên project/env tương ứng service; Inventory startup là `Inventory.Host`. Mỗi migration chỉ ghi DB của service. Không dùng `EnsureCreated` song song migrations. Sprint sau thêm migrations job/script idempotent chạy trước business app, seed lặp lại không phá dữ liệu; chưa auto-migrate/seed schema giả ở Sprint 0.
+Thay tên project/env tương ứng service; Inventory startup là `Inventory.Host`. Mỗi migration chỉ ghi DB của service. Không dùng `EnsureCreated` song song migrations. Sprint sau thêm migrations job/script idempotent chạy trước business app, seed lặp lại không phá dữ liệu; Catalog và Inventory tự gọi `Database.Migrate()` khi khởi động (idempotent, một instance); seed demo nằm trong migration với ID cố định. Inventory (`InitialInventory`) dùng `xmin` làm optimistic concurrency token, check constraint cho status và partial unique index (một reservation active cho mỗi unit/loan item, một maintenance mở cho mỗi unit) làm lưới an toàn thứ hai sau `FOR UPDATE SKIP LOCKED`. `AddStockMovements` thêm bảng append-only `StockMovements` (khoá `bigint` identity = thứ tự ghi, FK restrict tới `AssetUnits`): domain ghi movement ở mọi lần đổi status, riêng lệnh SQL reserve tự ghi trong cùng transaction; migration chèn một dòng baseline cho các unit đã có.
 
 EF tool/EF Core ghim 8.0.34; provider Npgsql EF 8.0.11; Central Package Management pin transitive EF về cùng patch. Không nâng EF lên 9/10 để xử lý restore. Kiểm tra `dotnet list <project> package --include-transitive` khi đổi package.
 
