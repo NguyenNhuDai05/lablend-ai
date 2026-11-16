@@ -74,6 +74,8 @@ internal sealed class Sprint2Stack(PostgresFixture postgres) : IAsyncDisposable
     public HttpClient InventoryStaff { get; private set; } = null!;
     public HttpClient CatalogStaff { get; private set; } = null!;
     public string InventoryGrpc => inventory.GrpcAddress;
+    public string CatalogAddress => catalog.Address;
+    private string staffToken = "";
     public Guid StudentId { get; private set; }
     public string StudentToken { get; private set; } = "";
     public async Task Start(IReadOnlyDictionary<string, string>? settings = null)
@@ -95,6 +97,7 @@ internal sealed class Sprint2Stack(PostgresFixture postgres) : IAsyncDisposable
         await Body(await auth.PutAsJsonAsync($"api/users/{user["id"]}/role", new { role = "LAB_STAFF" }));
         var staff = await Body(await auth.PostAsJsonAsync("api/auth/login", new { email, password }));
         var token = (string)staff["accessToken"]!;
+        staffToken = token;
         Staff = Client(borrowing.Address, token); InventoryStaff = Client(inventory.Address, token); CatalogStaff = Client(catalog.Address, token);
         var studentEmail = "student-" + email;
         var student = await Body(await auth.PostAsJsonAsync("api/auth/register", new { email = studentEmail, password, confirmPassword = password, displayName = "Sprint 2 Student" }));
@@ -102,6 +105,14 @@ internal sealed class Sprint2Stack(PostgresFixture postgres) : IAsyncDisposable
         var login = await Body(await auth.PostAsJsonAsync("api/auth/login", new { email = studentEmail, password }));
         StudentToken = (string)login["accessToken"]!; Student = Client(borrowing.Address, StudentToken);
         Staff.DefaultRequestHeaders.Add("X-Correlation-ID", "sprint2-real-lifecycle");
+    }
+    public Task CrashBorrowing() => borrowing.DisposeAsync().AsTask();
+    public async Task RestartBorrowing()
+    {
+        await borrowing.Start("Borrowing", postgres.BorrowingConnection, postgres, catalog.Address,
+            new Dictionary<string, string> { ["Inventory__GrpcAddress"] = InventoryGrpc, ["Inventory__ServiceToken"] = postgres.SigningKey });
+        Staff.Dispose(); Student.Dispose();
+        Staff = Client(borrowing.Address, staffToken); Student = Client(borrowing.Address, StudentToken);
     }
     public async Task<(Guid Type, Guid[] Assets)> Stock(int count)
     {

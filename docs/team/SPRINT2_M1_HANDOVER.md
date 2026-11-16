@@ -22,3 +22,13 @@ PRs must use the previous feature branch as base until dependencies merge. Never
 
 Staff/Admin POST `/api/loans/{id}/approve`, `/handover`, `/returns`. Returns body: `{"items":[{"loanItemId":"UUID","condition":"NORMAL|DAMAGED|LOST"}]}`.
 Service auth uses Inventory configuration, never a user's JWT. PostgreSQL session advisory locks coordinate a loan across processes without holding a transaction during RPC. Persisted operation intent survives process failure. No cross-service database access in production.
+
+## Recovery operations
+
+`BorrowingWorkflow` options: BatchSize=20 (1–100), MaxAttempts=8 (1–20), PickupHours=24 (1–168), PollSeconds=15 (1–3600). Pending/RETRY/COMPENSATING commands are scanned by NextRetryAt with bounded exponential backoff (up to five minutes). Each loan uses the same session advisory key across API and reconciler; re-read state after acquiring it. MANUAL_REVIEW blocks further mutations and is never automatically reset.
+
+Use borrowing_user only to inspect InventoryOperations for OperationId, LoanId, OperationType, State, RetryCount, LastError and NextRetryAt. For manual review, query Inventory through authenticated GetOperationStatus with the loan's ApprovalOperationId, compare every item/asset/status against the durable intent, and resolve the underlying credential/network/contract problem. Do not set APPROVED manually, delete intent, or generate a new operation ID to bypass a conflict. An owner-reviewed repair procedure is required for external reservation writers or inconsistent HANDED_OVER/RETURNED state; those holdings must never be released as pickup expiry.
+
+An acknowledged reserve followed by failed local commit records COMPENSATING when the database is reachable. Reconciliation verifies HELD/RELEASED, calls ReleaseReservations and rechecks status before finalizing local failure/expiry. If the database was unavailable, the earlier PENDING command survives and can roll forward on recovery. A process crash with no recorded compensation rolls forward the same allocation when still valid. Expired approvals stabilize an unknown reserve through the same-ID replay before release: found=false alone cannot prove an older request is no longer in flight. Handover/return recovery uses the approval reference plus immutable per-item return intent; it never assigns a new asset.
+
+Draft lifecycle PR: [#10](https://github.com/NguyenNhuDai05/lablend-ai/pull/10). Exact-head CI for `5d23245`: [success](https://github.com/NguyenNhuDai05/lablend-ai/actions/runs/43821389658).

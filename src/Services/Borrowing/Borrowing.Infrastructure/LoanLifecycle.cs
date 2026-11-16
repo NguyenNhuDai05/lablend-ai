@@ -3,10 +3,11 @@ using Borrowing.Application;
 using Borrowing.Domain;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace Borrowing.Infrastructure;
 
-public sealed class LoanLifecycle(BorrowingDbContext db, IInventoryClient inventory, TimeProvider clock, ILogger<LoanLifecycle> logger) : ILoanLifecycle
+public sealed class LoanLifecycle(BorrowingDbContext db, IInventoryClient inventory, TimeProvider clock, IOptions<BorrowingWorkflowOptions> options, ILogger<LoanLifecycle> logger) : ILoanLifecycle
 {
     private static bool Active(InventoryOperation op) => op.State is not ("COMPLETED" or "FAILED");
     public async Task Execute(Guid loanId, string type, Guid actor, string correlationId, ReturnLoanRequest? request, CancellationToken ct)
@@ -80,6 +81,12 @@ public sealed class LoanLifecycle(BorrowingDbContext db, IInventoryClient invent
         try
         {
             var status = await inventory.Status(loan.ApprovalOperationId ?? operation.OperationId, operation.CorrelationId, ct);
+            if (operation.State == "COMPENSATING" || operation.OperationType == "RELEASE"
+                || operation.OperationType == "APPROVE" && loan.DueAt <= clock.GetUtcNow())
+            {
+                await Compensate(loan, operation, status, ct);
+                return;
+            }
             InventorySnapshot result;
             switch (operation.OperationType)
             {
@@ -130,11 +137,51 @@ public sealed class LoanLifecycle(BorrowingDbContext db, IInventoryClient invent
                 operation.State = "FAILED"; operation.CompletedAt = clock.GetUtcNow();
                 (await Load(operation.LoanId, ct)).FailApproval(operation.ActorId, clock.GetUtcNow(), failure.Message);
             }
-            else operation.State = operation.RetryCount >= 8 || !failure.Uncertain ? "MANUAL_REVIEW" : "RETRY";
+            else operation.State = operation.RetryCount >= options.Value.MaxAttempts || !failure.Uncertain ? "MANUAL_REVIEW"
+                : operation.State == "COMPENSATING" ? "COMPENSATING" : "RETRY";
             await db.SaveChangesAsync(ct);
             logger.LogWarning("Loan {LoanId} operation {OperationId} deferred: {Code}; state={State}; correlationId={CorrelationId}", operation.LoanId, operation.OperationId, failure.Message, operation.State, operation.CorrelationId);
             throw new LoanFailure(failure.Status, "Inventory operation could not be completed: " + failure.Message);
         }
+        catch (DbUpdateException) when (!ct.IsCancellationRequested)
+        {
+            // An acknowledged reserve followed by a failed local transaction must leave durable compensation intent.
+            // If the database itself is down this write can also fail; the original PENDING intent still survives.
+            db.ChangeTracker.Clear();
+            operation = await db.InventoryOperations.SingleAsync(o => o.OperationId == operation.OperationId, ct);
+            operation.RetryCount++; operation.LastError = "LOCAL_COMMIT_FAILED";
+            operation.State = operation.RetryCount >= options.Value.MaxAttempts ? "MANUAL_REVIEW"
+                : operation.OperationType == "APPROVE" ? "COMPENSATING" : "RETRY";
+            operation.NextRetryAt = clock.GetUtcNow().AddSeconds(5);
+            await db.SaveChangesAsync(ct);
+            throw new LoanFailure(503, "Local commit failed; the persisted operation will be reconciled.");
+        }
+    }
+
+    private async Task Compensate(LoanRequest loan, InventoryOperation operation, InventorySnapshot status, CancellationToken ct)
+    {
+        if (!status.Found)
+        {
+            // found=false is only a snapshot: an older request might still be in flight. Same-ID replay
+            // joins the server's operation serialization before release, preventing a late orphaned hold.
+            try { status = await inventory.Reserve(loan.ApprovalOperationId!.Value, loan.Id,
+                loan.Items.ToDictionary(i => i.Id, i => i.EquipmentTypeId), operation.CorrelationId, ct); }
+            catch (InventoryFailure e) when (!e.Uncertain && e.Message == "INSUFFICIENT_STOCK")
+            {
+                loan.Expire(operation.ActorId, clock.GetUtcNow());
+                operation.State = "COMPLETED"; operation.CompletedAt = clock.GetUtcNow();
+                await db.SaveChangesAsync(ct); return;
+            }
+        }
+        Verify(loan, status, "HELD", "RELEASED"); // HANDED_OVER/RETURNED is never released.
+        await inventory.Release(loan.Id, operation.CorrelationId, ct);
+        var released = await inventory.Status(loan.ApprovalOperationId!.Value, operation.CorrelationId, ct);
+        Verify(loan, released, "RELEASED");
+        if (operation.OperationType == "RELEASE" || loan.DueAt <= clock.GetUtcNow()) loan.Expire(operation.ActorId, clock.GetUtcNow());
+        else loan.FailApproval(operation.ActorId, clock.GetUtcNow(), "Reservation compensated after local commit failure.");
+        operation.State = "COMPLETED"; operation.CompletedAt = clock.GetUtcNow(); operation.LastError = "RESERVATIONS_RELEASED";
+        await db.SaveChangesAsync(ct);
+        logger.LogInformation("Compensated loan {LoanId}, operation {OperationId}; correlationId={CorrelationId}", loan.Id, operation.OperationId, operation.CorrelationId);
     }
 
     private static void Verify(LoanRequest loan, InventorySnapshot result, params string[] allowed)

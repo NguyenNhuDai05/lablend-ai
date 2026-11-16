@@ -16,6 +16,11 @@ public static class DependencyInjection
         services.AddScoped<ILoanRepository, LoanRepository>();
         services.AddScoped<LoanService>();
         services.AddScoped<ILoanLifecycle, LoanLifecycle>();
+        services.AddScoped<LoanLifecycle>();
+        services.AddScoped<LoanReconciliation>();
+        services.AddOptions<BorrowingWorkflowOptions>().Bind(configuration.GetSection("BorrowingWorkflow"))
+            .Validate(o => o.BatchSize is >= 1 and <= 100 && o.MaxAttempts is >= 1 and <= 20 && o.PickupHours is >= 1 and <= 168
+                && o.PollSeconds is >= 1 and <= 3600, "Invalid BorrowingWorkflow configuration.").ValidateOnStart();
         services.AddOptions<InventoryOptions>().Bind(configuration.GetSection("Inventory"))
             .Validate(o => Uri.TryCreate(o.GrpcAddress, UriKind.Absolute, out var uri) && uri.Scheme is "http" or "https"
                 && o.DeadlineSeconds is >= 1 and <= 30, "Invalid Inventory endpoint/deadline.");
