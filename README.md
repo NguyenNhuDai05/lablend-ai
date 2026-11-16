@@ -4,6 +4,8 @@ LabLend AI là nền tảng mượn/trả thiết bị phòng thí nghiệm cho 
 
 **Trạng thái: tích hợp Sprint 1 M1 + M2 + M3 (PR #8).** Identity/JWT/refresh/profile/admin, Borrowing Core, Catalog/Inventory và Notification có code/migrations thật. Xem [PR8 integration acceptance](docs/testing/PR8_INTEGRATION_ACCEPTANCE.md) để biết kết quả kiểm thử và trạng thái merge thực tế. Approval/gRPC allocation, luồng Redis đầy đủ, worker overdue và UI loan hoàn chỉnh vẫn Planned. Bằng chứng: [SPRINT1_ACCEPTANCE](docs/testing/SPRINT1_ACCEPTANCE.md); nền tảng trước đó: [SPRINT0_ACCEPTANCE](docs/testing/SPRINT0_ACCEPTANCE.md).
 
+**Sprint 2 M1:** REST approve/handover/partial returns và adapter Inventory gRPC đang được triển khai trên feature branches. Xem [acceptance theo từng gate](docs/testing/SPRINT2_M1_ACCEPTANCE.md) và [handover/review order](docs/team/SPRINT2_M1_HANDOVER.md) cho trạng thái hiện hành, migration, kiểm thử thật và các quyết định M2/M3 còn chờ review. Các mô tả Sprint 0/1 bên dưới là baseline lịch sử; không dùng healthy containers làm bằng chứng hoàn thành Sprint 2.
+
 **Tích hợp M1/M3 ngày 16/11/2026:** frontend routing/auth, staff UI và Notification của M3 đã được ghép với Identity/Borrowing. Auth client đã khớp cookie/CSRF, roles[] và confirmPassword; access token ở memory, refresh được serialize. [Báo cáo tích hợp và kiểm thử](docs/team/M1_M3_INTEGRATION.md). Checkpoint này có trước PR #8; Catalog/Inventory được tích hợp riêng qua PR #8; consumer Redis của M3 vẫn dùng contract proposal, chưa có Borrowing producer.
 
 ## Bắt đầu đọc từ đâu

@@ -28,7 +28,7 @@ public sealed class SchemaTests(PostgresFixture postgres)
         await using var borrowing = new BorrowingFactory(postgres); using var client = borrowing.CreateClient();
         using var borrowingScope = borrowing.Services.CreateScope(); var loans = borrowingScope.ServiceProvider.GetRequiredService<BorrowingDbContext>();
         await loans.Database.MigrateAsync(); await loans.Database.MigrateAsync();
-        Assert.Single(await loans.Database.GetAppliedMigrationsAsync());
+        Assert.Equal(loans.Database.GetMigrations(), await loans.Database.GetAppliedMigrationsAsync());
         foreach (var source in new[] { postgres.IdentityConnection, postgres.BorrowingConnection })
         {
             var other = new NpgsqlConnectionStringBuilder(source);

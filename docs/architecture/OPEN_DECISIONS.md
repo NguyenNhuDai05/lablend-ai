@@ -1,5 +1,13 @@
 # Open decisions
 
+## Sprint 2 M1 consumer audit (2026-11-16)
+
+OD-01–03 reviewed by the M1 implementation against the unchanged v1 proto/server: UUIDs, one item/unit, atomic reserve, stable operation ID and same-payload replay, GetOperationStatus, explicit HELD release, service Bearer metadata and a 5-second deadline are the consumer defaults. This records consumer implementation review, not an invented M2 approval of new contract changes.
+
+OD-04/05 remain **PROVISIONAL / M3 review pending**: the producer will use the existing consumer's camelCase v1 envelope, `recipientUserId/title/message/loanId` payload, `lablend.events.v1` stream and `event` field. Real compatibility/crash/replay tests are required; tests do not close team review.
+
+v1 gap for M2 review: allocations omit reservation ID and historical return condition/time. Borrowing leaves ReservationId null and persists immutable staff return intent before RPC. Current asset status is not historical return evidence after another borrower or maintenance changes it. Recovery assumes reservation mutations originate from Borrowing; external command writers cannot be safely reconciled without additional contract evidence. No proto or M2 implementation change is made here.
+
 Các mục còn OPEN/PROPOSAL chưa thay thế review của người sở hữu. OD-06/OD-08 đã có implementation defaults được chủ repository chấp thuận trong phiên Sprint 1; review consumer M2/M3 vẫn pending. Không ghi là hai thành viên đã review khi chưa có bằng chứng.
 
 | ID | Quyết định cần chốt | Owner và reviewers | Điều kiện đóng |

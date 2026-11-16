@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Borrowing.Api.Controllers;
 
 [ApiController, Route("api/loans"), Authorize, Produces("application/json")]
-public sealed class LoansController(LoanService service) : ControllerBase
+public sealed class LoansController(LoanService service, ILoanLifecycle lifecycle) : ControllerBase
 {
     private Guid Actor => Guid.Parse(User.FindFirst("sub")!.Value);
     private bool Staff => User.IsInRole(Roles.Admin) || User.IsInRole(Roles.LabStaff);
@@ -29,4 +29,16 @@ public sealed class LoansController(LoanService service) : ControllerBase
     public Task<LoanDto> Cancel(Guid id, CancellationToken ct) => service.Cancel(id, Actor, ct);
     [HttpPost("{id:guid}/reject"), Authorize(Policy = "StaffOrAdmin"), ProducesResponseType<LoanDto>(200), ProducesResponseType<ProblemDetails>(409)]
     public Task<LoanDto> Reject(Guid id, RejectLoanRequest request, CancellationToken ct) => service.Reject(id, Actor, request.RejectionReason, ct);
+
+    [HttpPost("{id:guid}/approve"), Authorize(Policy = "StaffOrAdmin"), ProducesResponseType<LoanDto>(200), ProducesResponseType<ProblemDetails>(409), ProducesResponseType<ProblemDetails>(503)]
+    public Task<LoanDto> Approve(Guid id, CancellationToken ct) => Execute(id, "APPROVE", null, ct);
+    [HttpPost("{id:guid}/handover"), Authorize(Policy = "StaffOrAdmin"), ProducesResponseType<LoanDto>(200), ProducesResponseType<ProblemDetails>(409), ProducesResponseType<ProblemDetails>(503)]
+    public Task<LoanDto> Handover(Guid id, CancellationToken ct) => Execute(id, "HANDOVER", null, ct);
+    [HttpPost("{id:guid}/returns"), Authorize(Policy = "StaffOrAdmin"), ProducesResponseType<LoanDto>(200), ProducesResponseType<ProblemDetails>(400), ProducesResponseType<ProblemDetails>(409), ProducesResponseType<ProblemDetails>(503)]
+    public Task<LoanDto> Return(Guid id, ReturnLoanRequest request, CancellationToken ct) => Execute(id, "RETURN", request, ct);
+    private async Task<LoanDto> Execute(Guid id, string type, ReturnLoanRequest? request, CancellationToken ct)
+    {
+        await lifecycle.Execute(id, type, Actor, HttpContext.TraceIdentifier, request, ct);
+        return await service.Detail(id, Actor, true, ct);
+    }
 }

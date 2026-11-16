@@ -15,6 +15,9 @@ public sealed class LoanRequest
     public Guid? ReviewedBy { get; private set; }
     public DateTimeOffset? ReviewedAt { get; private set; }
     public string? RejectionReason { get; private set; }
+    public Guid? ApprovalOperationId { get; private set; }
+    public Guid? HandedOverBy { get; private set; }
+    public DateTimeOffset? HandedOverAt { get; private set; }
     public DateTimeOffset CreatedAt { get; private set; }
     public DateTimeOffset UpdatedAt { get; private set; }
     public uint Version { get; private set; }
@@ -52,6 +55,55 @@ public sealed class LoanRequest
         Transition(actor, LoanStatus.REJECTED, "REJECTED", now, RejectionReason);
         foreach (var item in Items) item.ItemStatus = ItemStatus.REJECTED;
     }
+    public void BeginApproval(Guid operationId, Guid actor, DateTimeOffset now)
+    {
+        if (Status != LoanStatus.PENDING || DueAt <= now) throw new LoanStateException("Only a PENDING loan with a future due date may be approved.");
+        ApprovalOperationId = operationId;
+        Transition(actor, LoanStatus.APPROVING, "APPROVING", now, null);
+    }
+
+    public void Approve(Guid actor, DateTimeOffset now)
+    {
+        if (Status != LoanStatus.APPROVING || Items.Any(i => i.AssetUnitId == null || i.ItemStatus != ItemStatus.RESERVED))
+            throw new LoanStateException("Approval requires every item to have a verified allocation.");
+        ReviewedBy = actor; ReviewedAt = now;
+        Transition(actor, LoanStatus.APPROVED, "APPROVED", now, null);
+    }
+
+    public void FailApproval(Guid actor, DateTimeOffset now, string reason)
+    {
+        if (Status != LoanStatus.APPROVING) throw new LoanStateException("Approval is not in progress.");
+        Transition(actor, LoanStatus.APPROVAL_FAILED, "APPROVAL_FAILED", now, reason);
+    }
+
+    public void Handover(Guid actor, DateTimeOffset now)
+    {
+        if (Status != LoanStatus.APPROVED) throw new LoanStateException("Only APPROVED loans may be handed over.");
+        foreach (var item in Items) item.ItemStatus = ItemStatus.BORROWED;
+        HandedOverBy = actor; HandedOverAt = now;
+        Transition(actor, LoanStatus.BORROWED, "HANDED_OVER", now, null);
+    }
+
+    public void RecordReturn(IReadOnlyDictionary<Guid, string> conditions, Guid actor, DateTimeOffset now)
+    {
+        if (Status != LoanStatus.BORROWED) throw new LoanStateException("Only BORROWED loans may be returned.");
+        foreach (var (id, condition) in conditions)
+        {
+            var item = Items.Single(i => i.Id == id);
+            if (item.ItemStatus != ItemStatus.BORROWED) throw new LoanStateException("Item is already returned.");
+            item.ReturnCondition = condition; item.ReturnedAt = now;
+            item.ItemStatus = condition switch { "NORMAL" => ItemStatus.RETURNED, "DAMAGED" => ItemStatus.DAMAGED, "LOST" => ItemStatus.LOST, _ => throw new ArgumentException("Invalid return condition.") };
+        }
+        Transition(actor, Items.All(i => i.ItemStatus != ItemStatus.BORROWED) ? LoanStatus.RETURNED : LoanStatus.BORROWED, "RETURNED", now, null);
+    }
+
+    public void Expire(Guid actor, DateTimeOffset now)
+    {
+        if (Status is not (LoanStatus.APPROVED or LoanStatus.APPROVING)) throw new LoanStateException("Only reservations awaiting pickup may expire.");
+        foreach (var item in Items) item.ItemStatus = ItemStatus.CANCELLED;
+        Transition(actor, LoanStatus.EXPIRED, "EXPIRED", now, null);
+    }
+
     private void Transition(Guid actor, LoanStatus next, string action, DateTimeOffset now, string? note)
     {
         Histories.Add(new() { LoanRequestId = Id, ActorUserId = actor, Action = action, FromStatus = Status,
@@ -67,6 +119,8 @@ public sealed class LoanItem
     public Guid EquipmentTypeId { get; set; }
     public Guid? AssetUnitId { get; set; }
     public Guid? ReservationId { get; set; }
+    public string? ReturnCondition { get; set; }
+    public DateTimeOffset? ReturnedAt { get; set; }
     public ItemStatus ItemStatus { get; set; } = ItemStatus.REQUESTED;
 }
 

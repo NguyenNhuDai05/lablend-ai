@@ -1,5 +1,7 @@
 # Requirements traceability
 
+Current M1 Sprint 2 delta: R09 has source implementation for REST approve/handover/returns → Inventory gRPC with persisted operation intent and a Borrowing-only migration. Real-service Gate A coverage is in `Sprint2LifecycleTests`; current execution status and evidence are tracked in [Sprint 2 acceptance](../testing/SPRINT2_M1_ACCEPTANCE.md). R05–R07 remain pending their gates. Historical Sprint 0/1 status tables below do not supersede this checkpoint or certify final acceptance.
+
 Nguồn chuẩn: [PRN232 Final Assignment, 3 trang](PRN232%20-%20Final%20Assignment.pdf). Plan nhóm: [V4](../../PRN232_LabLend_AI_Master_Implementation_Plan_V4.docx). Nếu xung đột, PDF ưu tiên. Mã R01–R18 giữ theo V4 để đối chiếu; PDF không bắt buộc sáu microservice, Gemini hoặc frontend.
 
 **Implemented** = phần được nêu đã có implementation; **Scaffolded** = mới có nền/cấu hình; **Planned** = chưa triển khai; **Blocked** = có blocker cụ thể. Một yêu cầu cuối môn vẫn chưa đạt nếu evidence mới chứng minh skeleton.

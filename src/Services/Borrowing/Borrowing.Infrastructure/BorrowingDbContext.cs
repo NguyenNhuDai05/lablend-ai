@@ -8,8 +8,23 @@ public sealed class BorrowingDbContext(DbContextOptions<BorrowingDbContext> opti
     public DbSet<LoanRequest> LoanRequests => Set<LoanRequest>();
     public DbSet<LoanItem> LoanItems => Set<LoanItem>();
     public DbSet<LoanHistory> LoanHistories => Set<LoanHistory>();
+    public DbSet<InventoryOperation> InventoryOperations => Set<InventoryOperation>();
     protected override void OnModelCreating(ModelBuilder model)
     {
+        model.Entity<InventoryOperation>(b =>
+        {
+            b.HasKey(x => x.OperationId);
+            b.Property(x => x.OperationId).ValueGeneratedNever();
+            b.Property(x => x.OperationType).HasMaxLength(32);
+            b.Property(x => x.State).HasMaxLength(32);
+            b.Property(x => x.CorrelationId).HasMaxLength(64);
+            b.Property(x => x.RequestJson).HasColumnType("jsonb");
+            b.Property(x => x.LastError).HasMaxLength(500);
+            b.Property(x => x.Version).IsRowVersion();
+            b.HasIndex(x => new { x.State, x.NextRetryAt });
+            b.HasIndex(x => x.LoanId).IsUnique().HasFilter("\"State\" NOT IN ('COMPLETED','FAILED')");
+            b.HasOne<LoanRequest>().WithMany().HasForeignKey(x => x.LoanId);
+        });
         model.Entity<LoanRequest>(b =>
         {
             b.HasKey(x => x.Id);
@@ -33,6 +48,7 @@ public sealed class BorrowingDbContext(DbContextOptions<BorrowingDbContext> opti
             b.HasKey(x => x.Id);
             b.Property(x => x.Id).ValueGeneratedNever();
             b.Property(x => x.ItemStatus).HasConversion<string>().HasMaxLength(32);
+            b.Property(x => x.ReturnCondition).HasMaxLength(16);
             b.HasIndex(x => x.EquipmentTypeId);
             b.ToTable(t => t.HasCheckConstraint("CK_Item_Status", "\"ItemStatus\" IN ('REQUESTED','RESERVED','BORROWED','RETURNED','DAMAGED','LOST','CANCELLED','REJECTED')"));
         });
