@@ -42,7 +42,7 @@ async function screen(page, name) { await page.screenshot({ path: resolve(eviden
 async function confirmReturn(page, condition) {
   await page.getByRole('combobox', { name: /Tình trạng trả/ }).first().selectOption(condition);
   const review = page.getByRole('button', { name: 'Xem lại thiết bị nhận trả', exact: true });
-  if (await review.count()) await review.click();
+  await review.click();
   await page.getByRole('button', { name: 'Xác nhận nhận trả', exact: true }).click();
 }
 try {
@@ -80,7 +80,7 @@ try {
   await studentPage.getByLabel('Hạn trả dự kiến').fill(new Date(due.getTime() - due.getTimezoneOffset() * 60000).toISOString().slice(0, 19));
   await studentPage.getByRole('spinbutton').first().fill('3');
   const review = studentPage.getByRole('button', { name: 'Xem lại yêu cầu', exact: true });
-  if (await review.count()) await review.click();
+  await review.click();
   let creates = 0; studentPage.on('request', r => { if (r.method() === 'POST' && r.url().endsWith('/api/loans')) creates++; });
   await studentPage.getByRole('button', { name: 'Gửi yêu cầu mượn', exact: true }).evaluate(button => { button.click(); button.click(); });
   await studentPage.waitForURL(/\/loans\/[0-9a-f-]{36}$/);

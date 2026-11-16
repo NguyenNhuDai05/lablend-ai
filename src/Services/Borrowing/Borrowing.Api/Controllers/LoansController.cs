@@ -11,9 +11,16 @@ public sealed class LoansController(LoanService service, ILoanLifecycle lifecycl
     private Guid Actor => Guid.Parse(User.FindFirst("sub")!.Value);
     private bool Staff => User.IsInRole(Roles.Admin) || User.IsInRole(Roles.LabStaff);
     [HttpPost, Authorize(Roles = Roles.Student), ProducesResponseType<LoanDto>(201), ProducesResponseType<ProblemDetails>(400), ProducesResponseType<ProblemDetails>(503)]
-    public async Task<IActionResult> Create(CreateLoanRequest request, CancellationToken ct)
+    [ProducesResponseType<ProblemDetails>(409)]
+    public async Task<IActionResult> Create(CreateLoanRequest request, CancellationToken ct, [FromHeader(Name = "Idempotency-Key")] string? idempotencyKey = null)
     {
-        var loan = await service.Create(Actor, request, HttpContext.TraceIdentifier, ct);
+        Guid? key = null;
+        if (idempotencyKey != null)
+        {
+            if (!Guid.TryParseExact(idempotencyKey, "D", out var parsed) || parsed == Guid.Empty) throw new LoanFailure(400, "Idempotency-Key must be a nonempty UUID.");
+            key = parsed;
+        }
+        var loan = await service.Create(Actor, request, HttpContext.TraceIdentifier, ct, key);
         // A relative public resource path remains usable behind both YARP and the web nginx proxy.
         return Created($"/api/loans/{loan.Id}", loan);
     }

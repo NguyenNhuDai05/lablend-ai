@@ -88,3 +88,44 @@ test('action errors expose safe HTTP hints and a correlation ID for recovery', a
   const { errorText, ApiError } = await modules();
   for (const status of [401, 403, 404, 409, 503]) { const text = errorText(new ApiError('Server detail', status, 'ERROR', 'trace-123')); assert.match(text, /Server detail/); assert.match(text, /trace-123/); assert.ok(text.length > 40); }
 });
+
+test('an explicit resubmission preserves its draft key and payload after a lost network reply', async t => {
+  const { configureApiClient, loanApi } = await modules();
+  configureApiClient({ getAccessToken: () => 'student', onUnauthorized() {} });
+  const calls = []; const key = crypto.randomUUID();
+  t.mock.method(globalThis, 'fetch', async (_url, init) => {
+    calls.push({ key: init.headers.get('Idempotency-Key'), body: init.body });
+    if (calls.length === 1) throw new TypeError('lost reply');
+    return json({ id: 'one-persisted-loan' }, 201);
+  });
+  const submit = () => loanApi.create('Laboratory project', '2026-11-17T00:00:00Z', [{ equipmentTypeId: type, quantity: 2 }], now, key);
+  await assert.rejects(submit(), e => e.code === 'NETWORK_ERROR');
+  assert.equal(calls.length, 1);
+  assert.equal((await submit()).id, 'one-persisted-loan');
+  assert.equal(calls[0].key, key); assert.deepEqual(calls[0], calls[1]);
+});
+
+test('Admin global filters and pagination are encoded together and never expose a page-only filter', async t => {
+  const { configureApiClient, apiUrl } = await modules();
+  const { accountApi } = await import(await source('../src/features/account/api.ts', { '../../lib/api': apiUrl }));
+  configureApiClient({ getAccessToken: () => 'admin', onUnauthorized() {} });
+  t.mock.method(globalThis, 'fetch', async url => {
+    const parsed = new URL(url, 'http://localhost');
+    assert.equal(parsed.pathname, '/api/users');
+    assert.deepEqual(Object.fromEntries(parsed.searchParams), { page: '2', pageSize: '20', keyword: 'name+lab@example.test', role: 'STUDENT', isActive: 'false' });
+    return json({ items: [], total: 23, page: 2, pageSize: 20 });
+  });
+  assert.equal((await accountApi.list(2, undefined, { keyword: 'name+lab@example.test', role: 'STUDENT', isActive: 'false' })).total, 23);
+});
+
+test('loan-related notifications use the server aggregate filter without accepting a user ID', async t => {
+  const { configureApiClient, apiUrl } = await modules();
+  const { notificationApi } = await import(await source('../src/features/notifications/api.ts', { '../../lib/api': apiUrl }));
+  configureApiClient({ getAccessToken: () => 'student', onUnauthorized() {} });
+  t.mock.method(globalThis, 'fetch', async url => {
+    const params = new URL(url, 'http://localhost').searchParams;
+    assert.deepEqual(Object.fromEntries(params), { page: '1', pageSize: '20', aggregateId: type });
+    return json({ items: [], total: 0, page: 1, pageSize: 20 });
+  });
+  assert.equal((await notificationApi.list(1, 20, undefined, type)).total, 0);
+});

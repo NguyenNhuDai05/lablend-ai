@@ -239,6 +239,29 @@ namespace Borrowing.Infrastructure.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Borrowing.Domain.LoanSubmission", b =>
+                {
+                    b.Property<Guid>("StudentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("Key")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("LoanId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("RequestHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.HasKey("StudentId", "Key");
+
+                    b.HasIndex("LoanId");
+
+                    b.ToTable("LoanSubmissions");
+                });
+
             modelBuilder.Entity("Borrowing.Domain.OutboxMessage", b =>
                 {
                     b.Property<Guid>("EventId")
@@ -342,6 +365,15 @@ namespace Borrowing.Infrastructure.Migrations
                         .WithMany("Items")
                         .HasForeignKey("LoanRequestId")
                         .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Borrowing.Domain.LoanSubmission", b =>
+                {
+                    b.HasOne("Borrowing.Domain.LoanRequest", null)
+                        .WithMany()
+                        .HasForeignKey("LoanId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
 

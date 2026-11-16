@@ -39,7 +39,7 @@ public sealed class NotificationServiceTests
         public int SaveCount { get; private set; }
         public Task<NotificationItem?> FindOwnedAsync(Guid notificationId, Guid userId, CancellationToken cancellationToken) =>
             Task.FromResult(item is not null && item.Id == notificationId && item.UserId == userId ? item : null);
-        public Task<(IReadOnlyList<NotificationItem> Items, long Total)> ListAsync(Guid userId, int page, int pageSize, CancellationToken cancellationToken) =>
+        public Task<(IReadOnlyList<NotificationItem> Items, long Total)> ListAsync(Guid userId, int page, int pageSize, CancellationToken cancellationToken, string? aggregateId = null) =>
             Task.FromResult(((IReadOnlyList<NotificationItem>)Array.Empty<NotificationItem>(), 0L));
         public Task<long> UnreadCountAsync(Guid userId, CancellationToken cancellationToken) => Task.FromResult(0L);
         public Task SaveChangesAsync(CancellationToken cancellationToken) { SaveCount++; return Task.CompletedTask; }
