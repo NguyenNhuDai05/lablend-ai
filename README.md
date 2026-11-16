@@ -74,6 +74,7 @@ docker compose config --quiet
 docker compose up -d --build --wait --wait-timeout 180
 docker compose ps
 ./scripts/Verify-Sprint0.ps1
+./scripts/Verify-Sprint2.ps1  # current Borrowing endpoints/migrations, four job passes and readiness
 ```
 
 Script setup sinh `.env` với random credentials, **không in secrets và không ghi đè file đã tồn tại**. Không chỉ copy `.env.example` rồi để password rỗng. Compose core chạy mặc định: web, gateway, identity, catalog, inventory, borrowing, notification, worker, postgres, redis. Optional recommendation host: `docker compose --profile bonus up -d --build --wait`; host này chưa tích hợp AI và không nhận API key trong Sprint 0. Observability dashboard là **Planned**, chưa tạo profile giả. Core không phụ thuộc Gemini hoặc Internet khi đã tải image/package.

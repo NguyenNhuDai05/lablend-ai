@@ -1,0 +1,160 @@
+ Image lablend-ai-borrowing Building 
+#1 [internal] load local bake definitions
+#1 reading from stdin 723B 0.0s done
+#1 DONE 0.0s
+
+#2 [internal] load build definition from Dockerfile.dotnet
+#2 transferring dockerfile:
+#2 transferring dockerfile: 1.39kB 0.1s done
+#2 DONE 6.7s
+
+#3 [internal] load metadata for mcr.microsoft.com/dotnet/sdk:8.0
+#3 DONE 1.3s
+
+#4 [internal] load metadata for mcr.microsoft.com/dotnet/aspnet:8.0
+#4 DONE 1.3s
+
+#5 [internal] load .dockerignore
+#5 transferring context:
+#5 transferring context: 325B 0.0s done
+#5 DONE 2.5s
+
+#6 [internal] load build context
+#6 DONE 0.0s
+
+#7 [final 1/4] FROM mcr.microsoft.com/dotnet/aspnet:8.0@sha256:2f202e1169ec507bdc07007cf68c14d0ff3a098110b17c460a60185e1f36a9d1
+#7 resolve mcr.microsoft.com/dotnet/aspnet:8.0@sha256:2f202e1169ec507bdc07007cf68c14d0ff3a098110b17c460a60185e1f36a9d1 0.1s done
+#7 DONE 0.1s
+
+#8 [restore 1/6] FROM mcr.microsoft.com/dotnet/sdk:8.0@sha256:78235e09001f52b6592c458ac010775ebac6725422e80cd0c1650590f67b2743
+#8 resolve mcr.microsoft.com/dotnet/sdk:8.0@sha256:78235e09001f52b6592c458ac010775ebac6725422e80cd0c1650590f67b2743 0.1s done
+#8 DONE 0.1s
+
+#6 [internal] load build context
+#6 transferring context: 512.96kB 1.2s done
+#6 DONE 1.2s
+
+#9 [restore 2/6] WORKDIR /source
+#9 CACHED
+
+#10 [restore 3/6] COPY . .
+#10 DONE 0.8s
+
+#11 [restore 4/6] RUN --mount=type=cache,id=lablend-nuget,target=/root/.nuget/packages,sharing=locked dotnet restore LabLendAI.sln --disable-parallel
+#11 11.46   Determining projects to restore...
+#11 23.42   Restored /source/src/Services/Inventory/Inventory.Application/Inventory.Application.csproj (in 935 ms).
+#11 27.90   Restored /source/infrastructure/docker/HealthProbe/HealthProbe.csproj (in 4.33 sec).
+#11 28.70   Restored /source/src/Services/Borrowing/Borrowing.Api/Borrowing.Api.csproj (in 781 ms).
+#11 29.05   Restored /source/src/Services/Notification/Notification.Infrastructure/Notification.Infrastructure.csproj (in 330 ms).
+#11 29.08   Restored /source/src/Services/Catalog/Catalog.Api/Catalog.Api.csproj (in 16 ms).
+#11 29.10   Restored /source/src/Services/Recommendation/Recommendation.Infrastructure/Recommendation.Infrastructure.csproj (in 10 ms).
+#11 29.13   Restored /source/src/Services/Catalog/Catalog.Infrastructure/Catalog.Infrastructure.csproj (in 10 ms).
+#11 29.14   Restored /source/src/Services/Catalog/Catalog.Domain/Catalog.Domain.csproj (in 4 ms).
+#11 29.16   Restored /source/src/Services/Catalog/Catalog.Application/Catalog.Application.csproj (in 5 ms).
+#11 29.21   Restored /source/src/Services/Borrowing/Borrowing.Infrastructure/Borrowing.Infrastructure.csproj (in 33 ms).
+#11 29.22   Restored /source/src/Services/Borrowing/Borrowing.Domain/Borrowing.Domain.csproj (in 3 ms).
+#11 29.24   Restored /source/src/Services/Borrowing/Borrowing.Application/Borrowing.Application.csproj (in 6 ms).
+#11 29.25   Restored /source/src/Services/Inventory/Inventory.Infrastructure/Inventory.Infrastructure.csproj (in 7 ms).
+#11 29.30   Restored /source/src/Gateway/LabLend.Gateway/LabLend.Gateway.csproj (in 37 ms).
+#11 29.32   Restored /source/src/BuildingBlocks/Observability/Observability.csproj (in 9 ms).
+#11 29.34   Restored /source/src/BuildingBlocks/Contracts/Contracts.csproj (in 4 ms).
+#11 29.56   Restored /source/tests/Unit/LabLend.Platform.UnitTests/LabLend.Platform.UnitTests.csproj (in 206 ms).
+#11 29.78   Restored /source/tests/Integration/LabLend.Sprint1.IntegrationTests/LabLend.Sprint1.IntegrationTests.csproj (in 183 ms).
+#11 29.82   Restored /source/tests/Integration/LabLend.Platform.IntegrationTests/LabLend.Platform.IntegrationTests.csproj (in 18 ms).
+#11 29.98   Restored /source/tests/Integration/Inventory.IntegrationTests/Inventory.IntegrationTests.csproj (in 140 ms).
+#11 30.01   Restored /source/tests/Integration/Catalog.IntegrationTests/Catalog.IntegrationTests.csproj (in 15 ms).
+#11 30.05   Restored /source/src/Workers/LabLend.Borrowing.Worker/LabLend.Borrowing.Worker.csproj (in 18 ms).
+#11 30.06   Restored /source/src/Services/Recommendation/Recommendation.Domain/Recommendation.Domain.csproj (in 4 ms).
+#11 30.08   Restored /source/src/Services/Recommendation/Recommendation.Application/Recommendation.Application.csproj (in 5 ms).
+#11 30.11   Restored /source/src/Services/Recommendation/Recommendation.Api/Recommendation.Api.csproj (in 15 ms).
+#11 30.13   Restored /source/src/Services/Notification/Notification.Domain/Notification.Domain.csproj (in 4 ms).
+#11 30.15   Restored /source/src/Services/Notification/Notification.Application/Notification.Application.csproj (in 5 ms).
+#11 30.19   Restored /source/src/Services/Notification/Notification.Api/Notification.Api.csproj (in 19 ms).
+#11 30.24   Restored /source/src/Services/Inventory/Inventory.Host/Inventory.Host.csproj (in 20 ms).
+#11 30.26   Restored /source/src/Services/Inventory/Inventory.Domain/Inventory.Domain.csproj (in 4 ms).
+#11 30.30   Restored /source/src/Services/Inventory/Inventory.DemoClient/Inventory.DemoClient.csproj (in 20 ms).
+#11 30.34   Restored /source/src/Services/Identity/Identity.Infrastructure/Identity.Infrastructure.csproj (in 22 ms).
+#11 30.36   Restored /source/src/Services/Identity/Identity.Domain/Identity.Domain.csproj (in 7 ms).
+#11 30.38   Restored /source/src/Services/Identity/Identity.Application/Identity.Application.csproj (in 6 ms).
+#11 30.41   Restored /source/src/Services/Identity/Identity.Api/Identity.Api.csproj (in 19 ms).
+#11 DONE 30.9s
+
+#12 [restore 5/6] RUN --mount=type=cache,id=lablend-nuget,target=/root/.nuget/packages,sharing=locked dotnet build LabLendAI.sln -c Release --no-restore --maxcpucount:2
+#12 14.83   Contracts -> /source/src/BuildingBlocks/Contracts/bin/Release/net8.0/Contracts.dll
+#12 15.13   Observability -> /source/src/BuildingBlocks/Observability/bin/Release/net8.0/Observability.dll
+#12 15.52   Identity.Domain -> /source/src/Services/Identity/Identity.Domain/bin/Release/net8.0/Identity.Domain.dll
+#12 17.90   Catalog.Domain -> /source/src/Services/Catalog/Catalog.Domain/bin/Release/net8.0/Catalog.Domain.dll
+#12 19.08   Inventory.Domain -> /source/src/Services/Inventory/Inventory.Domain/bin/Release/net8.0/Inventory.Domain.dll
+#12 19.33   Identity.Application -> /source/src/Services/Identity/Identity.Application/bin/Release/net8.0/Identity.Application.dll
+#12 20.56   Inventory.Application -> /source/src/Services/Inventory/Inventory.Application/bin/Release/net8.0/Inventory.Application.dll
+#12 23.04   Identity.Infrastructure -> /source/src/Services/Identity/Identity.Infrastructure/bin/Release/net8.0/Identity.Infrastructure.dll
+#12 23.95   Inventory.Infrastructure -> /source/src/Services/Inventory/Inventory.Infrastructure/bin/Release/net8.0/Inventory.Infrastructure.dll
+#12 25.03   Borrowing.Domain -> /source/src/Services/Borrowing/Borrowing.Domain/bin/Release/net8.0/Borrowing.Domain.dll
+#12 26.02   Notification.Domain -> /source/src/Services/Notification/Notification.Domain/bin/Release/net8.0/Notification.Domain.dll
+#12 27.01   Recommendation.Domain -> /source/src/Services/Recommendation/Recommendation.Domain/bin/Release/net8.0/Recommendation.Domain.dll
+#12 36.40   Recommendation.Application -> /source/src/Services/Recommendation/Recommendation.Application/bin/Release/net8.0/Recommendation.Application.dll
+#12 39.02   Recommendation.Infrastructure -> /source/src/Services/Recommendation/Recommendation.Infrastructure/bin/Release/net8.0/Recommendation.Infrastructure.dll
+#12 45.69   HealthProbe -> /source/infrastructure/docker/HealthProbe/bin/Release/net8.0/HealthProbe.dll
+#12 55.46   Notification.Application -> /source/src/Services/Notification/Notification.Application/bin/Release/net8.0/Notification.Application.dll
+#12 57.00   Notification.Infrastructure -> /source/src/Services/Notification/Notification.Infrastructure/bin/Release/net8.0/Notification.Infrastructure.dll
+#12 60.71   Inventory.Host -> /source/src/Services/Inventory/Inventory.Host/bin/Release/net8.0/Inventory.Host.dll
+#12 63.87   Notification.Api -> /source/src/Services/Notification/Notification.Api/bin/Release/net8.0/Notification.Api.dll
+#12 65.51   LabLend.Gateway -> /source/src/Gateway/LabLend.Gateway/bin/Release/net8.0/LabLend.Gateway.dll
+#12 66.77   Recommendation.Api -> /source/src/Services/Recommendation/Recommendation.Api/bin/Release/net8.0/Recommendation.Api.dll
+#12 69.75   Borrowing.Application -> /source/src/Services/Borrowing/Borrowing.Application/bin/Release/net8.0/Borrowing.Application.dll
+#12 69.96   Identity.Api -> /source/src/Services/Identity/Identity.Api/bin/Release/net8.0/Identity.Api.dll
+#12 70.05   Catalog.Application -> /source/src/Services/Catalog/Catalog.Application/bin/Release/net8.0/Catalog.Application.dll
+#12 72.49   Inventory.DemoClient -> /source/src/Services/Inventory/Inventory.DemoClient/bin/Release/net8.0/Inventory.DemoClient.dll
+#12 75.32   Inventory.IntegrationTests -> /source/tests/Integration/Inventory.IntegrationTests/bin/Release/net8.0/Inventory.IntegrationTests.dll
+#12 88.90   Borrowing.Infrastructure -> /source/src/Services/Borrowing/Borrowing.Infrastructure/bin/Release/net8.0/Borrowing.Infrastructure.dll
+#12 92.84   LabLend.Borrowing.Worker -> /source/src/Workers/LabLend.Borrowing.Worker/bin/Release/net8.0/LabLend.Borrowing.Worker.dll
+#12 93.50   LabLend.Platform.UnitTests -> /source/tests/Unit/LabLend.Platform.UnitTests/bin/Release/net8.0/LabLend.Platform.UnitTests.dll
+#12 95.28   Borrowing.Api -> /source/src/Services/Borrowing/Borrowing.Api/bin/Release/net8.0/Borrowing.Api.dll
+#12 96.30   LabLend.Platform.IntegrationTests -> /source/tests/Integration/LabLend.Platform.IntegrationTests/bin/Release/net8.0/LabLend.Platform.IntegrationTests.dll
+#12 97.72   Catalog.Infrastructure -> /source/src/Services/Catalog/Catalog.Infrastructure/bin/Release/net8.0/Catalog.Infrastructure.dll
+#12 99.40   Catalog.Api -> /source/src/Services/Catalog/Catalog.Api/bin/Release/net8.0/Catalog.Api.dll
+#12 101.4   Catalog.IntegrationTests -> /source/tests/Integration/Catalog.IntegrationTests/bin/Release/net8.0/Catalog.IntegrationTests.dll
+#12 106.8   LabLend.Sprint1.IntegrationTests -> /source/tests/Integration/LabLend.Sprint1.IntegrationTests/bin/Release/net8.0/LabLend.Sprint1.IntegrationTests.dll
+#12 110.4 
+#12 110.4 Build succeeded.
+#12 110.4     0 Warning(s)
+#12 110.4     0 Error(s)
+#12 110.4 
+#12 110.4 Time Elapsed 00:01:48.40
+#12 DONE 112.7s
+
+#13 [restore 6/6] RUN --mount=type=cache,id=lablend-nuget,target=/root/.nuget/packages,sharing=locked dotnet publish infrastructure/docker/HealthProbe/HealthProbe.csproj -c Release --no-build --no-restore -o /probe
+#13 6.066   HealthProbe -> /probe/
+#13 DONE 6.3s
+
+#14 [build 1/1] RUN --mount=type=cache,id=lablend-nuget,target=/root/.nuget/packages,sharing=locked dotnet publish "src/Services/Borrowing/Borrowing.Api/Borrowing.Api.csproj" -c Release --no-build --no-restore -o /publish
+#14 14.56   Borrowing.Api -> /publish/
+#14 DONE 15.6s
+
+#15 [final 2/4] WORKDIR /app
+#15 CACHED
+
+#16 [final 3/4] COPY --from=build /publish .
+#16 DONE 0.3s
+
+#17 [final 4/4] COPY --from=restore /probe /probe
+#17 DONE 0.2s
+
+#18 exporting to image
+#18 exporting layers
+#18 exporting layers 4.0s done
+#18 exporting manifest sha256:fa26bf4dd6fb7bc8208c4877f079f1504e1f34dcd84d598774db9b88d2461b82
+#18 exporting manifest sha256:fa26bf4dd6fb7bc8208c4877f079f1504e1f34dcd84d598774db9b88d2461b82 0.2s done
+#18 exporting config sha256:79eb6f10f7d24dcfcec592552a83dbeafde13b759d2d3920cf467907e26bb9c6
+#18 exporting config sha256:79eb6f10f7d24dcfcec592552a83dbeafde13b759d2d3920cf467907e26bb9c6 0.1s done
+#18 exporting attestation manifest sha256:faff481b1795dc3114b71a73ef6c64a225f88416ca5e7fd63b063712494f851c
+#18 exporting attestation manifest sha256:faff481b1795dc3114b71a73ef6c64a225f88416ca5e7fd63b063712494f851c 0.2s done
+#18 exporting manifest list sha256:5a62e8bc6f20b60f46a87fde7f07bbcfb571e40b2337c6b0292eefebadc5cc2d 0.1s done
+#18 naming to docker.io/library/lablend-ai-borrowing:latest done
+#18 unpacking to docker.io/library/lablend-ai-borrowing:latest
+#18 unpacking to docker.io/library/lablend-ai-borrowing:latest 0.8s done
+#18 DONE 5.7s
+
+#19 resolving provenance for metadata file
+#19 DONE 0.2s
+ Image lablend-ai-borrowing Built 

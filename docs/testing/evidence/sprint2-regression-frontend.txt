@@ -1,0 +1,93 @@
+
+> @lablend/web@0.0.0 build
+> tsc -b && vite build
+
+vite v7.3.8 building client environment for production...
+transforming...
+✓ 59 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                   0.52 kB │ gzip:  0.36 kB
+dist/assets/index-DEluX4yA.css    7.72 kB │ gzip:  2.42 kB
+dist/assets/index-cdik2GQp.js   295.67 kB │ gzip: 92.64 kB
+✓ built in 2.68s
+
+> @lablend/web@0.0.0 test
+> node --test tests/*.test.mjs
+
+TAP version 13
+# Subtest: auth POST sends the HttpOnly-cookie transport and CSRF marker without an old bearer token
+ok 1 - auth POST sends the HttpOnly-cookie transport and CSRF marker without an old bearer token
+  ---
+  duration_ms: 191.1029
+  type: 'test'
+  ...
+# Subtest: concurrent expired requests renew once and retry with the new JWT
+ok 2 - concurrent expired requests renew once and retry with the new JWT
+  ---
+  duration_ms: 68.0866
+  type: 'test'
+  ...
+# Subtest: failed cookie refresh clears the session without a retry loop
+ok 3 - failed cookie refresh clears the session without a retry loop
+  ---
+  duration_ms: 39.5316
+  type: 'test'
+  ...
+# Subtest: invalid login does not renew a session or clear a different existing session
+ok 4 - invalid login does not renew a session or clear a different existing session
+  ---
+  duration_ms: 32.696
+  type: 'test'
+  ...
+# Subtest: a late response from a previous login cannot retry or clear the current account
+ok 5 - a late response from a previous login cannot retry or clear the current account
+  ---
+  duration_ms: 27.7119
+  type: 'test'
+  ...
+# Subtest: an account switch during refresh success cannot retry as or clear the new account
+ok 6 - an account switch during refresh success cannot retry as or clear the new account
+  ---
+  duration_ms: 32.1699
+  type: 'test'
+  ...
+# Subtest: an account switch during refresh failure cannot retry as or clear the new account
+ok 7 - an account switch during refresh failure cannot retry as or clear the new account
+  ---
+  duration_ms: 21.5582
+  type: 'test'
+  ...
+# Subtest: 403 preserves the current session and ProblemDetails
+ok 8 - 403 preserves the current session and ProblemDetails
+  ---
+  duration_ms: 21.6494
+  type: 'test'
+  ...
+# Subtest: Identity roles[] maps to the routed UI and unknown/inactive roles fail closed
+ok 9 - Identity roles[] maps to the routed UI and unknown/inactive roles fail closed
+  ---
+  duration_ms: 29.5706
+  type: 'test'
+  ...
+# Subtest: Staff StockMovements uses the shared memory JWT and refreshes an expired session
+ok 10 - Staff StockMovements uses the shared memory JWT and refreshes an expired session
+  ---
+  duration_ms: 100.8935
+  type: 'test'
+  ...
+# Subtest: Staff mutations preserve validation, forbidden and conflict errors without clearing the session
+ok 11 - Staff mutations preserve validation, forbidden and conflict errors without clearing the session
+  ---
+  duration_ms: 49.8319
+  type: 'test'
+  ...
+1..11
+# tests 11
+# suites 0
+# pass 11
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1703.537
