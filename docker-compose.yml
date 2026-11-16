@@ -20,7 +20,9 @@ services:
     healthcheck:
       test:
         - "CMD-SHELL"
-        - "pg_isready -U postgres -d postgres"
+        # The init-only temporary server listens on a Unix socket. Require TCP so dependants
+        # cannot migrate while bootstrap is still running/restarting the PostgreSQL process.
+        - "pg_isready -h 127.0.0.1 -U postgres -d postgres"
       interval: "5s"
       timeout: "3s"
       retries: 30
