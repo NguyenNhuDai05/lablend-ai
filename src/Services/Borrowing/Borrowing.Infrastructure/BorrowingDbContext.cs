@@ -10,6 +10,7 @@ public sealed class BorrowingDbContext(DbContextOptions<BorrowingDbContext> opti
     public DbSet<LoanHistory> LoanHistories => Set<LoanHistory>();
     public DbSet<InventoryOperation> InventoryOperations => Set<InventoryOperation>();
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
+    public DbSet<ReminderDispatch> ReminderDispatches => Set<ReminderDispatch>();
     public string EventCorrelationId { get; set; } = Guid.NewGuid().ToString("N");
 
     public override int SaveChanges(bool acceptAllChangesOnSuccess)
@@ -34,6 +35,13 @@ public sealed class BorrowingDbContext(DbContextOptions<BorrowingDbContext> opti
     }
     protected override void OnModelCreating(ModelBuilder model)
     {
+        model.Entity<ReminderDispatch>(b =>
+        {
+            b.HasKey(x => x.EventId); b.Property(x => x.EventId).ValueGeneratedNever();
+            b.Property(x => x.EventType).HasMaxLength(100);
+            b.HasIndex(x => new { x.LoanId, x.EventType, x.DueAt, x.ThresholdMinutes }).IsUnique();
+            b.HasOne<LoanRequest>().WithMany().HasForeignKey(x => x.LoanId);
+        });
         model.Entity<OutboxMessage>(b =>
         {
             b.HasKey(x => x.EventId); b.Property(x => x.EventId).ValueGeneratedNever();
@@ -64,6 +72,7 @@ public sealed class BorrowingDbContext(DbContextOptions<BorrowingDbContext> opti
             b.Property(x => x.Version).IsRowVersion();
             b.HasIndex(x => new { x.StudentId, x.CreatedAt });
             b.HasIndex(x => new { x.Status, x.CreatedAt });
+            b.HasIndex(x => new { x.Status, x.DueAt });
             b.HasMany(x => x.Items).WithOne().HasForeignKey(x => x.LoanRequestId).OnDelete(DeleteBehavior.Cascade);
             b.HasMany(x => x.Histories).WithOne().HasForeignKey(x => x.LoanRequestId).OnDelete(DeleteBehavior.Cascade);
             b.ToTable(t =>

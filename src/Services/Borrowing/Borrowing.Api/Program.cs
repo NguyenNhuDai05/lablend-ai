@@ -14,7 +14,7 @@ var app = builder.Build();
 if (builder.Configuration.GetValue<bool>("Database:ApplyMigrations"))
 {
     await using var scope = app.Services.CreateAsyncScope();
-    await scope.ServiceProvider.GetRequiredService<BorrowingDbContext>().Database.MigrateAsync();
+    await BorrowingMigrations.Apply(scope.ServiceProvider.GetRequiredService<BorrowingDbContext>());
 }
 app.UseLabLendApi("Borrowing");
 app.Run();

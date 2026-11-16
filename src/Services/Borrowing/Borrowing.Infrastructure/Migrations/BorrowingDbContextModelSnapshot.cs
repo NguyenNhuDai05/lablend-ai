@@ -225,6 +225,8 @@ namespace Borrowing.Infrastructure.Migrations
 
                     b.HasIndex("Status", "CreatedAt");
 
+                    b.HasIndex("Status", "DueAt");
+
                     b.HasIndex("StudentId", "CreatedAt");
 
                     b.ToTable("LoanRequests", t =>
@@ -286,6 +288,36 @@ namespace Borrowing.Infrastructure.Migrations
                     b.ToTable("OutboxMessages");
                 });
 
+            modelBuilder.Entity("Borrowing.Domain.ReminderDispatch", b =>
+                {
+                    b.Property<Guid>("EventId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("DueAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("EventType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<Guid>("LoanId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("ThresholdMinutes")
+                        .HasColumnType("integer");
+
+                    b.HasKey("EventId");
+
+                    b.HasIndex("LoanId", "EventType", "DueAt", "ThresholdMinutes")
+                        .IsUnique();
+
+                    b.ToTable("ReminderDispatches");
+                });
+
             modelBuilder.Entity("Borrowing.Domain.InventoryOperation", b =>
                 {
                     b.HasOne("Borrowing.Domain.LoanRequest", null)
@@ -309,6 +341,15 @@ namespace Borrowing.Infrastructure.Migrations
                     b.HasOne("Borrowing.Domain.LoanRequest", null)
                         .WithMany("Items")
                         .HasForeignKey("LoanRequestId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Borrowing.Domain.ReminderDispatch", b =>
+                {
+                    b.HasOne("Borrowing.Domain.LoanRequest", null)
+                        .WithMany()
+                        .HasForeignKey("LoanId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

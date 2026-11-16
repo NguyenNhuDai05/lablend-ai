@@ -2,9 +2,9 @@
 
 LabLend AI là nền tảng mượn/trả thiết bị phòng thí nghiệm cho đại học, phục vụ **STUDENT**, **LAB_STAFF** và **ADMIN**. Sinh viên tra cứu và yêu cầu mượn; staff duyệt, bàn giao, nhận trả và bảo trì; admin quản lý tài khoản và quyền. Đây là PRN232 Final Assignment theo [đề chính thức](docs/requirements/PRN232%20-%20Final%20Assignment.pdf) và [Master Plan V4](PRN232_LabLend_AI_Master_Implementation_Plan_V4.docx).
 
-**Trạng thái: tích hợp Sprint 1 M1 + M2 + M3 (PR #8).** Identity/JWT/refresh/profile/admin, Borrowing Core, Catalog/Inventory và Notification có code/migrations thật. Xem [PR8 integration acceptance](docs/testing/PR8_INTEGRATION_ACCEPTANCE.md) để biết kết quả kiểm thử và trạng thái merge thực tế. Approval/gRPC allocation, luồng Redis đầy đủ, worker overdue và UI loan hoàn chỉnh vẫn Planned. Bằng chứng: [SPRINT1_ACCEPTANCE](docs/testing/SPRINT1_ACCEPTANCE.md); nền tảng trước đó: [SPRINT0_ACCEPTANCE](docs/testing/SPRINT0_ACCEPTANCE.md).
+**Trạng thái: Sprint 2 Member 1, tiếp nối main/PR #8.** Identity/JWT/refresh/profile/admin, Catalog/Inventory và Notification được giữ nguyên. Borrowing bổ sung REST→gRPC approve/handover/partial returns, persisted operations/recovery/compensation, transactional Outbox→Redis Streams và bốn scheduled jobs. Xem [Sprint 2 acceptance](docs/testing/SPRINT2_M1_ACCEPTANCE.md) để phân biệt implementation, kết quả kiểm thử và blocker thực tế. Nền tảng trước đó: [PR8](docs/testing/PR8_INTEGRATION_ACCEPTANCE.md), [Sprint 1](docs/testing/SPRINT1_ACCEPTANCE.md), [Sprint 0](docs/testing/SPRINT0_ACCEPTANCE.md).
 
-**Sprint 2 M1:** REST approve/handover/partial returns và adapter Inventory gRPC đang được triển khai trên feature branches. Xem [acceptance theo từng gate](docs/testing/SPRINT2_M1_ACCEPTANCE.md) và [handover/review order](docs/team/SPRINT2_M1_HANDOVER.md) cho trạng thái hiện hành, migration, kiểm thử thật và các quyết định M2/M3 còn chờ review. Các mô tả Sprint 0/1 bên dưới là baseline lịch sử; không dùng healthy containers làm bằng chứng hoàn thành Sprint 2.
+**Review:** bốn feature branches/stacked PRs, không merge tự động; [handover/review order](docs/team/SPRINT2_M1_HANDOVER.md). Event contract vẫn PROVISIONAL chờ M3 review; các gap proto đã ghi cho M2. Staff loan UI mới thuộc phạm vi M3; Sprint 2 M1 không chỉnh implementation của M2/M3. Healthy containers không thay bằng chứng nghiệp vụ.
 
 **Tích hợp M1/M3 ngày 16/11/2026:** frontend routing/auth, staff UI và Notification của M3 đã được ghép với Identity/Borrowing. Auth client đã khớp cookie/CSRF, roles[] và confirmPassword; access token ở memory, refresh được serialize. [Báo cáo tích hợp và kiểm thử](docs/team/M1_M3_INTEGRATION.md). Checkpoint này có trước PR #8; Catalog/Inventory được tích hợp riêng qua PR #8; consumer Redis của M3 vẫn dùng contract proposal, chưa có Borrowing producer.
 
@@ -28,10 +28,10 @@ flowchart LR
   Gateway --> Inventory[Inventory REST + gRPC]
   Gateway --> Notification[Notification REST]
   Gateway -. bonus .-> Recommendation[Recommendation REST]
-  Borrowing -. planned gRPC .-> Inventory
-  Borrowing -. planned Outbox .-> Worker[Borrowing Worker]
-  Worker -. planned XADD .-> Redis[Redis Streams]
-  Redis -. planned consumer .-> Notification
+  Borrowing -->|gRPC allocation| Inventory
+  Borrowing -->|transactional Outbox| Worker[Borrowing Worker]
+  Worker -->|XADD| Redis[Redis Streams]
+  Redis -->|consumer group and Inbox| Notification
   Recommendation -. planned HTTPS .-> Gemini[Google Gemini external]
   DB[(PostgreSQL: 6 isolated databases)]
   Identity --> DB
@@ -42,7 +42,7 @@ flowchart LR
   Recommendation --> DB
 ```
 
-Mỗi service có `Host/Api → Application → Domain`; Infrastructure triển khai repository interfaces và DbContext riêng. Các mũi tên nghiệp vụ nét đứt là **Planned**. Inventory được deploy riêng với Borrowing; gRPC health HTTP/2 được chuẩn bị riêng, proto allocation v1 có sáu RPC; R09 Borrowing REST→Inventory business gRPC vẫn Planned. Một PostgreSQL instance chứa 6 database với 6 login riêng; không FK/SQL join/DbContext xuyên service.
+Mỗi service có `Host/Api → Application → Domain`; Infrastructure triển khai repositories/ports và DbContext riêng. Inventory được deploy riêng, proto allocation v1 có sáu RPC; Borrowing dùng service credential, deadline và correlation metadata. Worker quét hạn/operations và publish Outbox qua Redis; Notification dùng consumer group + Inbox dedupe. Một PostgreSQL instance chứa 6 database với 6 login riêng; không FK/SQL join/DbContext xuyên service. Nét đứt chỉ phần bonus Planned.
 
 ## Technology stack
 
@@ -51,7 +51,7 @@ Mỗi service có `Host/Api → Application → Domain`; Infrastructure triển 
 | Backend | .NET 8, ASP.NET Core 8, C# 12 |
 | Data | EF Core 8 + Npgsql 8.x, PostgreSQL 16 |
 | Gateway | YARP 2.3, JWT Bearer validation, CORS allowlist, rate limit |
-| Communication | gRPC HTTP/2; Redis 7.4 Streams dự kiến cho events |
+| Communication | gRPC HTTP/2; Redis 7.4 Streams + transactional Outbox/Inbox |
 | Background | .NET BackgroundService process |
 | Frontend | React, TypeScript, Vite, npm lockfile |
 | Tests | xUnit; WebApplicationFactory cho platform tests |
@@ -90,7 +90,7 @@ Script setup sinh `.env` với random credentials, **không in secrets và khôn
 
 Chỉ web và gateway publish cổng **loopback**; DB/Redis/API/gRPC nằm trong Docker network `backend` internal. Gateway có thêm network `edge`. Khi bonus tắt, route Recommendation có thể trả 502; core vẫn chạy, không coi đây là AI endpoint đã hoàn thiện.
 
-`/health/live` kiểm tra process; `/health/ready` kiểm tra dependency kết nối thực, **chưa kiểm tra business schema/migrations**. Worker health là heartbeat sau PostgreSQL/Redis check, không phải chứng cứ overdue job. Standard `grpc.health.v1.Health` kiểm tra transport và dependency, không phải ReserveAssets.
+`/health/live` kiểm tra process; REST `/health/ready` kiểm tra dependency kết nối thực, chưa chứng nhận toàn nghiệp vụ. Worker heartbeat yêu cầu PostgreSQL, Redis, Inventory RPC được xác thực và recent passes của cả bốn jobs; dependency lỗi sẽ xóa heartbeat. Nghiệm thu overdue vẫn cần event/notification và logs thực trong acceptance. Standard `grpc.health.v1.Health` không thay ReserveAssets.
 
 ## Local development
 
@@ -140,7 +140,7 @@ Mở http://localhost:5173. Frontend đã có routing, register/login/session re
 | `IDENTITY_DB_PASSWORD` … `RECOMMENDATION_DB_PASSWORD` | Mỗi service chỉ nhận password DB của mình |
 | `REDIS_PASSWORD` | Redis auth và các host cần Redis |
 | `JWT_SIGNING_KEY` | Random tối thiểu 32 byte; Identity phát JWT và Gateway/REST validate cùng issuer/audience/key |
-| `INVENTORY_SERVICE_TOKEN` | Reserved cho gRPC service authorization Sprint sau, chưa áp vào business RPC |
+| `INVENTORY_SERVICE_TOKEN` | Bearer service credential cho mọi Inventory business RPC; Borrowing API/worker dùng cùng credential nội bộ, không dùng user JWT |
 | `GEMINI_ENABLED`, `GEMINI_API_KEY`, `GEMINI_MODEL` | Dành cho bonus tương lai; hiện disabled, không truyền key vào container |
 | `GATEWAY_PORT`, `WEB_PORT` | Publish loopback, mặc định 5080/3000 |
 | `POSTGRES_DEV_PORT`, `REDIS_DEV_PORT` | Chỉ file Compose dev dùng, mặc định 55432/56379 |
@@ -166,7 +166,7 @@ dotnet build LabLendAI.sln -c Release
 dotnet test LabLendAI.sln -c Release --no-build --no-restore
 ```
 
-Không đặt flag thì PostgreSQL suites báo SKIPPED; đó không phải bằng chứng PASS. Fixture tự tạo project Compose test tên ngẫu nhiên, password tạm thời, identity_db/borrowing_db/catalog_db/inventory_db và DB roles riêng, rồi xóa đúng container test; không nhận connection string thật của nhóm. YARP regression cũ dùng Catalog double có nhãn; MemberIntegrationTests bổ sung Identity/Catalog/Inventory/Borrowing executables thật, không mock Catalog. M2 Catalog/Inventory tests dùng Testcontainers PostgreSQL và gRPC Kestrel HTTP/2 thật. Hosted CI bật flag; chưa tuyên bố hosted run mới đã PASS khi chưa push.
+Không đặt flag thì PostgreSQL suites báo SKIPPED; đó không phải PASS. Fixture tạo project Compose riêng, password tạm thời, năm DB/roles identity/borrowing/catalog/inventory/notification và Redis với stable loopback port riêng, rồi chỉ dọn tài nguyên của fixture; không nhận connection string thật của nhóm. Sprint2 tests chạy real JWT/REST/Inventory HTTP/2/Redis/Notification và worker processes, có failure injection được ghi rõ. YARP regression cũ dùng Catalog double có nhãn. M2 Catalog/Inventory tests dùng Testcontainers PostgreSQL và gRPC Kestrel. CI bật flag; kết quả exact commit và links trong acceptance.
 
 Runtime verification sau khi Compose đã chạy: `./scripts/Verify-Sprint1.ps1` (thêm `-IncludeBonus` khi Recommendation host đang chạy). Script chỉ đọc readiness/OpenAPI/authorization/migration metadata và kiểm tra isolation; không tạo test user/loan trong database nhóm. Checkpoint trước PR #8 (M1/M3): 38 tests .NET và 7 tests frontend PASS, Release build 0 warnings/errors, 11 containers healthy; Identity/Borrowing/Notification migrations đã áp dụng. [Checkpoint M1 và giới hạn Catalog](docs/testing/SPRINT1_ACCEPTANCE.md), [kết quả tích hợp](docs/team/M1_M3_INTEGRATION.md).
 

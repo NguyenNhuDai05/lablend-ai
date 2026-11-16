@@ -34,3 +34,13 @@ An acknowledged reserve followed by failed local commit records COMPENSATING whe
 Draft lifecycle PR: [#10](https://github.com/NguyenNhuDai05/lablend-ai/pull/10). Exact-head CI for `5d23245`: [success](https://github.com/NguyenNhuDai05/lablend-ai/actions/runs/43821389658).
 
 Draft recovery PR: [#11](https://github.com/NguyenNhuDai05/lablend-ai/pull/11), base #10. Exact-head CI for `315777a`: [success](https://github.com/NguyenNhuDai05/lablend-ai/actions/runs/43822285722).
+
+Draft outbox PR: [#12](https://github.com/NguyenNhuDai05/lablend-ai/pull/12), base #11. Exact-head CI for `d4d2a3d`: [success](https://github.com/NguyenNhuDai05/lablend-ai/actions/runs/43824491341).
+
+## Scheduled jobs and readiness
+
+DueReminderJob and OverdueDetectionJob default to a 60-second poll, batch 20; Reminders:DueSoonMinutes defaults to 1440. DueSoon dispatch key is `(LoanId, LoanDueSoon, DueAt, configured threshold minutes)`; Overdue key uses threshold 0, one event per loan due date. Configuring a new due-soon threshold permits one new reminder for that threshold. A local unique index and per-loan advisory lock coordinate processes; Dispatch and Outbox commit together. Jobs recheck BORROWED items after locking and skip unresolved Inventory operations. OVERDUE remains derived; no lifecycle overwrite. Terminal/partially returned items are handled from remaining BORROWED units. Restart does not clear dispatches.
+
+OutboxPublisherJob default interval is 2 seconds; ReservationReconciliationJob uses BorrowingWorkflow:PollSeconds (15). Every hosted job creates a fresh DI scope per pass. Record failures are isolated; failed passes retry on the next schedule. Job logs include names, record IDs/counts and safe error types/codes. The heartbeat now requires PostgreSQL, Redis, an authenticated Inventory RPC and recent passes from all four jobs. Default heartbeat interval is 15 seconds; a failed dependency removes the heartbeat file. Jobs keep attempting recovery even when readiness is unhealthy.
+
+Worker requires ConnectionStrings__Database for borrowing_db only, ConnectionStrings__Redis, Inventory__GrpcAddress and Inventory__ServiceToken. Compose supplies them. API and worker apply Borrowing migrations under a shared schema advisory lock; Database:ApplyMigrations can disable automatic application for an externally managed environment. No other service database is migrated by these hosts.

@@ -151,9 +151,9 @@ public sealed class Sprint2RecoveryTests(PostgresFixture postgres, ITestOutputHe
         await using var db = Db();
         await db.Database.ExecuteSqlRawAsync("DROP TRIGGER s2_local_commit_fault ON \"LoanRequests\"; DROP FUNCTION s2_local_commit_fault()");
     }
-    internal static async Task Wait(Func<Task<bool>> condition)
+    internal static async Task Wait(Func<Task<bool>> condition, int seconds = 30)
     {
-        var deadline = DateTime.UtcNow.AddSeconds(30);
+        var deadline = DateTime.UtcNow.AddSeconds(seconds);
         while (!await condition()) { if (DateTime.UtcNow >= deadline) throw new TimeoutException("Real service condition not reached."); await Task.Delay(100); }
     }
 }
