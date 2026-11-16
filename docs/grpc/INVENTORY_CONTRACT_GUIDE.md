@@ -4,9 +4,9 @@
 
 The M1 consumer was checked against the unchanged v1 proto and server implementation on 2026-11-16. Borrowing.Infrastructure generates Client code directly from this file, uses IOptions Inventory:GrpcAddress/ServiceToken/DeadlineSeconds (default 5), sends the service Bearer credential and x-correlation-id, and maps status/trailer codes into business/dependency failures. User JWTs never authorize Inventory RPCs. Stable durable approval operation IDs, GetOperationStatus, full item/asset/state verification, replay and HELD-only release are covered by [Gate A/B](../testing/SPRINT2_M1_ACCEPTANCE.md).
 
-No schema/server change is proposed by this consumer addition. M2 review remains required for the historical return-condition/reservation-ID gap in OPEN_DECISIONS.md. Borrowing leaves ReservationId null and persists immutable per-item return intent; it does not infer historical condition from a currently reused/repaired asset. Team approval of additional contract fields is not claimed.
+No schema/server change is proposed by this consumer addition. M2 owner decision on the historical return-condition/reservation-ID gap: [INVENTORY_V1_REVIEW.md](INVENTORY_V1_REVIEW.md). Borrowing leaves ReservationId null and persists immutable per-item return intent; it does not infer historical condition from a currently reused/repaired asset. Team approval of additional contract fields is not claimed.
 
-**Owner schema: Member 2. Consumer/reviewer: Member 1. Status: v1 IMPLEMENTED (server), chờ M1 review OD-01–03.**
+**Owner schema: Member 2. Consumer/reviewer: Member 1. Status: v1 IMPLEMENTED; M2 owner review xong ([INVENTORY_V1_REVIEW](INVENTORY_V1_REVIEW.md)), chờ M1 ký OD-01–03.**
 
 Nguồn chuẩn: [`proto/inventory/v1/inventory.proto`](../../proto/inventory/v1/inventory.proto) (package `lablend.inventory.v1`, C# `LabLend.Inventory.Contracts.V1`). Inventory.Host generate server + client (`GrpcServices="Both"`); Borrowing thêm `<Protobuf Include=... GrpcServices="Client" />` trỏ cùng file, không copy proto.
 
@@ -52,4 +52,4 @@ Demo chạy lại được: kính hiển vi về lại AVAILABLE, thiết bị d
 
 `GrpcOverHttp2Tests` chạy app trên Kestrel thật (endpoint gRPC chỉ HTTP/2, như Docker) và gọi bằng client sinh từ cùng file proto: đủ 6 RPC + health, kiểm tra mọi response là HTTP/2, T09 timeout và snapshot schema v1 (T23). Snapshot đỏ nghĩa là thay đổi phá client của Borrowing: thêm field mới với số mới thì cập nhật snapshot; đổi tên/số/kiểu field hoặc RPC thì làm `v2`.
 
-Còn lại cho R09: M1 thêm gRPC client trong Borrowing approve/handover/return và test end-to-end REST → gRPC.
+R09: Borrowing approve/handover/return đã gọi các RPC này (PR #10–#11); evidence REST → gRPC ở Gate A/B của [SPRINT2_M1_ACCEPTANCE](../testing/SPRINT2_M1_ACCEPTANCE.md).
