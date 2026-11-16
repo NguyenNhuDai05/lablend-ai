@@ -2,7 +2,9 @@
 
 LabLend AI là nền tảng mượn/trả thiết bị phòng thí nghiệm cho đại học, phục vụ **STUDENT**, **LAB_STAFF** và **ADMIN**. Sinh viên tra cứu và yêu cầu mượn; staff duyệt, bàn giao, nhận trả và bảo trì; admin quản lý tài khoản và quyền. Đây là PRN232 Final Assignment theo [đề chính thức](docs/requirements/PRN232%20-%20Final%20Assignment.pdf) và [Master Plan V4](PRN232_LabLend_AI_Master_Implementation_Plan_V4.docx).
 
-**Trạng thái: Sprint 1 Member 1.** Identity/JWT/refresh/profile/admin và Borrowing Core đã có code, migrations, automated tests. Tạo loan với Catalog thật còn BLOCKED vì Catalog của M2 mới là skeleton. Approval/gRPC allocation, Redis nghiệp vụ, worker overdue và frontend nghiệp vụ vẫn Planned. Bằng chứng: [SPRINT1_ACCEPTANCE](docs/testing/SPRINT1_ACCEPTANCE.md); nền tảng trước đó: [SPRINT0_ACCEPTANCE](docs/testing/SPRINT0_ACCEPTANCE.md).
+**Trạng thái: Sprint 1 Member 1.** Identity/JWT/refresh/profile/admin và Borrowing Core đã có code, migrations, automated tests. Tạo loan với Catalog thật còn BLOCKED vì Catalog backend trong main vẫn là skeleton. Approval/gRPC allocation, luồng Redis đầy đủ, worker overdue và UI loan hoàn chỉnh vẫn Planned. Bằng chứng: [SPRINT1_ACCEPTANCE](docs/testing/SPRINT1_ACCEPTANCE.md); nền tảng trước đó: [SPRINT0_ACCEPTANCE](docs/testing/SPRINT0_ACCEPTANCE.md).
+
+**Tích hợp M1/M3 ngày 16/11/2026:** frontend routing/auth, staff UI và Notification của M3 đã được ghép với Identity/Borrowing. Auth client đã khớp cookie/CSRF, roles[] và confirmPassword; access token ở memory, refresh được serialize. [Báo cáo tích hợp và kiểm thử](docs/team/M1_M3_INTEGRATION.md). Catalog/Inventory backend ở nhánh M2 chưa thuộc lần merge này; consumer Redis của M3 vẫn dùng contract proposal, chưa có Borrowing producer.
 
 ## Bắt đầu đọc từ đâu
 
