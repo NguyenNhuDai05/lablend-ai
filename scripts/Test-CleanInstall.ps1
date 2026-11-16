@@ -34,6 +34,10 @@ $names = @('COMPOSE_PROJECT_NAME','COMPOSE_FILE','GATEWAY_PORT','WEB_PORT','Boot
     'POSTGRES_ADMIN_PASSWORD','IDENTITY_DB_PASSWORD','CATALOG_DB_PASSWORD','INVENTORY_DB_PASSWORD',
     'BORROWING_DB_PASSWORD','NOTIFICATION_DB_PASSWORD','RECOMMENDATION_DB_PASSWORD','REDIS_PASSWORD',
     'JWT_SIGNING_KEY','INVENTORY_SERVICE_TOKEN','LABLEND_DEMO_ADMIN_PASSWORD','LABLEND_DEMO_USER_PASSWORD')
+$names += @(Get-Content -LiteralPath (Join-Path $repoRoot '.env.example') | ForEach-Object {
+    if ($_ -match '^([A-Z_]+)=') { $Matches[1] }
+})
+$names = @($names | Select-Object -Unique)
 foreach ($name in $names) { $savedEnvironment[$name] = [Environment]::GetEnvironmentVariable($name) }
 $started = $false
 try {
@@ -46,6 +50,11 @@ try {
         Invoke-Step 'checkout revision' { git checkout --detach $Revision }
         $summary.commit = (git rev-parse HEAD).Trim()
         Invoke-Step 'generate environment' { & ./scripts/Initialize-Environment.ps1 }
+        # Compose's .env discovery changes when COMPOSE_FILE is set. Load only this clone's generated
+        # values explicitly for every nested Docker/Node command, then restore the caller in finally.
+        foreach ($line in Get-Content -LiteralPath (Join-Path $clone '.env')) {
+            if ($line -match '^([A-Z_]+)=(.*)$') { [Environment]::SetEnvironmentVariable($Matches[1], $Matches[2]) }
+        }
         $env:COMPOSE_PROJECT_NAME = $project
         $env:GATEWAY_PORT = [string](Get-FreePort)
         do { $env:WEB_PORT = [string](Get-FreePort) } while ($env:WEB_PORT -eq $env:GATEWAY_PORT)
