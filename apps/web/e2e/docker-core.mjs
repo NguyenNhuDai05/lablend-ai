@@ -169,6 +169,7 @@ try {
   await studentPage.setViewportSize({ width: 390, height: 844 });
   for (const path of ['/catalog', '/loans', '/notifications']) {
     await studentPage.goto(origin + path); await studentPage.locator('h1').waitFor();
+    if (path === '/loans') await studentPage.getByRole('link', { name: type.name, exact: true }).first().waitFor();
     assert.ok(await studentPage.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
     await screen(studentPage, 't20-mobile-' + path.slice(1));
   }

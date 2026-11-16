@@ -157,7 +157,9 @@ try {
   await student.goto(`${origin}/profile`); await student.getByLabel('Họ và tên', { exact: true }).fill('Student Browser Updated'); await student.getByRole('button', { name: 'Lưu hồ sơ' }).click(); await student.getByText('Đã cập nhật hồ sơ.', { exact: true }).waitFor();
   await student.getByLabel('Mật khẩu hiện tại').fill(env.LABLEND_E2E_PASSWORD); await student.getByLabel('Mật khẩu mới', { exact: true }).fill(env.LABLEND_E2E_PASSWORD + 'Changed1!'); await student.getByLabel('Xác nhận mật khẩu mới').fill(env.LABLEND_E2E_PASSWORD + 'Changed1!'); await student.getByRole('button', { name: 'Đổi mật khẩu và đăng nhập lại' }).click();
   await student.getByRole('heading', { name: 'Đăng nhập', exact: true }).waitFor(); await login(student, env.LABLEND_E2E_STUDENT, env.LABLEND_E2E_PASSWORD + 'Changed1!');
-  await student.goto(`${origin}/loans`); await student.setViewportSize({ width: 390, height: 844 }); await student.getByRole('heading', { name: 'Phiếu mượn của tôi', exact: true }).waitFor(); await student.locator('.loan-list article').first().waitFor(); await screenshot(student, 'mobile-loans');
+  await student.goto(`${origin}/loans`); await student.setViewportSize({ width: 390, height: 844 }); await student.getByRole('heading', { name: 'Phiếu mượn của tôi', exact: true }).waitFor(); await student.locator('.loan-list article').first().waitFor();
+  const listedType = await fetch(`${env.LABLEND_E2E_GATEWAY}api/equipment-types/${env.LABLEND_E2E_TYPE}`).then(r => r.json());
+  await student.getByRole('link', { name: listedType.name, exact: true }).first().waitFor(); await screenshot(student, 'mobile-loans');
   assert.equal(await student.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
   await student.goto(`${origin}/catalog`); await student.locator('.equipment-card').first().waitFor();
   assert.equal(await student.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true); await screenshot(student, 'mobile-catalog');
