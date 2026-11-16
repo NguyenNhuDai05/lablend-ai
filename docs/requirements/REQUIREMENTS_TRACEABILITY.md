@@ -27,4 +27,24 @@ Nguồn chuẩn: [PRN232 Final Assignment, 3 trang](PRN232%20-%20Final%20Assignm
 
 Rubric PDF: architecture/design 20%; REST 20%; background 10%; broker 15%; gRPC 15%; deployment 10%; docs/presentation 10%. Không quy đổi trạng thái Sprint 0 thành điểm hoặc ghi đủ 100% MUST khi business còn Planned.
 
-Test P0/bonus và evidence: [TEST_PLAN](../testing/TEST_PLAN.md), [SPRINT0_ACCEPTANCE](../testing/SPRINT0_ACCEPTANCE.md). Mọi ghi nhận PASS phải trỏ tới lệnh/kết quả thực; không coi healthy là bằng chứng database migrations, allocation hoặc message delivery.
+## Sprint 1 Member 1 delta
+
+Bảng trên được giữ như baseline Sprint 0. Trạng thái hiện hành riêng phạm vi Member 1:
+
+| IDs | Sprint 1 status | Implementation and remaining scope |
+|---|---|---|
+| R01/R02 | IMPLEMENTED Identity + Borrowing Core | Controllers → Application services → repositories; read/write thực; Catalog/Inventory CRUD do M2, không chứng nhận toàn bộ Final |
+| R03 | IMPLEMENTED | Identity UserManager password hashing, JWT issue/validation, RBAC, refresh hash/rotation/replay/revoke; [Identity contract](../api/IDENTITY_API_CONTRACT.md) |
+| R04 | IMPLEMENTED scoped lists | User/Loan pagination, status filter, deterministic date sort; Catalog search/filter/sort/page đã implemented ở M2 (PR #8 integration) |
+| R10/R14 | IMPLEMENTED scoped schemas | Identity/Borrowing EF migrations, constraints, local transactions và PostgreSQL integration; Catalog/Inventory/Notification cũng có migrations thật; Recommendation scaffolded |
+| R11/R16 | IMPLEMENTED extended | DI, options, sanitized ProblemDetails, actual Identity/Borrowing Swagger operations |
+| R12/R15 | Verification per acceptance | Compose/build/runtime results phải đọc [Sprint 1 acceptance](../testing/SPRINT1_ACCEPTANCE.md) |
+| R05–R09/R13/R18 | Incomplete final requirements | Overdue job, Streams producer/consumer, business gRPC, full source/E2E final vẫn Planned; không đổi trạng thái thành complete |
+| T01/T02/T22 | Evidence per acceptance | Identity PostgreSQL/password/RBAC/session suites |
+| T03/T05 | Real-service integration added in PR #8 | MemberIntegrationTests: real Identity-issued Staff/Student JWT, Catalog CRUD, Borrowing→Catalog active/missing/inactive, Inventory maintenance/retire/movements; kết quả thực tại PR8_INTEGRATION_ACCEPTANCE.md. Regression double cũ vẫn có nhãn |
+
+Test P0/bonus và evidence: [TEST_PLAN](../testing/TEST_PLAN.md), [SPRINT0_ACCEPTANCE](../testing/SPRINT0_ACCEPTANCE.md), [SPRINT1_ACCEPTANCE](../testing/SPRINT1_ACCEPTANCE.md). Mọi PASS phải trỏ tới kết quả thực; healthy không chứng minh allocation hoặc message delivery.
+
+## PR #8 integration checkpoint
+
+Bảng Sprint 0 ở trên là lịch sử; trạng thái hợp nhất hiện hành: Identity/Borrowing Core (M1), Catalog/Inventory REST + six-RPC HTTP/2 server (M2), routed auth/Staff/Notification UI và Notification REST/consumer proposal (M3) được bảo toàn. [PR8 acceptance](../testing/PR8_INTEGRATION_ACCEPTANCE.md) ghi kết quả build/tests/runtime/CI thực tế. R08 có implementation phía server; **R09 REST Borrowing→Inventory allocation vẫn PLANNED**. Outbox, overdue jobs và Redis event end-to-end vẫn PLANNED; không coi health probes hoặc direct gRPC tests là hoàn thành các yêu cầu đó.

@@ -1,0 +1,15 @@
+#12 343.3     0 Warning(s)
+#12 343.3     0 Error(s)
+#12 343.3 Time Elapsed 00:05:41.22
+ Image lablend-ai-identity Built 
+#12 195.0     0 Warning(s)
+#12 195.1     0 Error(s)
+#12 195.2 Time Elapsed 00:03:04.33
+ Image lablend-ai-catalog Built 
+ Image lablend-ai-inventory Built 
+ Image lablend-ai-borrowing Built 
+ Image lablend-ai-notification Built 
+ Image lablend-ai-borrowing-worker Built 
+ Image lablend-ai-gateway Built 
+ Image lablend-ai-web Built 
+ Image lablend-ai-recommendation Built 

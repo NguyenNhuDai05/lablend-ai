@@ -1,32 +1,12 @@
-import { useState } from 'react';
-import { checkGateway } from './lib/api';
+import { Navigate, Route, Routes } from 'react-router-dom';
+import { ProtectedRoute, RoleRoute } from './auth/RouteGuards';
+import { AppLayout } from './components/AppLayout';
+import { StaffCatalogRoute, StaffInventoryRoute } from './features/staff/StaffRoutes';
+import { NotificationsPage } from './features/notifications/NotificationsPage';
+import { LoginPage, RegisterPage } from './pages/AuthPages';
+import { HomePage } from './pages/HomePage';
+import { LoansPage, NotFoundPage } from './pages/PlaceholderPages';
 
 export function App() {
-  const [state, setState] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
-  const [message, setMessage] = useState('Chưa kiểm tra kết nối.');
-  async function check() {
-    setState('loading');
-    setMessage('Đang kiểm tra kết nối…');
-    try {
-      const health = await checkGateway();
-      setState('success');
-      setMessage(`Gateway: ${health.status}.`);
-    } catch (error) {
-      setState('error');
-      setMessage(error instanceof Error ? error.message : 'Không thể kết nối Gateway.');
-    }
-  }
-  return <main>
-    <p className="eyebrow">PRN232 · SPRINT 0</p>
-    <h1>LabLend AI</h1>
-    <p className="intro">Quản lý mượn và trả thiết bị phòng thí nghiệm.</p>
-    <section aria-labelledby="foundation-title">
-      <h2 id="foundation-title">Nền tảng đã sẵn sàng để phát triển</h2>
-      <p>Đây là giao diện khởi đầu. Đăng nhập, danh mục và quy trình mượn trả sẽ được nhóm triển khai trong các sprint tiếp theo.</p>
-      <button onClick={() => void check()} disabled={state === 'loading'}>
-        {state === 'loading' ? 'Đang kết nối…' : 'Kiểm tra kết nối'}
-      </button>
-      <p role="status" className={state === 'error' ? 'error' : ''}>{message}</p>
-    </section>
-  </main>;
+  return <Routes><Route element={<AppLayout />}><Route index element={<HomePage />} /><Route path="login" element={<LoginPage />} /><Route path="register" element={<RegisterPage />} /><Route element={<ProtectedRoute />}><Route path="notifications" element={<NotificationsPage />} /><Route element={<RoleRoute allowed={['STUDENT']} />}><Route path="loans" element={<LoansPage />} /></Route><Route element={<RoleRoute allowed={['LAB_STAFF', 'ADMIN']} />}><Route path="staff" element={<Navigate to="/staff/catalog" replace />} /><Route path="staff/catalog" element={<StaffCatalogRoute />} /><Route path="staff/inventory" element={<StaffInventoryRoute />} /></Route></Route><Route path="*" element={<NotFoundPage />} /></Route></Routes>;
 }

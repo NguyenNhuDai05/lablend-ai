@@ -47,5 +47,5 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Could not copy database isolation check.' }
     docker compose exec -T postgres bash /tmp/lablend-verify-isolation.sh
     if ($LASTEXITCODE -ne 0) { throw 'Database ownership/isolation check failed.' }
-    Write-Host 'Sprint 0 runtime checks passed. Business CRUD/RPC/messaging/overdue are still Planned.'
+    Write-Host 'Sprint 0 foundation runtime checks passed. Business acceptance is documented separately in PR8_INTEGRATION_ACCEPTANCE.md.'
 } finally { Pop-Location }

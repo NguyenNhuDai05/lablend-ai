@@ -53,6 +53,7 @@ services:
         ASSEMBLY_NAME: "Identity.Api.dll"
     environment:
       ASPNETCORE_ENVIRONMENT: "Development"
+      SessionCookie__AllowedOrigins__1: "http://localhost:${WEB_PORT:-3000}"
       Jwt__SigningKey: "${JWT_SIGNING_KEY:?Generate .env first}"
       ConnectionStrings__Database: "Host=postgres;Database=identity_db;Username=identity_user;Password=${IDENTITY_DB_PASSWORD:?Generate .env first};Timeout=3"
     depends_on:
@@ -138,6 +139,7 @@ services:
       Jwt__SigningKey: "${JWT_SIGNING_KEY:?Generate .env first}"
       ConnectionStrings__Database: "Host=postgres;Database=borrowing_db;Username=borrowing_user;Password=${BORROWING_DB_PASSWORD:?Generate .env first};Timeout=3"
       Inventory__GrpcAddress: "http://inventory:8081"
+      Catalog__BaseAddress: "http://catalog:8080/"
       Inventory__ServiceToken: "${INVENTORY_SERVICE_TOKEN:?Generate .env first}"
     depends_on:
       postgres:

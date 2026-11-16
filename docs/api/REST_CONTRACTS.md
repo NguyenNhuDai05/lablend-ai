@@ -7,22 +7,22 @@
 - 200 đọc/cập nhật có body; 201 tạo kèm Location; 204 delete hoặc command không body; 400 validation; 401 token thiếu/sai/hết hạn; 403 sai quyền; 404 resource không thuộc người dùng hoặc không có; 409 state/stock/idempotency conflict; 429 throttling; 502/503 dependency failure.
 - Lỗi dùng `application/problem+json`: status/title, `code`, `correlationId`; validation có `errors`. Không trả stack trace/key/connection string.
 - X-Correlation-ID: tối đa 64 ASCII chữ/số hoặc `-_.`; invalid/missing được thay bằng UUID mới. Gateway chuyển ID tới upstream. HttpClient/gRPC/event producer tương lai phải propagate ID này; không log tokens/password/prompt chứa PII.
-- JWT validation có issuer/audience/lifetime/signature, claim `sub` là user UUID, `role` dùng STUDENT/LAB_STAFF/ADMIN. Chưa có issuance/login ở Sprint 0. `[Authorize]`, `StaffOrAdmin`, `Admin` là policies đã wiring; service vẫn phải kiểm tra owner/state.
-- Gateway public prefixes không thay authorization ở Controllers. `/api/auth/*` chứa login/register public; `/api/users/*` phải auth. Catalog read public, mutations require Staff/Admin. Inventory Admin mutations require Staff/Admin. Hành vi cụ thể chờ owner implement/review.
+- JWT validation có issuer/audience/lifetime/signature, claim `sub` là user UUID, `role` dùng STUDENT/LAB_STAFF/ADMIN. Identity Sprint 1 phát hành access JWT 10 phút và refresh cookie HttpOnly; xem contract Identity. `[Authorize]`, `StaffOrAdmin`, `Admin` là policies đã wiring; service vẫn phải kiểm tra owner/state.
+- Gateway public prefixes không thay authorization ở Controllers. `/api/auth/*` chứa login/register public; `/api/users/*` phải auth. Catalog read public, mutations require Staff/Admin. Inventory Admin mutations require Staff/Admin. Controllers tự enforce policies, không dựa vào Gateway để thay quyền nghiệp vụ.
 - `[ApiController]` + DTO validation chạy ở transport; Application kiểm tra business invariants. Repository không quyết định permission.
 
 ## Proposal cần M2/M3 review
 
 Pagination: `items`, `total`, `page` (1-based), `pageSize`. DTO kỹ thuật tại Contracts/PagedResponse.cs. Đề xuất default pageSize=10, max=100; reject page<1/size ngoài giới hạn; whitelist sortBy/direction. Không nối input trực tiếp vào SQL. Exact filters/response fields chờ OD-07.
 
-| Service / owner | Planned routes | Review/acceptance |
+| Service / owner | Routes (phân biệt implemented/planned bên dưới) | Review/acceptance |
 |---|---|---|
-| Identity / M1 | POST /api/auth/register, /login, /refresh, /logout; GET /api/auth/me; GET/PUT /api/users/me; admin users/roles | OD-06; password hashing, refresh hash/rotation, T01–T03/T22 |
-| Catalog / M2 | CRUD /api/categories và /api/equipment-types; GET equipment-types?keyword=&categoryId=&sortBy=&direction=&page=&pageSize= | OD-07; real DB + search/filter/sort/page, T04 |
+| Identity / M1 (implemented) | POST /api/auth/register, /login, /refresh, /logout; GET /api/auth/me; GET/PUT /api/users/me; admin users/roles | OD-06; password hashing, refresh hash/rotation, T01–T03/T22 |
+| Catalog / M2 (implemented) | CRUD /api/categories và /api/equipment-types; GET equipment-types?keyword=&categoryId=&sortBy=&direction=&page=&pageSize= | OD-07; real DB + search/filter/sort/page, T04 |
 | Inventory Admin / M2 | Implemented — xem Inventory v1 bên dưới | OD-01–03 chờ M1 review |
-| Borrowing / M1 | POST /api/loans; GET /api/loans/my; GET /api/loans/{id}; staff list; POST .../{id}/cancel,/reject,/approve,/handover,/returns; GET .../{id}/timeline | OD-08; owner from sub; PENDING→APPROVING→APPROVED; approval calls gRPC, T05–T11/T28 |
-| Notification / M3 | GET /api/notifications; PATCH /api/notifications/{id}/read; GET /api/notifications/unread-count | OD-04–05; owner from sub; inbox dedupe; T12–T18 |
-| Recommendation / M3 | POST /api/recommendations; GET /api/recommendations/history | Bonus only; OD-09; 503 AI_UNAVAILABLE / 502 AI_INVALID_RESPONSE; T19/T25/T26 |
+| Borrowing / M1 (Core implemented) | POST /api/loans; GET /api/loans/my; GET /api/loans/{id}; staff list; POST .../{id}/cancel,/reject | OD-08; owner from sub. Approve/handover/returns/timeline và REST→gRPC vẫn PLANNED, xem Borrowing contract |
+| Notification / M3 (REST implemented) | GET /api/notifications; PATCH /api/notifications/{id}/read; GET /api/notifications/unread-count | OD-04–05; owner from sub; inbox dedupe; T12–T18 |
+| Recommendation / M3 (planned bonus) | POST /api/recommendations; GET /api/recommendations/history | Bonus only; OD-09; 503 AI_UNAVAILABLE / 502 AI_INVALID_RESPONSE; T19/T25/T26 |
 
 ## Catalog v1 (Implemented, M2, chờ M3 review OD-07)
 
@@ -65,6 +65,31 @@ PUT nhận thêm `isActive`. Seed qua migration: 3 categories `c0000000-…-0000
 
 Asset status: AVAILABLE, RESERVED, ON_LOAN, MAINTENANCE, LOST, RETIRED. Mỗi lần đổi status ghi một dòng StockMovements trong cùng transaction: `fromStatus` null = trạng thái đầu tiên (tạo mới, hoặc baseline khi migration chạy); thay đổi qua REST có `changedBy` (JWT `sub`), thay đổi qua gRPC có `loanId`. Replay gRPC và retire lặp lại không ghi thêm dòng. Reserve/handover/return **không** có REST: chỉ Borrowing gọi qua gRPC ([guide](../grpc/INVENTORY_CONTRACT_GUIDE.md)). Seed 13 units `a0000000-…-0000000000NN` cho 5 equipment types của Catalog; `e…04` (kính hiển vi) chỉ có 1 unit để demo tranh chấp. Lỗi nghiệp vụ trả `code` như `CONFLICT`, `NOT_FOUND`.
 
-**Các route khác trong bảng là Planned.** Gateway routing config chỉ chuẩn bị prefixes. Request tới một business path có thể trả 401 hoặc 404; không có mock HTTP 200 làm giả CRUD.
+Identity và Borrowing Core xem contracts dưới đây. Borrowing approval/handover/returns/timeline và Recommendation vẫn PLANNED; routing prefix không chứng minh business implementation.
+
+Sprint 1: Identity và Borrowing Core đã có Controllers/OpenAPI thật. Hợp đồng hiện hành: [Identity](IDENTITY_API_CONTRACT.md), [Borrowing](BORROWING_API_CONTRACT.md). Catalog/Inventory đã có controllers và migrations thật. Notification REST đã có list, mark-read và unread-count theo owner JWT; Redis consumer giữ proposal OD-04/05. Recommendation vẫn skeleton. Borrowing approve/handover/returns/timeline/dashboard vẫn PLANNED. Bằng chứng tích hợp Catalog thật được ghi riêng trong PR8_INTEGRATION_ACCEPTANCE.md. Không dùng HTTP 200 giả để thay CRUD.
 
 Swagger ở mỗi REST host: `/swagger`; schema `/swagger/v1/swagger.json`. Gateway allowlist xuất schema qua `/platform/<service>/openapi.json`. Health endpoints không được coi là CRUD operations. Khi thêm controller thực, viết response/status documentation và authorize ở chính service.
+
+## DTO và response hiện hành
+
+- Identity: request/response, cookie/CSRF, roles và từng status code tại [IDENTITY_API_CONTRACT](IDENTITY_API_CONTRACT.md). Access JWT chỉ ở memory React; refresh token HttpOnly cookie. Không dùng script dev-token trong browser flow.
+- Borrowing Core: request `purpose`, `dueAt`, `items[{equipmentTypeId}]`, response loan/items/history và owner/staff rules tại [BORROWING_API_CONTRACT](BORROWING_API_CONTRACT.md). Catalog trả `id` và `isActive`; missing/inactive bị từ chối 400, lỗi dependency 503.
+- Catalog: Category `{id,name,description,isActive,createdAt,updatedAt}`; EquipmentType `{id,categoryId,categoryName,name,description,specifications,tags,imageUrl,isActive,createdAt,updatedAt}`. POST category nhận name/description; POST equipment type nhận các trường nghiệp vụ trong body mẫu, PUT thêm isActive. Search trả `{items,total,page,pageSize}`.
+- Inventory: POST/PUT asset nhận `{equipmentTypeId,serialNumber,location,notes}`. Response thêm `{id,status,createdAt,updatedAt}`. Maintenance response `{id,assetUnitId,reason,openedBy,openedAt,completedAt,completedBy,completionNotes}`. Availability/movements và query/status/auth theo bảng Inventory v1; không có cross-database FK hoặc direct Catalog DB lookup.
+
+## Notification REST (implemented, M3)
+
+Tất cả endpoints cần JWT; owner lấy từ `sub`, không nhận userId từ query/body.
+
+| Method / route | Response / status |
+|---|---|
+| GET /api/notifications?page=1&pageSize=20 | 200 `{items,total,page,pageSize}`; page >= 1, pageSize 1–100; 400 invalid query; 401 anonymous |
+| PATCH /api/notifications/{id}/read | 200 NotificationDto; 404 missing/khác owner; 401 anonymous |
+| GET /api/notifications/unread-count | 200 `{count}`; 401 anonymous |
+
+NotificationDto: `{id,eventType,aggregateId,title,message,createdAt,readAt}` (readAt nullable). Consumer/migration của M3 được giữ nguyên; end-to-end Borrowing producer→Redis→Notification vẫn PLANNED theo OD-04/05.
+
+## Recommendation (planned bonus)
+
+`POST /api/recommendations` và `GET /api/recommendations/history` chưa có business controllers. Gateway prefix/health/Swagger host không chứng minh implementation. Không có Gemini call/billing trong PR8 integration.

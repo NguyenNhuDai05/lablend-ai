@@ -1,9 +1,8 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import { BrowserRouter } from 'react-router-dom';
 import { App } from './App';
-import { StaffApp } from './features/staff/StaffApp';
+import { AuthProvider } from './auth/AuthContext';
 import './styles.css';
 
-// ponytail: path switch until M3's router lands; then register StaffApp under /staff there.
-const Root = location.pathname.startsWith('/staff') ? StaffApp : App;
-createRoot(document.getElementById('root')!).render(<StrictMode><Root /></StrictMode>);
+createRoot(document.getElementById('root')!).render(<StrictMode><BrowserRouter><AuthProvider><App /></AuthProvider></BrowserRouter></StrictMode>);
