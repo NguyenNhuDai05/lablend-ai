@@ -1,4 +1,4 @@
- Image lablend-ai-borrowing Building 
+ Image lablend-ai-borrowing Building
 #1 [internal] load local bake definitions
 #1 reading from stdin 723B 0.0s done
 #1 DONE 0.0s
@@ -115,11 +115,11 @@
 #12 99.40   Catalog.Api -> /source/src/Services/Catalog/Catalog.Api/bin/Release/net8.0/Catalog.Api.dll
 #12 101.4   Catalog.IntegrationTests -> /source/tests/Integration/Catalog.IntegrationTests/bin/Release/net8.0/Catalog.IntegrationTests.dll
 #12 106.8   LabLend.Sprint1.IntegrationTests -> /source/tests/Integration/LabLend.Sprint1.IntegrationTests/bin/Release/net8.0/LabLend.Sprint1.IntegrationTests.dll
-#12 110.4 
+#12 110.4
 #12 110.4 Build succeeded.
 #12 110.4     0 Warning(s)
 #12 110.4     0 Error(s)
-#12 110.4 
+#12 110.4
 #12 110.4 Time Elapsed 00:01:48.40
 #12 DONE 112.7s
 
@@ -157,4 +157,4 @@
 
 #19 resolving provenance for metadata file
 #19 DONE 0.2s
- Image lablend-ai-borrowing Built 
+ Image lablend-ai-borrowing Built
