@@ -78,6 +78,7 @@ export async function apiRequest<T>(path: string, init: RequestInit = {}, retry 
     return await response.json() as T;
   } catch (error) {
     if (error instanceof ApiError) throw error;
+    if (init.signal?.aborted) throw new DOMException('Request cancelled.', 'AbortError');
     if (controller.signal.aborted) throw new ApiError('Yêu cầu đã hết thời gian chờ.', 0, 'REQUEST_TIMEOUT');
     throw new ApiError('Không thể kết nối dịch vụ. Vui lòng thử lại.', 0, 'NETWORK_ERROR');
   } finally {

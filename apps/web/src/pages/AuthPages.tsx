@@ -2,19 +2,22 @@ import { useState, type FormEvent, type ReactNode } from 'react';
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { ApiError } from '../lib/api';
+import { safeDestination } from '../lib/workflows';
 const messageOf = (error: unknown) => error instanceof ApiError ? error.message : 'Không thể hoàn tất yêu cầu.';
 
 export function LoginPage() {
   const auth = useAuth(); const navigate = useNavigate(); const location = useLocation();
   const [error, setError] = useState(''); const [busy, setBusy] = useState(false);
-  const destination = (location.state as { from?: { pathname?: string } } | null)?.from?.pathname ?? '/';
+  const loginState = location.state as { from?: { pathname?: string; search?: string }; message?: string } | null;
+  const from = loginState?.from;
+  const destination = safeDestination(from?.pathname ? from.pathname + (from.search ?? '') : new URLSearchParams(location.search).get('returnTo') ?? undefined);
   if (auth.status === 'authenticated') return <Navigate to={destination} replace />;
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); setBusy(true); setError(''); const data = new FormData(event.currentTarget);
     try { await auth.login({ email: String(data.get('email')), password: String(data.get('password')) }); navigate(destination, { replace: true }); }
     catch (e) { setError(messageOf(e)); } finally { setBusy(false); }
   }
-  return <AuthCard title="Đăng nhập" footer={<>Chưa có tài khoản? <Link to="/register">Đăng ký</Link></>}><form onSubmit={event => void submit(event)}><label>Email<input name="email" type="email" autoComplete="email" required /></label><label>Mật khẩu<input name="password" type="password" autoComplete="current-password" required /></label>{error && <p className="form-error" role="alert">{error}</p>}<button disabled={busy}>{busy ? 'Đang đăng nhập…' : 'Đăng nhập'}</button></form></AuthCard>;
+  return <AuthCard title="Đăng nhập" footer={<>Chưa có tài khoản? <Link to="/register">Đăng ký</Link></>}><form onSubmit={event => void submit(event)}>{loginState?.message && <p role="status">{loginState.message}</p>}<label>Email<input name="email" type="email" autoComplete="email" required /></label><label>Mật khẩu<input name="password" type="password" autoComplete="current-password" required /></label>{error && <p className="form-error" role="alert">{error}</p>}<button disabled={busy}>{busy ? 'Đang đăng nhập…' : 'Đăng nhập'}</button></form></AuthCard>;
 }
 
 export function RegisterPage() {

@@ -76,9 +76,8 @@ public sealed class PostgresFixture : IAsyncLifetime
     public async Task DisposeAsync()
     {
         NpgsqlConnection.ClearAllPools();
-        // project is a private, generated name and this Compose file has no external/shared volumes.
-        // Remove only its anonymous PostgreSQL data volume as well as its containers/network.
-        if (root != null) await Docker("down", "--volumes", "--remove-orphans");
+        // Preserve database volumes, including private fixture volumes. No volume removal is authorized.
+        if (root != null) await Docker("down", "--remove-orphans");
     }
     private async Task<string> Docker(params string[] args)
     {

@@ -1,0 +1,74 @@
+  Contracts -> <repo>\src\BuildingBlocks\Contracts\bin\Release\net8.0\Contracts.dll
+<repo>\src\BuildingBlocks\Observability\Observability.csproj : warning NU1900: Error occurred while getting package vulnerability data: Unable to load the service index for source https://api.nuget.org/v3/index.json.
+  Observability -> <repo>\src\BuildingBlocks\Observability\bin\Release\net8.0\Observability.dll
+<repo>\src\Services\Identity\Identity.Domain\Identity.Domain.csproj : warning NU1900: Error occurred while getting package vulnerability data: Unable to load the service index for source https://api.nuget.org/v3/index.json.
+  Identity.Domain -> <repo>\src\Services\Identity\Identity.Domain\bin\Release\net8.0\Identity.Domain.dll
+<repo>\src\Services\Identity\Identity.Application\Identity.Application.csproj : warning NU1900: Error occurred while getting package vulnerability data: Unable to load the service index for source https://api.nuget.org/v3/index.json.
+  Identity.Application -> <repo>\src\Services\Identity\Identity.Application\bin\Release\net8.0\Identity.Application.dll
+<repo>\src\Services\Identity\Identity.Infrastructure\Identity.Infrastructure.csproj : warning NU1900: Error occurred while getting package vulnerability data: Unable to load the service index for source https://api.nuget.org/v3/index.json.
+  Identity.Infrastructure -> <repo>\src\Services\Identity\Identity.Infrastructure\bin\Release\net8.0\Identity.Infrastructure.dll
+<repo>\src\Services\Identity\Identity.Api\Identity.Api.csproj : warning NU1900: Error occurred while getting package vulnerability data: Unable to load the service index for source https://api.nuget.org/v3/index.json.
+  Identity.Api -> <repo>\src\Services\Identity\Identity.Api\bin\Release\net8.0\Identity.Api.dll
+  Catalog.Domain -> <repo>\src\Services\Catalog\Catalog.Domain\bin\Release\net8.0\Catalog.Domain.dll
+  Catalog.Application -> <repo>\src\Services\Catalog\Catalog.Application\bin\Release\net8.0\Catalog.Application.dll
+<repo>\src\Services\Catalog\Catalog.Infrastructure\Catalog.Infrastructure.csproj : warning NU1900: Error occurred while getting package vulnerability data: Unable to load the service index for source https://api.nuget.org/v3/index.json.
+  Catalog.Infrastructure -> <repo>\src\Services\Catalog\Catalog.Infrastructure\bin\Release\net8.0\Catalog.Infrastructure.dll
+<repo>\src\Services\Catalog\Catalog.Api\Catalog.Api.csproj : warning NU1900: Error occurred while getting package vulnerability data: Unable to load the service index for source https://api.nuget.org/v3/index.json.
+  Catalog.Api -> <repo>\src\Services\Catalog\Catalog.Api\bin\Release\net8.0\Catalog.Api.dll
+  Inventory.Domain -> <repo>\src\Services\Inventory\Inventory.Domain\bin\Release\net8.0\Inventory.Domain.dll
+  Inventory.Application -> <repo>\src\Services\Inventory\Inventory.Application\bin\Release\net8.0\Inventory.Application.dll
+<repo>\src\Services\Inventory\Inventory.Infrastructure\Inventory.Infrastructure.csproj : warning NU1900: Error occurred while getting package vulnerability data: Unable to load the service index for source https://api.nuget.org/v3/index.json.
+  Inventory.Infrastructure -> <repo>\src\Services\Inventory\Inventory.Infrastructure\bin\Release\net8.0\Inventory.Infrastructure.dll
+<repo>\src\Services\Inventory\Inventory.Host\Inventory.Host.csproj : warning NU1900: Error occurred while getting package vulnerability data: Unable to load the service index for source https://api.nuget.org/v3/index.json.
+  Inventory.Host -> <repo>\src\Services\Inventory\Inventory.Host\bin\Release\net8.0\Inventory.Host.dll
+  Borrowing.Domain -> <repo>\src\Services\Borrowing\Borrowing.Domain\bin\Release\net8.0\Borrowing.Domain.dll
+  Borrowing.Application -> <repo>\src\Services\Borrowing\Borrowing.Application\bin\Release\net8.0\Borrowing.Application.dll
+<repo>\src\Services\Borrowing\Borrowing.Infrastructure\Borrowing.Infrastructure.csproj : warning NU1900: Error occurred while getting package vulnerability data: Unable to load the service index for source https://api.nuget.org/v3/index.json.
+  Borrowing.Infrastructure -> <repo>\src\Services\Borrowing\Borrowing.Infrastructure\bin\Release\net8.0\Borrowing.Infrastructure.dll
+<repo>\src\Services\Borrowing\Borrowing.Api\Borrowing.Api.csproj : warning NU1900: Error occurred while getting package vulnerability data: Unable to load the service index for source https://api.nuget.org/v3/index.json.
+  Borrowing.Api -> <repo>\src\Services\Borrowing\Borrowing.Api\bin\Release\net8.0\Borrowing.Api.dll
+  Notification.Domain -> <repo>\src\Services\Notification\Notification.Domain\bin\Release\net8.0\Notification.Domain.dll
+  Notification.Application -> <repo>\src\Services\Notification\Notification.Application\bin\Release\net8.0\Notification.Application.dll
+<repo>\src\Services\Notification\Notification.Infrastructure\Notification.Infrastructure.csproj : warning NU1900: Error occurred while getting package vulnerability data: Unable to load the service index for source https://api.nuget.org/v3/index.json.
+  Notification.Infrastructure -> <repo>\src\Services\Notification\Notification.Infrastructure\bin\Release\net8.0\Notification.Infrastructure.dll
+<repo>\src\Services\Notification\Notification.Api\Notification.Api.csproj : warning NU1900: Error occurred while getting package vulnerability data: Unable to load the service index for source https://api.nuget.org/v3/index.json.
+  Notification.Api -> <repo>\src\Services\Notification\Notification.Api\bin\Release\net8.0\Notification.Api.dll
+  Recommendation.Domain -> <repo>\src\Services\Recommendation\Recommendation.Domain\bin\Release\net8.0\Recommendation.Domain.dll
+  Recommendation.Application -> <repo>\src\Services\Recommendation\Recommendation.Application\bin\Release\net8.0\Recommendation.Application.dll
+  Recommendation.Infrastructure -> <repo>\src\Services\Recommendation\Recommendation.Infrastructure\bin\Release\net8.0\Recommendation.Infrastructure.dll
+  Recommendation.Api -> <repo>\src\Services\Recommendation\Recommendation.Api\bin\Release\net8.0\Recommendation.Api.dll
+<repo>\src\Gateway\LabLend.Gateway\LabLend.Gateway.csproj : warning NU1900: Error occurred while getting package vulnerability data: Unable to load the service index for source https://api.nuget.org/v3/index.json.
+  LabLend.Gateway -> <repo>\src\Gateway\LabLend.Gateway\bin\Release\net8.0\LabLend.Gateway.dll
+<repo>\src\Workers\LabLend.Borrowing.Worker\LabLend.Borrowing.Worker.csproj : warning NU1900: Error occurred while getting package vulnerability data: Unable to load the service index for source https://api.nuget.org/v3/index.json.
+  LabLend.Borrowing.Worker -> <repo>\src\Workers\LabLend.Borrowing.Worker\bin\Release\net8.0\LabLend.Borrowing.Worker.dll
+  HealthProbe -> <repo>\infrastructure\docker\HealthProbe\bin\Release\net8.0\HealthProbe.dll
+  LabLend.Platform.UnitTests -> <repo>\tests\Unit\LabLend.Platform.UnitTests\bin\Release\net8.0\LabLend.Platform.UnitTests.dll
+  LabLend.Platform.IntegrationTests -> <repo>\tests\Integration\LabLend.Platform.IntegrationTests\bin\Release\net8.0\LabLend.Platform.IntegrationTests.dll
+  Catalog.IntegrationTests -> <repo>\tests\Integration\Catalog.IntegrationTests\bin\Release\net8.0\Catalog.IntegrationTests.dll
+  Inventory.IntegrationTests -> <repo>\tests\Integration\Inventory.IntegrationTests\bin\Release\net8.0\Inventory.IntegrationTests.dll
+  Inventory.DemoClient -> <repo>\src\Services\Inventory\Inventory.DemoClient\bin\Release\net8.0\Inventory.DemoClient.dll
+<repo>\tests\Integration\LabLend.Sprint1.IntegrationTests\LabLend.Sprint1.IntegrationTests.csproj : warning NU1900: Error occurred while getting package vulnerability data: Unable to load the service index for source https://api.nuget.org/v3/index.json.
+  LabLend.Sprint1.IntegrationTests -> <repo>\tests\Integration\LabLend.Sprint1.IntegrationTests\bin\Release\net8.0\LabLend.Sprint1.IntegrationTests.dll
+
+Build succeeded.
+
+<repo>\src\BuildingBlocks\Observability\Observability.csproj : warning NU1900: Error occurred while getting package vulnerability data: Unable to load the service index for source https://api.nuget.org/v3/index.json.
+<repo>\src\Services\Identity\Identity.Domain\Identity.Domain.csproj : warning NU1900: Error occurred while getting package vulnerability data: Unable to load the service index for source https://api.nuget.org/v3/index.json.
+<repo>\src\Services\Identity\Identity.Application\Identity.Application.csproj : warning NU1900: Error occurred while getting package vulnerability data: Unable to load the service index for source https://api.nuget.org/v3/index.json.
+<repo>\src\Services\Identity\Identity.Infrastructure\Identity.Infrastructure.csproj : warning NU1900: Error occurred while getting package vulnerability data: Unable to load the service index for source https://api.nuget.org/v3/index.json.
+<repo>\src\Services\Identity\Identity.Api\Identity.Api.csproj : warning NU1900: Error occurred while getting package vulnerability data: Unable to load the service index for source https://api.nuget.org/v3/index.json.
+<repo>\src\Services\Catalog\Catalog.Infrastructure\Catalog.Infrastructure.csproj : warning NU1900: Error occurred while getting package vulnerability data: Unable to load the service index for source https://api.nuget.org/v3/index.json.
+<repo>\src\Services\Catalog\Catalog.Api\Catalog.Api.csproj : warning NU1900: Error occurred while getting package vulnerability data: Unable to load the service index for source https://api.nuget.org/v3/index.json.
+<repo>\src\Services\Inventory\Inventory.Infrastructure\Inventory.Infrastructure.csproj : warning NU1900: Error occurred while getting package vulnerability data: Unable to load the service index for source https://api.nuget.org/v3/index.json.
+<repo>\src\Services\Inventory\Inventory.Host\Inventory.Host.csproj : warning NU1900: Error occurred while getting package vulnerability data: Unable to load the service index for source https://api.nuget.org/v3/index.json.
+<repo>\src\Services\Borrowing\Borrowing.Infrastructure\Borrowing.Infrastructure.csproj : warning NU1900: Error occurred while getting package vulnerability data: Unable to load the service index for source https://api.nuget.org/v3/index.json.
+<repo>\src\Services\Borrowing\Borrowing.Api\Borrowing.Api.csproj : warning NU1900: Error occurred while getting package vulnerability data: Unable to load the service index for source https://api.nuget.org/v3/index.json.
+<repo>\src\Services\Notification\Notification.Infrastructure\Notification.Infrastructure.csproj : warning NU1900: Error occurred while getting package vulnerability data: Unable to load the service index for source https://api.nuget.org/v3/index.json.
+<repo>\src\Services\Notification\Notification.Api\Notification.Api.csproj : warning NU1900: Error occurred while getting package vulnerability data: Unable to load the service index for source https://api.nuget.org/v3/index.json.
+<repo>\src\Gateway\LabLend.Gateway\LabLend.Gateway.csproj : warning NU1900: Error occurred while getting package vulnerability data: Unable to load the service index for source https://api.nuget.org/v3/index.json.
+<repo>\src\Workers\LabLend.Borrowing.Worker\LabLend.Borrowing.Worker.csproj : warning NU1900: Error occurred while getting package vulnerability data: Unable to load the service index for source https://api.nuget.org/v3/index.json.
+<repo>\tests\Integration\LabLend.Sprint1.IntegrationTests\LabLend.Sprint1.IntegrationTests.csproj : warning NU1900: Error occurred while getting package vulnerability data: Unable to load the service index for source https://api.nuget.org/v3/index.json.
+    16 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:24.07
