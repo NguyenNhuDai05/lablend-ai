@@ -105,6 +105,20 @@ services:
     $summary.error = $_.Exception.Message
     if ($summary.stages.Count) { $summary.stages[-1].status = $summary.status }
     Write-Warning $summary.error
+    if ($started) {
+        Push-Location $clone
+        try {
+            docker compose ps --all --format json | Set-Content -LiteralPath (Join-Path $evidence 'failure-containers.json') -Encoding utf8
+            docker inspect "$project-borrowing-worker-1" --format '{{json .State}}' | Set-Content -LiteralPath (Join-Path $evidence 'failure-worker-state.json') -Encoding utf8
+            $workerLogs = docker compose logs --no-color --tail 200 borrowing-worker | Out-String
+            $redactions = @($env:Bootstrap__AdminPassword)
+            foreach ($line in Get-Content -LiteralPath (Join-Path $clone '.env')) {
+                if ($line -match '^[A-Z_]*(PASSWORD|SIGNING_KEY|SERVICE_TOKEN|API_KEY)=(.+)$') { $redactions += $Matches[2] }
+            }
+            foreach ($secret in $redactions) { if ($secret) { $workerLogs = $workerLogs.Replace($secret, '[redacted]') } }
+            $workerLogs | Set-Content -LiteralPath (Join-Path $evidence 'failure-worker.log') -Encoding utf8
+        } finally { Pop-Location }
+    }
 } finally {
     if ($started -and -not $KeepRunning) {
         Push-Location $clone

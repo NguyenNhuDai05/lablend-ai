@@ -80,8 +80,8 @@ try {
   await student.goto(`${origin}/admin/users`); await student.getByRole('heading', { name: 'Không có quyền truy cập' }).waitFor();
   await student.bringToFront();
   await student.goto(`${origin}/notifications`);
-  await student.getByRole('heading', { name: 'Loan approved', exact: true }).waitFor();
-  await student.getByRole('heading', { name: 'Equipment due soon', exact: true }).waitFor();
+  await student.getByRole('heading', { name: 'Phiếu mượn đã được duyệt', exact: true }).waitFor();
+  await student.getByRole('heading', { name: 'Sắp đến hạn trả thiết bị', exact: true }).waitFor();
   await student.getByRole('button', { name: 'Đánh dấu đã đọc' }).first().click();
   await student.getByText('Đã đọc', { exact: true }).first().waitFor();
 
@@ -95,7 +95,7 @@ try {
   assert.equal(await student.getByRole('button', { name: 'Hủy phiếu mượn', exact: true }).count(), 0);
 
   await student.bringToFront(); await student.goto(`${origin}/notifications`);
-  await eventually(() => student.getByRole('heading', { name: 'Equipment overdue', exact: true }).count().then(n => n > 0), 110000);
+  await eventually(() => student.getByRole('heading', { name: 'Thiết bị đã quá hạn trả', exact: true }).count().then(n => n > 0), 110000);
   await screenshot(student, 'notifications');
   await staff.getByRole('combobox', { name: /Tình trạng trả/ }).first().selectOption('DAMAGED');
   await staff.getByRole('button', { name: 'Xem lại thiết bị nhận trả', exact: true }).click();
@@ -106,7 +106,7 @@ try {
   await staff.getByRole('combobox', { name: /Tình trạng trả/ }).first().selectOption('NORMAL');
   await staff.getByRole('button', { name: 'Xem lại thiết bị nhận trả', exact: true }).click();
   await staff.getByRole('button', { name: 'Xác nhận nhận trả', exact: true }).click(); await status(staff, 'Đã trả');
-  await student.getByRole('heading', { name: 'Equipment return recorded', exact: true }).first().waitFor({ timeout: 25000 });
+  await student.getByRole('heading', { name: 'Đã ghi nhận trả thiết bị', exact: true }).first().waitFor({ timeout: 25000 });
 
   // Finish the physical lifecycle through the actual Staff maintenance UI and inspect append-only history.
   const damagedAsset = (await Promise.all(assets.map(asset))).find(a => a.status === 'MAINTENANCE');
