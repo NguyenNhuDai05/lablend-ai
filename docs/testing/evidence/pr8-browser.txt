@@ -1,0 +1,12 @@
+Browser acceptance on http://localhost:3008; real isolated Compose environment lablend-pr8-f33be25c.
+Real Identity login: LAB_STAFF and ADMIN reached protected Catalog/Inventory; STUDENT reached 403 at /staff.
+Anonymous /staff redirected to Login; final Admin login returned to /staff/catalog.
+Catalog category PR8 UI -> PR8 UI Updated: create, edit and inactive toggle persisted.
+Equipment PR8 UI Type -> PR8 UI Type Updated: create/edit, specifications/tags, search; user confirmed native deactivation dialog; inactive persisted.
+PR8 Paging category: real 12 equipment types, descending name order 12..03 on page 1 and 02..01 on page 2.
+Asset PR8-UI-001: create, edit location, maintenance start/complete, retire; four real StockMovements and completed maintenance displayed.
+Staff cookie session restored after reload, keeping Inventory route and actual retired asset.
+Student Notification screen loaded the true empty response; existing loan route preserved and labelled planned.
+Final frontend after session guards: rapid Admin logout -> Student login retained PR8 student after logout completion; Student /staff still 403; subsequent real Admin login reached /staff/catalog.
+Native confirm initially blocked the browser driver; user clicked OK and persisted result was independently checked through actual REST.
+Screenshots: pr8-staff-history.jpg, pr8-student-denied.jpg (only task-owned synthetic data, no tokens/passwords).

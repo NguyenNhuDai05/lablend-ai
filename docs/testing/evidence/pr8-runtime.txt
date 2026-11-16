@@ -1,0 +1,43 @@
+postgres running healthy
+redis running healthy
+identity running healthy
+catalog running healthy
+inventory running healthy
+borrowing running healthy
+notification running healthy
+recommendation running healthy
+borrowing-worker running healthy
+gateway running healthy
+web running healthy
+identity migrations: 20261115162335_InitialIdentity
+catalog migrations: 20261115124115_InitialCatalog
+inventory migrations: 20261115132010_InitialInventory, 20261115161050_AddStockMovements
+borrowing migrations: 20261115163138_InitialBorrowing
+notification migrations: 20261115213425_InitialNotification
+nginx->Gateway->Catalog: real equipment types count=5
+nginx->Gateway->Inventory: availability 200, type=e0000000-0000-0000-0000-000000000005
+Inventory Docker HTTP/2 gRPC health: PASS
+PASS: 11 expected containers are running and healthy.
+PASS: Gateway -> identity actual readiness, correlation forwarding and OpenAPI.
+PASS: Gateway -> catalog actual readiness, correlation forwarding and OpenAPI.
+PASS: Gateway -> inventory actual readiness, correlation forwarding and OpenAPI.
+PASS: Gateway -> borrowing actual readiness, correlation forwarding and OpenAPI.
+PASS: Gateway -> notification actual readiness, correlation forwarding and OpenAPI.
+PASS: Gateway -> recommendation actual readiness, correlation forwarding and OpenAPI.
+PASS: frontend entry point and nginx -> Gateway health.
+PASS: Borrowing container -> Inventory standard gRPC health (NOT allocation).
+ lablend-ai-postgres-1 Copying infrastructure/database/verify-isolation.sh to lablend-ai-postgres-1:/tmp/lablend-verify-isolation.sh
+ lablend-ai-postgres-1 Copied infrastructure/database/verify-isolation.sh to lablend-ai-postgres-1:/tmp/lablend-verify-isolation.sh
+PASS: identity authenticates to own database and cannot connect to other five databases.
+PASS: catalog authenticates to own database and cannot connect to other five databases.
+PASS: inventory authenticates to own database and cannot connect to other five databases.
+PASS: borrowing authenticates to own database and cannot connect to other five databases.
+PASS: notification authenticates to own database and cannot connect to other five databases.
+PASS: recommendation authenticates to own database and cannot connect to other five databases.
+Sprint 0 foundation runtime checks passed. Business acceptance is documented separately in PR8_INTEGRATION_ACCEPTANCE.md.
+PASS: all 20 Identity/Borrowing operations are present in actual OpenAPI through Gateway.
+PASS: anonymous GET /api/auth/me through running Compose Gateway returns 401.
+PASS: anonymous GET /api/loans/my through running Compose Gateway returns 401.
+PASS: identity_db has applied migration 20261115162335_InitialIdentity (read using identity_user).
+PASS: borrowing_db has applied migration 20261115163138_InitialBorrowing (read using borrowing_user).
+PASS: Sprint 1 Identity/Borrowing runtime checks. Real Catalog integration evidence: PR8_INTEGRATION_ACCEPTANCE.md and MemberIntegrationTests.

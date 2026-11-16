@@ -15,9 +15,14 @@ docs/grpc/INVENTORY_CONTRACT_GUIDE.md
 docs/requirements/REQUIREMENTS_TRACEABILITY.md
 docs/team/SPRINT1_HANDOVER.md
 docs/testing/PR8_INTEGRATION_ACCEPTANCE.md
+docs/testing/evidence/pr8-browser.txt
+docs/testing/evidence/pr8-ci.txt
+docs/testing/evidence/pr8-docker-e2e.txt
 docs/testing/evidence/pr8-files.txt
+docs/testing/evidence/pr8-images.txt
 docs/testing/evidence/pr8-local-gates.txt
 docs/testing/evidence/pr8-real-services.txt
+docs/testing/evidence/pr8-runtime.txt
 docs/testing/evidence/pr8-staff-history.jpg
 docs/testing/evidence/pr8-student-denied.jpg
 infrastructure/docker/compose.dev.yml

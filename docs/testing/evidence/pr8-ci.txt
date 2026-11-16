@@ -1,0 +1,7 @@
+Code head: 094161f1c5da125a58330a88b4ffa3e5a5e6f2a4
+Push verify SUCCESS: https://github.com/NguyenNhuDai05/lablend-ai/actions/runs/43808545747
+PR verify SUCCESS: https://github.com/NguyenNhuDai05/lablend-ai/actions/runs/43808551695
+Hosted build: 0 warnings, 0 errors.
+Hosted tests (LABLEND_POSTGRES_TESTS=1): Unit20 + Platform10 + Catalog3 + Inventory11 + Sprint1(real services)9 = 53 passed; failed0, skipped0.
+Hosted npm test: 11 passed; failed0, skipped0.
+Final evidence-only head is checked separately before normal PR merge; final receipt records its actual checks and merge SHA.
