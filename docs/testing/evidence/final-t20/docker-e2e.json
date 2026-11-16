@@ -1,0 +1,65 @@
+{
+  "project": "lablend-t20-98c82cde5abe",
+  "results": [
+    {
+      "name": "Flow 3 registration",
+      "expected": "real Catalog type and three AVAILABLE Inventory units persisted",
+      "actual": "1 type / 3 units",
+      "status": "PASS"
+    },
+    {
+      "name": "RBAC",
+      "expected": "Student denied staff inventory and admin users",
+      "actual": "403 / 403",
+      "status": "PASS"
+    },
+    {
+      "name": "Flow 1 create",
+      "expected": "double click creates one persisted PENDING loan",
+      "actual": "one POST / one loan",
+      "status": "PASS"
+    },
+    {
+      "name": "Reservation failures",
+      "expected": "duplicate approval / insufficient stock rejected; no partial reserve",
+      "actual": "409 / APPROVAL_FAILED",
+      "status": "PASS"
+    },
+    {
+      "name": "Flow 2 handover",
+      "expected": "REST -> real Inventory gRPC -> three ON_LOAN units",
+      "actual": "3 ON_LOAN",
+      "status": "PASS"
+    },
+    {
+      "name": "Jobs and broker",
+      "expected": "real due-soon/overdue -> Outbox -> Redis -> Inbox -> Student UI",
+      "actual": "all four lifecycle/reminder events received",
+      "status": "PASS"
+    },
+    {
+      "name": "Flow 2 returns",
+      "expected": "partial then full; DAMAGED/LOST/NORMAL; invalid condition; repeat safe",
+      "actual": "MAINTENANCE / LOST / AVAILABLE; RETURNED",
+      "status": "PASS"
+    },
+    {
+      "name": "Flow 3 maintenance",
+      "expected": "repair and maintenance persist; original StockMovements preserved",
+      "actual": "AVAILABLE; 3 appended movements",
+      "status": "PASS"
+    },
+    {
+      "name": "Recovery",
+      "expected": "Redis reconnect delivers persisted outbox; worker restarts healthy",
+      "actual": "notification delivered / healthy",
+      "status": "PASS"
+    },
+    {
+      "name": "Browser",
+      "expected": "desktop/mobile production web, timeline and notifications; no JS errors",
+      "actual": "verified",
+      "status": "PASS"
+    }
+  ]
+}

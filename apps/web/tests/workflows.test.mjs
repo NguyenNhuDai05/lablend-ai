@@ -129,3 +129,14 @@ test('loan-related notifications use the server aggregate filter without accepti
   });
   assert.equal((await notificationApi.list(1, 20, undefined, type)).total, 0);
 });
+
+test('persisted notification events have Vietnamese copy without inventing full-return state or replacing unknown event content', async () => {
+  const { notificationCopy } = await import(await source('../src/features/notifications/copy.ts'));
+  for (const eventType of ['LoanSubmitted', 'LoanApproved', 'LoanRejected', 'LoanHandedOver', 'LoanReturned', 'LoanDueSoon', 'LoanOverdue']) {
+    const copy = notificationCopy({ eventType, title: 'Original event', message: 'Original message' });
+    assert.ok(copy.title.length > 5); assert.ok(copy.message.length > 10);
+    assert.notEqual(copy.title, 'Original event');
+  }
+  assert.match(notificationCopy({ eventType: 'LoanReturned', title: '', message: '' }).message, /một lần nhận trả/);
+  assert.deepEqual(notificationCopy({ eventType: 'FutureEvent', title: 'Provider title', message: 'Provider detail' }), { title: 'Provider title', message: 'Provider detail' });
+});

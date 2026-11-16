@@ -11,11 +11,21 @@ import { loanApi, type Loan, type LoanSelection, type ReturnCondition } from './
 export function LoansPage({ staff = false }: { staff?: boolean }) {
   const [params, setParams] = useSearchParams(); const status = params.get('status') ?? ''; const page = Math.max(1, Number(params.get('page')) || 1);
   const result = useResource(`${staff}:${status}:${page}`, s => loanApi.list(staff, status, page, s), 15000);
+  // At most three type previews per card, ten cards/page: at most thirty reads, four in flight.
+  const previewIds = [...new Set(result.data?.items.flatMap(loan => [...new Set(loan.items.map(item => item.equipmentTypeId))].slice(0, 3)) ?? [])].sort();
+  const typeNames = useResource(`loan-types:${previewIds.join(',')}`, async signal => {
+    const names: Record<string, string> = {};
+    for (let offset = 0; offset < previewIds.length; offset += 4) {
+      const rows = await Promise.all(previewIds.slice(offset, offset + 4).map(id => catalogApi.detail(id, signal)));
+      for (const row of rows) names[row.id] = row.name;
+    }
+    return names;
+  });
   function update(changes: Record<string, string>) { setParams({ status, page: String(page), ...changes }); }
   const base = staff ? '/staff/loans' : '/loans';
   return <section><div className="section-title"><div><p className="eyebrow">{staff ? 'QUẢN LÝ PHÒNG LAB' : 'KHÔNG GIAN SINH VIÊN'}</p><h1>{staff ? 'Quản lý phiếu mượn' : 'Phiếu mượn của tôi'}</h1></div>{!staff && <Link className="button-link" to="/loans/new">Tạo phiếu mượn</Link>}</div>
     <div className="filters"><label>Trạng thái<select value={status} onChange={e => update({ status: e.target.value, page: '1' })}><option value="">Tất cả</option>{loanStatuses.map(s => <option key={s} value={s}>{statusLabels[s]}</option>)}</select></label><button onClick={result.reload} disabled={result.loading}>Tải lại</button><span>Dữ liệu tự cập nhật mỗi 15 giây khi mở trang.</span></div>
-    {result.loading ? <PageLoading /> : result.error ? <ErrorState message={result.error} retry={result.reload} /> : !result.data?.items.length ? <EmptyState message="Không có phiếu mượn phù hợp." /> : <><div className="loan-list">{result.data.items.map(loan => <article className="surface" key={loan.id}><div className="row-between"><Link to={`${base}/${loan.id}`}><strong>Phiếu {loan.id.slice(0, 8)}</strong></Link><span className={`status-pill ${loan.isOverdue ? 'late' : ''}`}>{loan.isOverdue ? 'Quá hạn' : statusLabels[loan.status]}</span></div><p>{loan.purpose}</p><p>{loan.items.length} thiết bị · Hạn trả: {formatDate(loan.dueAt)}</p>{staff && <p className="identifier">Sinh viên: {loan.studentId}</p>}<Link to={`${base}/${loan.id}`}>Xem chi tiết và lịch sử →</Link></article>)}</div><Pager page={page} pageSize={result.data.pageSize} total={result.data.total} onChange={p => update({ page: String(p) })} /></>}
+    {typeNames.error && <p role="alert">Chưa tải được tên thiết bị. Mã và số lượng vẫn hiển thị. <button className="button-quiet" onClick={typeNames.reload}>Tải lại tên thiết bị</button></p>}{result.loading ? <PageLoading /> : result.error ? <ErrorState message={result.error} retry={result.reload} /> : !result.data?.items.length ? <EmptyState message="Không có phiếu mượn phù hợp." /> : <><div className="loan-list">{result.data.items.map(loan => { const counts = new Map<string, number>(); for (const item of loan.items) counts.set(item.equipmentTypeId, (counts.get(item.equipmentTypeId) ?? 0) + 1); return <article className="surface" key={loan.id}><div className="row-between"><Link to={`${base}/${loan.id}`}><strong>Phiếu {loan.id.slice(0, 8)}</strong></Link><span className={`status-pill ${loan.isOverdue ? 'late' : ''}`}>{loan.isOverdue ? 'Quá hạn' : statusLabels[loan.status]}</span></div><p>{loan.purpose}</p><ul className="loan-equipment-list">{[...counts].slice(0, 3).map(([typeId, quantity]) => <li key={typeId}><Link to={`/equipment/${typeId}`}>{typeNames.data?.[typeId] ?? `Loại ${typeId.slice(0, 8)}`}</Link> × {quantity}</li>)}</ul>{counts.size > 3 && <p className="muted">Còn {counts.size - 3} loại khác trong chi tiết phiếu.</p>}<p>Ngày yêu cầu: {formatDate(loan.requestedAt)}</p><p>{loan.items.length} thiết bị · Hạn trả: {formatDate(loan.dueAt)}</p>{staff && <p className="identifier">Sinh viên: {loan.studentId}</p>}<Link to={`${base}/${loan.id}`}>Xem chi tiết và lịch sử →</Link></article>; })}</div><Pager page={page} pageSize={result.data.pageSize} total={result.data.total} onChange={p => update({ page: String(p) })} /></>}
   </section>;
 }
 

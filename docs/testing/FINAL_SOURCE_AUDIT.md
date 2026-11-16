@@ -22,12 +22,26 @@ Sources read: official three-page assignment PDF, Master Plan V4 (R01–R18, T01
 | R01–R18/docs | required architecture/REST/jobs/broker/gRPC/EF/readme | Historical acceptance | Current runtime/clean install, deck render/rehearsal | High | Current checkpoint with exact results, visual QA where supported, human review remains explicit |
 | Gemini/dashboard | optional skeleton/deferred | No live AI acceptance | P0 not yet stable | Low | Keep disabled; do not start bonus before P0 gate |
 
-## Stabilization evidence
+## Initial stabilization evidence (historical)
 
 The initial Release restore/build completed with **0 errors, 16 NU1900 warnings** (NuGet vulnerability endpoint unreachable). Baseline frontend production build and **21/21 tests passed**. New final-run results supersede these counts only after execution.
 
 Docker client 29.5.3, desktop-linux context: Linux engine named pipe does not exist. `docker desktop start` reports already running, while server connection fails. A non-destructive `docker desktop restart --detach --timeout 30` did not restore the pipe. Host logs show repeated waits for two backend processes and missing `dockerBackendApiServer`. At inspection, Windows reported ~5.94 GiB visible RAM and ~0.30 GiB free, C: ~6.56 GiB free. These are resource constraints and daemon symptoms, **not proof that OOM or code caused the earlier exit 139**. Container state/OOMKilled/native crash/image architecture cannot be recovered through an unavailable engine.
 
-Current classification: Docker runtime **BLOCKED**, historical Worker 139 root cause **UNRESOLVED**. No source/config change is justified solely by that code. No volumes/database/WSL data were removed. Close unnecessary applications and restart Docker Desktop normally on a machine with sufficient free memory/disk; if it remains stuck, save work and reboot Windows. Then run `scripts/Test-FinalPreflight.ps1` and T20; inspect worker `.State`, health and all four completed passes before acceptance. Do not factory reset, prune volumes or replace the team's database.
+Initial classification: Docker runtime **BLOCKED**, historical Worker 139 root cause **UNRESOLVED**. No source/config change is justified solely by that code. No volumes/database/WSL data were removed. Close unnecessary applications and restart Docker Desktop normally on a machine with sufficient free memory/disk; if it remains stuck, save work and reboot Windows. Then run `scripts/Test-FinalPreflight.ps1` and T20; inspect worker `.State`, health and all four completed passes before acceptance. Do not factory reset, prune volumes or replace the team's database.
 
 `Test-CleanInstall.ps1` was executed and stopped at its daemon gate with **BLOCKED**, before clone/build/migrations/E2E. Its generated result is under ignored `.tmp/clean-install`. Harness syntax checks do not certify T20.
+
+## Runtime recovery followup
+
+The non-destructive Desktop restart eventually restored the Linux engine. The repeated preflight captured linux/amd64 Docker 29.5.3, worker running/healthy with OOMKilled=false and exit 0. `Verify-Sprint2.ps1` then passed ten required containers, real service readiness/OpenAPI/anonymous authorization, old migrations, all four actual job passes, Redis group metadata and independent gRPC standard health. This verifies the existing baseline stack, not the new source deployment. It does not establish the historical 139 root cause. New-source images and fresh-install acceptance are recorded separately in the final acceptance report.
+
+## Cold-install root cause established
+
+The later fresh diagnostic project reproduced 139 in five different .NET hosts. Captured logs show Npgsql connection refusal/57P03 while PostgreSQL's temporary init-only server was shutting down. The old Unix-socket pg_isready healthcheck accepted that temporary server before the final TCP server existed. Compose now requires TCP, and Start-Core sequences actual health on the small VM. [Full diagnostic timeline and captured evidence](FINAL_DOCKER_DIAGNOSIS.md). This supersedes speculation about native crashes or OOM for the reproduced cold-install failure; the earlier shared-stack M3 crash remains unrecorded.
+
+## Final source checkpoint
+
+Fresh fetch still resolves main to `68933a1f91d9c9e2e6921998f44a1030c35fab06`; independent PR #15 remains unmerged. The final implementation is `ea868e4f22ebc13fbc2371ca1bfb73ef99435179`, and the merged review stack `430ff1b15ce7441a3862ad247316943e9a91acd2` has identical `src`, `apps/web`, `proto`, scripts, infrastructure and Compose content. Its [exact-source CI](https://github.com/NguyenNhuDai05/lablend-ai/actions/runs/43967053632) passed all 71 backend and 25 frontend tests with zero failures/skips. PR-A `9608470` and PR-B `7e850fc` also have successful exact-head CI. These final results supersede the initial test counts and unavailable-daemon classification above, without erasing the failed attempts.
+
+The final implementation includes bounded real equipment names/quantities in Student and Staff queues, persisted create idempotency, request/return review, authorized serial reads, server-wide Admin filters, loan-scoped owned notifications, localized event copy and real equipment images. All older migrations, tests, v1 protobuf and seven producer event types remain. The final clean-install/runtime results and explicit remaining human gates are in [acceptance](FINAL_PRODUCT_ACCEPTANCE.md).

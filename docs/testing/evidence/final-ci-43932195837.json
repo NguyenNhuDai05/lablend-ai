@@ -1,0 +1,52 @@
+{
+  "frontend": [
+    {
+      "failed": 0,
+      "entry": "verify/10_Run npm test.txt",
+      "skipped": 0,
+      "total": 25,
+      "passed": 25
+    }
+  ],
+  "runId": 43932195837,
+  "conclusion": "success",
+  "backend": [
+    {
+      "failed": 0,
+      "entry": "verify/11_Run dotnet test LabLendAI.sln -c Release --no-build --no-restore.txt",
+      "skipped": 0,
+      "passed": 20,
+      "total": 20
+    },
+    {
+      "failed": 0,
+      "entry": "verify/11_Run dotnet test LabLendAI.sln -c Release --no-build --no-restore.txt",
+      "skipped": 0,
+      "passed": 10,
+      "total": 10
+    },
+    {
+      "failed": 0,
+      "entry": "verify/11_Run dotnet test LabLendAI.sln -c Release --no-build --no-restore.txt",
+      "skipped": 0,
+      "passed": 3,
+      "total": 3
+    },
+    {
+      "failed": 0,
+      "entry": "verify/11_Run dotnet test LabLendAI.sln -c Release --no-build --no-restore.txt",
+      "skipped": 0,
+      "passed": 11,
+      "total": 11
+    },
+    {
+      "failed": 0,
+      "entry": "verify/11_Run dotnet test LabLendAI.sln -c Release --no-build --no-restore.txt",
+      "skipped": 0,
+      "passed": 27,
+      "total": 27
+    }
+  ],
+  "url": "https://github.com/NguyenNhuDai05/lablend-ai/actions/runs/43932195837",
+  "commit": "783c2f854094e9bd098bedcc79b6d8399a31a313"
+}

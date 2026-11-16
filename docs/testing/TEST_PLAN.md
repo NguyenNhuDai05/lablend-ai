@@ -1,5 +1,15 @@
 # Test plan
 
+## Final executable gates
+
+Current results and exact source commit: [final acceptance](FINAL_PRODUCT_ACCEPTANCE.md). `FinalWorkflowTests` adds real PostgreSQL concurrent create/replay/conflict/owner scope, Admin filters before pagination/literal wildcard handling, and Notification aggregate filter with JWT owner scope. Frontend transport tests include stable draft keys after lost replies and server query encoding. The real browser test additionally completes maintenance through Staff UI and asserts previous movements are unchanged.
+
+Enable both `LABLEND_POSTGRES_TESTS=1` and `LABLEND_BROWSER_TESTS=1`, then run `dotnet test LabLendAI.sln -c Release --no-build --no-restore`. Run `npm run build` and `npm test` in apps/web. All pre-existing tests remain. Real PostgreSQL/Redis/gRPC fault, concurrency, worker restart/replay and contract suites remain required. Focused integration tests can explicitly prepare rows; only business-command E2E counts as the final user workflow.
+
+T20: `scripts/Test-CleanInstall.ps1 -Revision <reviewed revision>` clones source, generates private credentials, uses a random project/ports/volumes, builds serially and runs `apps/web/e2e/docker-core.mjs` against production nginx/Gateway. Scenario stages record expected/actual outcomes in JSON and validate the owning DB after real commands. It covers registration, three physical units, review/create/double submit, reserve/handover, insufficient stock/double approval, real due-soon/overdue delivery, partial NORMAL/DAMAGED/LOST returns, repeat/invalid mutations, maintenance/history, Redis reconnect, worker restart and mobile. It also runs DB isolation and demo preparation twice. The harness preserves every volume at teardown. Do not certify T20 from local SDK tests, static parsing or pre-existing Docker health.
+
+`scripts/Test-FinalPreflight.ps1` is bounded/read-only and collects daemon/Compose/worker state/logs/resources without exposing .env values. It does not create a business PASS. Seven-topic human rehearsal and deck visual inspection remain separate.
+
 ## Sprint 0 implemented checks
 
 - Unit: correlation ID chống control characters/whitespace/non-ASCII và bounded length.

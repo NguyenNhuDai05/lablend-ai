@@ -1,0 +1,174 @@
+{
+  "source": "ea868e4f22ebc13fbc2371ca1bfb73ef99435179",
+  "status": "PASS",
+  "dataPreservation": "Original .env and existing named volumes retained. Old images tagged pre-final-20261117. No database reset or volume deletion.",
+  "web": "http://localhost:3000",
+  "images": [
+    {
+      "service": "identity",
+      "previousImage": "sha256:a9e740613da3f71948d64bd38f9cd2c1966d89b8b038c9d5b1724173540bc14c",
+      "testedImage": "sha256:d59e967a4af227c17378e03616a39af503315ecb7d6208cd8413784d1c1405f2",
+      "source": "ea868e4f22ebc13fbc2371ca1bfb73ef99435179"
+    },
+    {
+      "service": "catalog",
+      "previousImage": "sha256:eccb34d4752cb885d6029e16cc7bfd34f3c5fc9fa0078508e19dc9e81eaf8d4c",
+      "testedImage": "sha256:f28bf51328901ad26b308f5dc057c4790cdbdb08fef91780ba83a1e040b45fb8",
+      "source": "ea868e4f22ebc13fbc2371ca1bfb73ef99435179"
+    },
+    {
+      "service": "inventory",
+      "previousImage": "sha256:5d58ce2fc6f9059b763485670e973bf9e985ac50761e0ba32ead3b362843a5d9",
+      "testedImage": "sha256:22b8486c9b4471fa737b0ab3bcd585640e31269c49be5ae6c75701ba4ca70895",
+      "source": "ea868e4f22ebc13fbc2371ca1bfb73ef99435179"
+    },
+    {
+      "service": "borrowing",
+      "previousImage": "sha256:5a62e8bc6f20b60f46a87fde7f07bbcfb571e40b2337c6b0292eefebadc5cc2d",
+      "testedImage": "sha256:2ad0f0e67d6439d8c22c388d19312ae5ab368834655038f0f95e20f12446066e",
+      "source": "ea868e4f22ebc13fbc2371ca1bfb73ef99435179"
+    },
+    {
+      "service": "notification",
+      "previousImage": "sha256:52b465429833af35404a32b0bdd77616d971a8ac2e0a04f0ff4748ab9fe2ad87",
+      "testedImage": "sha256:2118585081202e3f0616fdf280159eb99ad6f5e65051c65998062b601ec296dd",
+      "source": "ea868e4f22ebc13fbc2371ca1bfb73ef99435179"
+    },
+    {
+      "service": "borrowing-worker",
+      "previousImage": "sha256:bec1f78081c34e5ea7c2ec8a0ba68b706b5484471a117dd024e1f8de9143fe1e",
+      "testedImage": "sha256:e20c1daec1d653a80300aa2c7465a6baad05e3f97f4445ad3b6bc8e065aa6613",
+      "source": "ea868e4f22ebc13fbc2371ca1bfb73ef99435179"
+    },
+    {
+      "service": "gateway",
+      "previousImage": "sha256:7108f24ac288a82cd66e4d1288fecf0abdc639498773516ae52f66bf74971e86",
+      "testedImage": "sha256:1d2e1c4ec74b5a71cfc9336ccaf9d1dc41e8043f11f2e369f207ba736fad3356",
+      "source": "ea868e4f22ebc13fbc2371ca1bfb73ef99435179"
+    },
+    {
+      "service": "web",
+      "previousImage": "sha256:bd144008312b1e29ea57da4dc22d3767204718dc14c7b8a0f243ed2596cc6da7",
+      "testedImage": "sha256:6921d5d83ce9ad45cab13efba664d66e9f64ad5e723826909da45f152faaea75",
+      "source": "ea868e4f22ebc13fbc2371ca1bfb73ef99435179"
+    }
+  ],
+  "borrowingMigrations": [
+    "20261115163138_InitialBorrowing",
+    "20261116055807_AddInventoryLifecycle",
+    "20261116071914_AddBorrowingOutbox",
+    "20261116073705_AddReminderDispatches",
+    "20261116180731_AddLoanSubmissionIdempotency"
+  ],
+  "containers": [
+    {
+      "Service": "borrowing",
+      "Name": "lablend-ai-borrowing-1",
+      "Image": "lablend-ai-borrowing",
+      "State": "running",
+      "Health": "healthy",
+      "ExitCode": 0
+    },
+    {
+      "Service": "borrowing-worker",
+      "Name": "lablend-ai-borrowing-worker-1",
+      "Image": "lablend-ai-borrowing-worker",
+      "State": "running",
+      "Health": "healthy",
+      "ExitCode": 0
+    },
+    {
+      "Service": "catalog",
+      "Name": "lablend-ai-catalog-1",
+      "Image": "lablend-ai-catalog",
+      "State": "running",
+      "Health": "healthy",
+      "ExitCode": 0
+    },
+    {
+      "Service": "gateway",
+      "Name": "lablend-ai-gateway-1",
+      "Image": "lablend-ai-gateway",
+      "State": "running",
+      "Health": "healthy",
+      "ExitCode": 0
+    },
+    {
+      "Service": "identity",
+      "Name": "lablend-ai-identity-1",
+      "Image": "lablend-ai-identity",
+      "State": "running",
+      "Health": "healthy",
+      "ExitCode": 0
+    },
+    {
+      "Service": "inventory",
+      "Name": "lablend-ai-inventory-1",
+      "Image": "lablend-ai-inventory",
+      "State": "running",
+      "Health": "healthy",
+      "ExitCode": 0
+    },
+    {
+      "Service": "notification",
+      "Name": "lablend-ai-notification-1",
+      "Image": "lablend-ai-notification",
+      "State": "running",
+      "Health": "healthy",
+      "ExitCode": 0
+    },
+    {
+      "Service": "postgres",
+      "Name": "lablend-ai-postgres-1",
+      "Image": "postgres:16-alpine",
+      "State": "running",
+      "Health": "healthy",
+      "ExitCode": 0
+    },
+    {
+      "Service": "redis",
+      "Name": "lablend-ai-redis-1",
+      "Image": "redis:7.4-alpine",
+      "State": "running",
+      "Health": "healthy",
+      "ExitCode": 0
+    },
+    {
+      "Service": "web",
+      "Name": "lablend-ai-web-1",
+      "Image": "lablend-ai-web",
+      "State": "running",
+      "Health": "healthy",
+      "ExitCode": 0
+    }
+  ],
+  "composeProject": "lablend-ai",
+  "compatibleOpenApi": {
+    "userQueryParameters": [
+      "page",
+      "pageSize",
+      "keyword",
+      "role",
+      "isActive"
+    ],
+    "notificationQueryParameters": [
+      "page",
+      "pageSize",
+      "aggregateId"
+    ],
+    "createIdempotencyHeader": true
+  },
+  "checkedAtUtc": "2026-11-16T22:22:20.7047466Z",
+  "completedJobs": [
+    "DueReminderJob",
+    "OverdueDetectionJob",
+    "ReservationReconciliationJob",
+    "OutboxPublisherJob"
+  ],
+  "worker": {
+    "health": "healthy",
+    "oomKilled": false,
+    "status": "running",
+    "exitCode": 0
+  }
+}

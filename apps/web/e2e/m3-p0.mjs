@@ -80,8 +80,8 @@ try {
   await student.goto(`${origin}/admin/users`); await student.getByRole('heading', { name: 'Không có quyền truy cập' }).waitFor();
   await student.bringToFront();
   await student.goto(`${origin}/notifications`);
-  await student.getByRole('heading', { name: 'Loan approved', exact: true }).waitFor();
-  await student.getByRole('heading', { name: 'Equipment due soon', exact: true }).waitFor();
+  await student.getByRole('heading', { name: 'Phiếu mượn đã được duyệt', exact: true }).waitFor();
+  await student.getByRole('heading', { name: 'Sắp đến hạn trả thiết bị', exact: true }).waitFor();
   await student.getByRole('button', { name: 'Đánh dấu đã đọc' }).first().click();
   await student.getByText('Đã đọc', { exact: true }).first().waitFor();
 
@@ -95,7 +95,7 @@ try {
   assert.equal(await student.getByRole('button', { name: 'Hủy phiếu mượn', exact: true }).count(), 0);
 
   await student.bringToFront(); await student.goto(`${origin}/notifications`);
-  await eventually(() => student.getByRole('heading', { name: 'Equipment overdue', exact: true }).count().then(n => n > 0), 110000);
+  await eventually(() => student.getByRole('heading', { name: 'Thiết bị đã quá hạn trả', exact: true }).count().then(n => n > 0), 110000);
   await screenshot(student, 'notifications');
   await staff.getByRole('combobox', { name: /Tình trạng trả/ }).first().selectOption('DAMAGED');
   await staff.getByRole('button', { name: 'Xem lại thiết bị nhận trả', exact: true }).click();
@@ -106,7 +106,7 @@ try {
   await staff.getByRole('combobox', { name: /Tình trạng trả/ }).first().selectOption('NORMAL');
   await staff.getByRole('button', { name: 'Xem lại thiết bị nhận trả', exact: true }).click();
   await staff.getByRole('button', { name: 'Xác nhận nhận trả', exact: true }).click(); await status(staff, 'Đã trả');
-  await student.getByRole('heading', { name: 'Equipment return recorded', exact: true }).first().waitFor({ timeout: 25000 });
+  await student.getByRole('heading', { name: 'Đã ghi nhận trả thiết bị', exact: true }).first().waitFor({ timeout: 25000 });
 
   // Finish the physical lifecycle through the actual Staff maintenance UI and inspect append-only history.
   const damagedAsset = (await Promise.all(assets.map(asset))).find(a => a.status === 'MAINTENANCE');
@@ -132,6 +132,7 @@ try {
   for (const movement of beforeMovements) assert.deepEqual(afterMovements.find(m => m.id === movement.id), movement);
   await staff.getByRole('button', { name: 'Lịch sử', exact: true }).click();
   await staff.getByRole('heading', { name: `Lịch sử ${damagedAsset.serialNumber}`, exact: true }).waitFor();
+  await staff.locator('dialog .timeline li').first().waitFor();
   await screenshot(staff, 'staff-maintenance-history');
   await staff.getByRole('button', { name: 'Đóng', exact: true }).click();
 
@@ -156,7 +157,9 @@ try {
   await student.goto(`${origin}/profile`); await student.getByLabel('Họ và tên', { exact: true }).fill('Student Browser Updated'); await student.getByRole('button', { name: 'Lưu hồ sơ' }).click(); await student.getByText('Đã cập nhật hồ sơ.', { exact: true }).waitFor();
   await student.getByLabel('Mật khẩu hiện tại').fill(env.LABLEND_E2E_PASSWORD); await student.getByLabel('Mật khẩu mới', { exact: true }).fill(env.LABLEND_E2E_PASSWORD + 'Changed1!'); await student.getByLabel('Xác nhận mật khẩu mới').fill(env.LABLEND_E2E_PASSWORD + 'Changed1!'); await student.getByRole('button', { name: 'Đổi mật khẩu và đăng nhập lại' }).click();
   await student.getByRole('heading', { name: 'Đăng nhập', exact: true }).waitFor(); await login(student, env.LABLEND_E2E_STUDENT, env.LABLEND_E2E_PASSWORD + 'Changed1!');
-  await student.goto(`${origin}/loans`); await student.setViewportSize({ width: 390, height: 844 }); await student.getByRole('heading', { name: 'Phiếu mượn của tôi', exact: true }).waitFor(); await student.locator('.loan-list article').first().waitFor(); await screenshot(student, 'mobile-loans');
+  await student.goto(`${origin}/loans`); await student.setViewportSize({ width: 390, height: 844 }); await student.getByRole('heading', { name: 'Phiếu mượn của tôi', exact: true }).waitFor(); await student.locator('.loan-list article').first().waitFor();
+  const listedType = await fetch(`${env.LABLEND_E2E_GATEWAY}api/equipment-types/${env.LABLEND_E2E_TYPE}`).then(r => r.json());
+  await student.getByRole('link', { name: listedType.name, exact: true }).first().waitFor(); await screenshot(student, 'mobile-loans');
   assert.equal(await student.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
   await student.goto(`${origin}/catalog`); await student.locator('.equipment-card').first().waitFor();
   assert.equal(await student.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true); await screenshot(student, 'mobile-catalog');

@@ -1,0 +1,42 @@
+T20: daemon
+T20: clean clone
+T20: checkout revision
+T20: generate environment
+T20: compose configuration
+T20: build sequential images
+T20: start private core sequentially
+T20: frontend dependencies
+T20: Playwright browser
+T20: three-flow Docker E2E
+PASS Flow 3 registration
+PASS RBAC
+PASS Flow 1 create
+PASS Reservation failures
+PASS Flow 2 handover
+PASS Jobs and broker
+PASS Flow 2 returns
+PASS Flow 3 maintenance
+PASS Recovery
+PASS Browser
+T20: database isolation
+PASS: identity authenticates to own database and cannot connect to other five databases.
+PASS: catalog authenticates to own database and cannot connect to other five databases.
+PASS: inventory authenticates to own database and cannot connect to other five databases.
+PASS: borrowing authenticates to own database and cannot connect to other five databases.
+PASS: notification authenticates to own database and cannot connect to other five databases.
+PASS: recommendation authenticates to own database and cannot connect to other five databases.
+T20: prepare reusable demo data
+Demo account ready: t20rehearsal-student@demo.test (STUDENT). Existing passwords are preserved.
+Demo account ready: t20rehearsal-lab_staff@demo.test (LAB_STAFF). Existing passwords are preserved.
+Demo physical unit: T20REHEARSAL-DEMO-1 (AVAILABLE).
+Demo physical unit: T20REHEARSAL-DEMO-2 (AVAILABLE).
+Demo physical unit: T20REHEARSAL-DEMO-3 (AVAILABLE).
+Demo data prepared through authorized REST commands. No loan, history, event or status was fabricated/reset.
+T20: repeat demo preparation safely
+Demo account ready: t20rehearsal-student@demo.test (STUDENT). Existing passwords are preserved.
+Demo account ready: t20rehearsal-lab_staff@demo.test (LAB_STAFF). Existing passwords are preserved.
+Demo physical unit: T20REHEARSAL-DEMO-1 (AVAILABLE).
+Demo physical unit: T20REHEARSAL-DEMO-2 (AVAILABLE).
+Demo physical unit: T20REHEARSAL-DEMO-3 (AVAILABLE).
+Demo data prepared through authorized REST commands. No loan, history, event or status was fabricated/reset.
+T20 result: PASS. Evidence: docs/testing/evidence/final-t20
