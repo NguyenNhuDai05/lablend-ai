@@ -15,7 +15,7 @@ public sealed class LoanService(ILoanRepository repository, ICatalogClient catal
         await catalog.ValidateEquipment(loan.Items.Select(i => i.EquipmentTypeId).Distinct().ToArray(), correlationId, ct);
         // Recheck the due date if the dependency took time.
         if (request.DueAt <= DateTimeOffset.UtcNow) throw new LoanFailure(400, "Due date must be in the future.");
-        await repository.Add(loan, ct);
+        await repository.Add(loan, ct, correlationId);
         return Dto(loan);
     }
     public async Task<LoanDto> Detail(Guid id, Guid actor, bool staff, CancellationToken ct)
@@ -42,8 +42,8 @@ public sealed class LoanService(ILoanRepository repository, ICatalogClient catal
         if (loan.StudentId != owner) throw new LoanFailure(404, "Loan not found.");
         loan.Cancel(owner, DateTimeOffset.UtcNow);
     }, ct));
-    public async Task<LoanDto> Reject(Guid id, Guid actor, string reason, CancellationToken ct) => Dto(await repository.Mutate(id,
-        loan => loan.Reject(actor, reason, DateTimeOffset.UtcNow), ct));
+    public async Task<LoanDto> Reject(Guid id, Guid actor, string reason, CancellationToken ct, string? correlationId = null) => Dto(await repository.Mutate(id,
+        loan => loan.Reject(actor, reason, DateTimeOffset.UtcNow), ct, correlationId));
     private static LoanDto Dto(LoanRequest loan) => new(loan.Id, loan.StudentId, loan.Purpose, loan.Status.ToString(),
         loan.IsOverdue(DateTimeOffset.UtcNow), loan.RequestedAt, loan.DueAt, loan.ReviewedBy, loan.ReviewedAt, loan.RejectionReason,
         loan.CreatedAt, loan.UpdatedAt,

@@ -28,7 +28,7 @@ public sealed class LoansController(LoanService service, ILoanLifecycle lifecycl
     [HttpPost("{id:guid}/cancel"), Authorize(Roles = Roles.Student), ProducesResponseType<LoanDto>(200), ProducesResponseType<ProblemDetails>(409)]
     public Task<LoanDto> Cancel(Guid id, CancellationToken ct) => service.Cancel(id, Actor, ct);
     [HttpPost("{id:guid}/reject"), Authorize(Policy = "StaffOrAdmin"), ProducesResponseType<LoanDto>(200), ProducesResponseType<ProblemDetails>(409)]
-    public Task<LoanDto> Reject(Guid id, RejectLoanRequest request, CancellationToken ct) => service.Reject(id, Actor, request.RejectionReason, ct);
+    public Task<LoanDto> Reject(Guid id, RejectLoanRequest request, CancellationToken ct) => service.Reject(id, Actor, request.RejectionReason, ct, HttpContext.TraceIdentifier);
 
     [HttpPost("{id:guid}/approve"), Authorize(Policy = "StaffOrAdmin"), ProducesResponseType<LoanDto>(200), ProducesResponseType<ProblemDetails>(409), ProducesResponseType<ProblemDetails>(503)]
     public Task<LoanDto> Approve(Guid id, CancellationToken ct) => Execute(id, "APPROVE", null, ct);

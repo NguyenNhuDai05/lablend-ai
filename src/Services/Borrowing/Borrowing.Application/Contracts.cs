@@ -18,8 +18,8 @@ public sealed class LoanFailure(int status, string message) : Exception(message)
 public interface ICatalogClient { Task ValidateEquipment(IReadOnlyCollection<Guid> ids, string correlationId, CancellationToken ct); }
 public interface ILoanRepository
 {
-    Task Add(LoanRequest loan, CancellationToken ct);
+    Task Add(LoanRequest loan, CancellationToken ct, string? correlationId = null);
     Task<LoanRequest?> Get(Guid id, CancellationToken ct);
     Task<PagedResponse<LoanRequest>> List(Guid? studentId, LoanStatus? status, int page, int size, CancellationToken ct);
-    Task<LoanRequest> Mutate(Guid id, Action<LoanRequest> mutation, CancellationToken ct);
+    Task<LoanRequest> Mutate(Guid id, Action<LoanRequest> mutation, CancellationToken ct, string? correlationId = null);
 }

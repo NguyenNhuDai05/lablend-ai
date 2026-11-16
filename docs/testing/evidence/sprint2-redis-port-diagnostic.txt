@@ -1,0 +1,7 @@
+2026-11-16: private labelled Redis diagnostic, removed after observation.
+docker run -p 127.0.0.1::6379 redis:7.4-alpine
+Before stop/start: 127.0.0.1:49505
+After stop/start:  127.0.0.1:49507
+Conclusion: an ephemeral Docker host port cannot serve as a stable outage/reconnect endpoint.
+Test fixture now allocates one private loopback port per project and supplies LABLEND_TEST_REDIS_PORT explicitly.
+Shared LabLend containers/volumes were not stopped or removed by this diagnostic.

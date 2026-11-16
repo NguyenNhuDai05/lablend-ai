@@ -78,6 +78,7 @@ public sealed class LoanLifecycle(BorrowingDbContext db, IInventoryClient invent
     {
         if (!Active(operation)) return;
         var loan = await Load(operation.LoanId, ct);
+        db.EventCorrelationId = operation.CorrelationId;
         try
         {
             var status = await inventory.Status(loan.ApprovalOperationId ?? operation.OperationId, operation.CorrelationId, ct);
@@ -190,6 +191,8 @@ public sealed class LoanLifecycle(BorrowingDbContext db, IInventoryClient invent
             || result.Allocations.Select(i => i.LoanItemId).Distinct().Count() != loan.Items.Count
             || result.Allocations.Select(i => i.AssetUnitId).Distinct().Count() != loan.Items.Count
             || result.Allocations.Any(a => a.AssetUnitId == Guid.Empty || !allowed.Contains(a.ReservationStatus)
+                || a.ReservationStatus == "HELD" && a.AssetStatus != "RESERVED"
+                || a.ReservationStatus == "HANDED_OVER" && a.AssetStatus != "ON_LOAN"
                 || !loan.Items.Any(i => i.Id == a.LoanItemId && (i.AssetUnitId == null || i.AssetUnitId == a.AssetUnitId))))
             throw new InventoryFailure(502, "INVENTORY_ALLOCATION_MISMATCH", true);
     }

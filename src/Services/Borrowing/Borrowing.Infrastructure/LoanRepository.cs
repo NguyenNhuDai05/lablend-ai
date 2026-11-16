@@ -8,8 +8,9 @@ namespace Borrowing.Infrastructure;
 public sealed class LoanRepository(BorrowingDbContext db) : ILoanRepository
 {
     private IQueryable<LoanRequest> Full => db.LoanRequests.Include(l => l.Items).Include(l => l.Histories).AsSplitQuery();
-    public async Task Add(LoanRequest loan, CancellationToken ct)
+    public async Task Add(LoanRequest loan, CancellationToken ct, string? correlationId = null)
     {
+        if (correlationId != null) db.EventCorrelationId = correlationId;
         await using var transaction = await db.Database.BeginTransactionAsync(ct);
         db.LoanRequests.Add(loan);
         await db.SaveChangesAsync(ct);
@@ -23,8 +24,9 @@ public sealed class LoanRepository(BorrowingDbContext db) : ILoanRepository
         var rows = await query.OrderByDescending(l => l.CreatedAt).ThenBy(l => l.Id).Skip((page - 1) * size).Take(size).ToListAsync(ct);
         return new(rows, total, page, size);
     }
-    public async Task<LoanRequest> Mutate(Guid id, Action<LoanRequest> mutation, CancellationToken ct)
+    public async Task<LoanRequest> Mutate(Guid id, Action<LoanRequest> mutation, CancellationToken ct, string? correlationId = null)
     {
+        if (correlationId != null) db.EventCorrelationId = correlationId;
         await using var transaction = await db.Database.BeginTransactionAsync(ct);
         // Lock only this aggregate. The second contender reads the committed lifecycle state after waiting.
         await db.Database.ExecuteSqlInterpolatedAsync($"SELECT 1 FROM \"LoanRequests\" WHERE \"Id\" = {id} FOR UPDATE", ct);

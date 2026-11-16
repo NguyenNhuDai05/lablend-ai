@@ -9,8 +9,38 @@ public sealed class BorrowingDbContext(DbContextOptions<BorrowingDbContext> opti
     public DbSet<LoanItem> LoanItems => Set<LoanItem>();
     public DbSet<LoanHistory> LoanHistories => Set<LoanHistory>();
     public DbSet<InventoryOperation> InventoryOperations => Set<InventoryOperation>();
+    public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
+    public string EventCorrelationId { get; set; } = Guid.NewGuid().ToString("N");
+
+    public override int SaveChanges(bool acceptAllChangesOnSuccess)
+    {
+        CaptureEvents(); return base.SaveChanges(acceptAllChangesOnSuccess);
+    }
+    public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
+    {
+        CaptureEvents(); return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+    }
+    private void CaptureEvents()
+    {
+        var histories = ChangeTracker.Entries<LoanHistory>().Where(e => e.State == EntityState.Added).Select(e => e.Entity).ToArray();
+        foreach (var history in histories)
+        {
+            var type = history.Action switch { "SUBMITTED" => "LoanSubmitted", "APPROVED" => "LoanApproved", "REJECTED" => "LoanRejected",
+                "HANDED_OVER" => "LoanHandedOver", "RETURNED" => "LoanReturned", _ => null };
+            if (type == null || ChangeTracker.Entries<OutboxMessage>().Any(e => e.Entity.EventId == history.Id)) continue;
+            var loan = ChangeTracker.Entries<LoanRequest>().Single(e => e.Entity.Id == history.LoanRequestId).Entity;
+            OutboxMessages.Add(LoanEvents.Create(loan, type, history.Id, EventCorrelationId, history.OccurredAt));
+        }
+    }
     protected override void OnModelCreating(ModelBuilder model)
     {
+        model.Entity<OutboxMessage>(b =>
+        {
+            b.HasKey(x => x.EventId); b.Property(x => x.EventId).ValueGeneratedNever();
+            b.Property(x => x.EventType).HasMaxLength(100); b.Property(x => x.CorrelationId).HasMaxLength(64);
+            b.Property(x => x.PayloadJson).HasColumnType("jsonb"); b.Property(x => x.LastError).HasMaxLength(500);
+            b.HasIndex(x => new { x.NextAttemptAt, x.OccurredAt }).HasFilter("\"PublishedAt\" IS NULL");
+        });
         model.Entity<InventoryOperation>(b =>
         {
             b.HasKey(x => x.OperationId);
