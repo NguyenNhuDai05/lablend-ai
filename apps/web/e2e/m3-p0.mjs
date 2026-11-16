@@ -132,6 +132,7 @@ try {
   for (const movement of beforeMovements) assert.deepEqual(afterMovements.find(m => m.id === movement.id), movement);
   await staff.getByRole('button', { name: 'Lịch sử', exact: true }).click();
   await staff.getByRole('heading', { name: `Lịch sử ${damagedAsset.serialNumber}`, exact: true }).waitFor();
+  await staff.locator('dialog .timeline li').first().waitFor();
   await screenshot(staff, 'staff-maintenance-history');
   await staff.getByRole('button', { name: 'Đóng', exact: true }).click();
 

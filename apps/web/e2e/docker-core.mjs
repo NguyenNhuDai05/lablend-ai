@@ -130,9 +130,24 @@ try {
   await request(`/api/loans/${loanId}/returns`, { method: 'POST', token: staff.accessToken, body: { items: [{ loanItemId: returned.items.find(i => i.assetUnitId === normal).id, condition: 'NORMAL' }] } });
   record('Flow 2 returns', 'partial then full; DAMAGED/LOST/NORMAL; invalid condition; repeat safe', 'MAINTENANCE / LOST / AVAILABLE; RETURNED');
   const movementsBefore = await request(`/api/inventory/assets/${damaged}/movements`, { token: staff.accessToken });
-  await request(`/api/inventory/assets/${damaged}/maintenance/complete`, { method: 'POST', token: staff.accessToken, body: { notes: 'T20 inspected and repaired' } });
-  await request(`/api/inventory/assets/${damaged}/maintenance`, { method: 'POST', expected: 201, token: staff.accessToken, body: { reason: 'T20 scheduled inspection' } });
-  await request(`/api/inventory/assets/${damaged}/maintenance/complete`, { method: 'POST', token: staff.accessToken, body: { notes: 'T20 scheduled inspection complete' } });
+  await staffPage.goto(origin + '/staff/inventory');
+  await staffPage.getByPlaceholder('Serial hoặc vị trí').fill(assets.find(a => a.id === damaged).serialNumber);
+  await staffPage.getByRole('button', { name: 'Tìm', exact: true }).click();
+  await staffPage.getByRole('button', { name: 'Hoàn tất bảo trì', exact: true }).click();
+  await staffPage.getByLabel('Kết quả bảo trì').fill('T20 inspected and repaired');
+  await staffPage.getByRole('button', { name: 'Hoàn tất', exact: true }).click();
+  await eventually(async () => (await request(`/api/inventory/assets/${damaged}`, { token: staff.accessToken })).status === 'AVAILABLE');
+  await staffPage.getByRole('button', { name: 'Bảo trì', exact: true }).click();
+  await staffPage.getByLabel('Lý do', { exact: true }).fill('T20 scheduled inspection');
+  await staffPage.getByRole('button', { name: 'Bắt đầu bảo trì', exact: true }).click();
+  await eventually(async () => (await request(`/api/inventory/assets/${damaged}`, { token: staff.accessToken })).status === 'MAINTENANCE');
+  await staffPage.getByRole('button', { name: 'Hoàn tất bảo trì', exact: true }).click();
+  await staffPage.getByLabel('Kết quả bảo trì').fill('T20 scheduled inspection complete');
+  await staffPage.getByRole('button', { name: 'Hoàn tất', exact: true }).click();
+  await eventually(async () => (await request(`/api/inventory/assets/${damaged}`, { token: staff.accessToken })).status === 'AVAILABLE');
+  await staffPage.getByRole('button', { name: 'Lịch sử', exact: true }).click();
+  await staffPage.locator('dialog .timeline li').first().waitFor(); await screen(staffPage, 't20-maintenance-history');
+  await staffPage.getByRole('button', { name: 'Đóng', exact: true }).click();
   const movementsAfter = await request(`/api/inventory/assets/${damaged}/movements`, { token: staff.accessToken });
   assert.equal(movementsAfter.length, movementsBefore.length + 3);
   for (const movement of movementsBefore) assert.deepEqual(movementsAfter.find(m => m.id === movement.id), movement);
@@ -145,7 +160,10 @@ try {
   finally { docker(['start', 'redis']); }
   await eventually(async () => (await request('/api/notifications?pageSize=100', { token: student.accessToken })).items.some(n => n.aggregateId === outageLoan.id));
   docker(['restart', 'borrowing-worker']);
-  await eventually(() => docker(['ps', '--format', 'json', 'borrowing-worker']).includes('healthy'));
+  await eventually(() => {
+    const state = JSON.parse(docker(['ps', '--format', 'json', 'borrowing-worker']));
+    return state.State === 'running' && state.Health === 'healthy';
+  });
   record('Recovery', 'Redis reconnect delivers persisted outbox; worker restarts healthy', 'notification delivered / healthy');
   await studentPage.goto(`${origin}/loans/${loanId}`); await studentPage.locator('.timeline li').first().waitFor(); await screen(studentPage, 't20-timeline');
   await studentPage.setViewportSize({ width: 390, height: 844 });

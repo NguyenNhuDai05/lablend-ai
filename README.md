@@ -2,7 +2,9 @@
 
 LabLend AI là nền tảng mượn/trả thiết bị phòng thí nghiệm cho đại học, phục vụ **STUDENT**, **LAB_STAFF** và **ADMIN**. Sinh viên tra cứu và yêu cầu mượn; staff duyệt, bàn giao, nhận trả và bảo trì; admin quản lý tài khoản và quyền. Đây là PRN232 Final Assignment theo [đề chính thức](docs/requirements/PRN232%20-%20Final%20Assignment.pdf) và [Master Plan V4](PRN232_LabLend_AI_Master_Implementation_Plan_V4.docx).
 
-**Trạng thái: M1 Sprint 2 đã merge #10–13; đang bàn giao M3 P0.** Nhánh M3 bổ sung Catalog công khai, Student Loans, Staff loan lifecycle, Profile/Admin và Notifications từ API thật; giữ nguyên Staff Catalog/Inventory và backend của M2. Gemini/dashboard để sau theo lựa chọn của repository owner. [M3 handover](docs/team/M3_P0_HANDOVER.md), [acceptance và bằng chứng](docs/testing/M3_P0_ACCEPTANCE.md), [kịch bản Final Demo](docs/demo/FINAL_DEMO_RUNBOOK.md).
+**Checkpoint hoàn thiện ngày 17/11/2026:** baseline `68933a1` đã merge M3 qua PR #14. Các thay đổi cuối được chia PR-A/PR-B/PR-C, không tự merge main. Xem [nghiệm thu cuối](docs/testing/FINAL_PRODUCT_ACCEPTANCE.md), [handover](docs/team/FINAL_COMPLETION_HANDOVER.md), [audit source](docs/testing/FINAL_SOURCE_AUDIT.md) và [kiến trúc C4/ERD/state machine hiện hành](docs/architecture/FINAL_ARCHITECTURE.md). Báo cáo ghi riêng PASS/FAIL/BLOCKED/NOT RUN/PROVISIONAL và không dùng số test từ checkpoint cũ để chứng nhận code mới.
+
+Ba luồng chính: Student tìm/xem thiết bị → chọn số lượng → xem lại → tạo phiếu → timeline/thông báo; Staff duyệt/giữ thiết bị → bàn giao → xem lại và nhận trả từng phần; Staff quản lý loại thiết bị/physical assets → bảo trì → lịch sử trạng thái. Admin tìm toàn bộ tài khoản bằng bộ lọc server. Create Loan có khóa chống trùng phía server, token vẫn chỉ ở memory và refresh cookie HttpOnly.
 
 **Contract review:** OD-04/05 và retention vẫn PROVISIONAL; Inventory gRPC v1 còn gap reservation ID/historical condition/time. [Technical M3 review](docs/events/M3_CONTRACT_REVIEW.md) ghi bằng chứng tương thích, không thay chữ ký phê duyệt nhóm. M1 có transactional Outbox, real gRPC lifecycle/recovery và bốn scheduled jobs; nền tảng/evidence lịch sử: [Sprint 2 M1](docs/testing/SPRINT2_M1_ACCEPTANCE.md), [PR8](docs/testing/PR8_INTEGRATION_ACCEPTANCE.md), [Sprint 1](docs/testing/SPRINT1_ACCEPTANCE.md), [Sprint 0](docs/testing/SPRINT0_ACCEPTANCE.md). Các checkpoint cũ không chứng nhận đầy đủ P0 M3 hiện tại.
 ## Bắt đầu đọc từ đâu
@@ -90,6 +92,31 @@ Chỉ web và gateway publish cổng **loopback**; DB/Redis/API/gRPC nằm trong
 
 `/health/live` kiểm tra process; REST `/health/ready` kiểm tra dependency kết nối thực, chưa chứng nhận toàn nghiệp vụ. Worker heartbeat yêu cầu PostgreSQL, Redis, Inventory RPC được xác thực và recent passes của cả bốn jobs; dependency lỗi sẽ xóa heartbeat. Nghiệm thu overdue vẫn cần event/notification và logs thực trong acceptance. Standard `grpc.health.v1.Health` không thay ReserveAssets.
 
+## Nghiệm thu bản clone sạch và chuẩn bị demo
+
+```powershell
+# PowerShell 7, Git, Docker Linux, Node 22.12+; có Internet để tải dependencies lần đầu.
+./scripts/Test-FinalPreflight.ps1
+# Dùng commit hoặc nhánh đã review. Nhánh chưa merge phải ghi origin/<branch>.
+./scripts/Test-CleanInstall.ps1 -Revision origin/feature/final-c-acceptance
+```
+
+T20 clone source vào `.tmp/clean-install`, sinh `.env` mới, dùng project `lablend-t20-<random>`, ports/volumes riêng và build tuần tự. Harness chạy production web bằng Playwright, REST qua Gateway, PostgreSQL/Redis/gRPC thật, xác nhận state DB theo ownership, ba flow, nhắc hạn thực, reconnect/restart, phân quyền và mobile. Kết quả ở thư mục `*-evidence`: `t20-result.json`, `docker-e2e.json`, `containers.json` và ảnh. PASS chỉ khi mọi stage hoàn tất. Core integration/browser fixture là gate riêng, không thay T20. Nếu Docker chưa hoạt động, T20 dừng BLOCKED trước khi tạo dữ liệu.
+
+Mặc định chỉ dừng container/network do T20 sở hữu khi kết thúc, giữ toàn bộ volumes. `-KeepRunning` giữ fixture để đọc evidence. Không xóa shared database/volumes hoặc reset Docker/WSL. Không chạy integration tests và image build nặng cùng lúc trên máy ít RAM.
+
+Dữ liệu diễn tập dùng lại qua API thật:
+
+```powershell
+# Admin phải được bootstrap cục bộ trước như hướng dẫn Identity bên dưới.
+$env:LABLEND_DEMO_ADMIN_PASSWORD = Read-Host 'Local demo admin password' -MaskInput
+$env:LABLEND_DEMO_USER_PASSWORD = Read-Host 'Password for new demo Student/Staff accounts' -MaskInput
+./scripts/Initialize-DemoData.ps1 -AdminEmail admin@demo.test
+Remove-Item Env:LABLEND_DEMO_ADMIN_PASSWORD,Env:LABLEND_DEMO_USER_PASSWORD
+```
+
+Script tạo hoặc tìm tài khoản `prn232-student@demo.test`, `prn232-lab_staff@demo.test`, loại thiết bị `PRN232 Signal Kit` và ba serial `PRN232-DEMO-1..3`. Không đổi password hoặc reset trạng thái tài khoản/thiết bị đã có; khác ownership/quyền thì dừng để người vận hành kiểm tra. Không tự tạo loan/history/event để giả lập demo. Dùng [runbook](docs/demo/FINAL_DEMO_RUNBOOK.md) và [checklist phân chia thuyết trình](docs/demo/FINAL_DEFENSE_CHECKLIST.md).
+
 ## Local development
 
 Chạy hạ tầng với cổng loopback cho local SDK:
@@ -153,7 +180,7 @@ Register/login qua Gateway; mọi POST `/api/auth/*` cần Origin localhost:5173
 
 Admin đầu tiên: chỉ Development, truyền `Bootstrap__Enabled=true`, `Bootstrap__AdminEmail`, `Bootstrap__AdminPassword` qua môi trường local rồi khởi động Identity; không có mật khẩu mặc định hay endpoint tạo ADMIN public. Seed không reset/promote user tồn tại. Compose có thể nhận bootstrap tạm thời qua một local override không commit; không đặt credentials vào source. Tắt bootstrap sau lần đầu.
 
-Borrowing chỉ hỗ trợ POST /api/loans, GET /api/loans/my, GET /api/loans/{id}, Staff/Admin GET /api/loans, POST /{id}/cancel và /reject. Due date >now và <=30 ngày; 1–20 items, mỗi item 1 unit. Runtime gọi Catalog thật để xác thực id/isActive, không có fallback cho ID giả. M2 cung cấp GET /api/equipment-types/{id} với id/isActive. `MemberIntegrationTests` khởi chạy Catalog thật, xác nhận type hợp lệ, missing và inactive; các unit/dependency tests cũ vẫn giữ double được đánh dấu rõ.
+Borrowing hỗ trợ tạo/list/detail/cancel/reject và Staff approve/handover/partial returns qua Inventory gRPC thật. POST /api/loans nhận Idempotency-Key tùy chọn, bảo vệ gửi trùng cùng draft theo StudentId; frontend gửi sau bước xem lại. Mọi create thành công gồm loan/items/history/outbox trong cùng transaction. Due date >now và <=30 ngày; 1–20 items, mỗi item 1 unit. Runtime gọi Catalog thật để xác thực id/isActive, không có fallback cho ID giả. M2 cung cấp GET /api/equipment-types/{id} với id/isActive. `MemberIntegrationTests` khởi chạy Catalog thật, xác nhận type hợp lệ, missing và inactive; các unit/dependency tests cũ vẫn giữ double được đánh dấu rõ.
 
 Chạy tất cả tests với PostgreSQL disposable, tách khỏi .env/volumes nhóm (Docker Desktop phải hoạt động):
 

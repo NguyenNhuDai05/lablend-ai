@@ -30,10 +30,15 @@ function Get-FreePort {
 }
 $savedEnvironment = @{}
 $names = @('COMPOSE_PROJECT_NAME','COMPOSE_FILE','GATEWAY_PORT','WEB_PORT','Bootstrap__AdminPassword',
-    'LABLEND_E2E_ORIGIN','LABLEND_E2E_GATEWAY','LABLEND_E2E_ADMIN_PASSWORD','LABLEND_E2E_EVIDENCE','LABLEND_E2E_PROJECT')
+    'COMPOSE_PROFILES','LABLEND_E2E_ORIGIN','LABLEND_E2E_GATEWAY','LABLEND_E2E_ADMIN_PASSWORD','LABLEND_E2E_EVIDENCE','LABLEND_E2E_PROJECT',
+    'POSTGRES_ADMIN_PASSWORD','IDENTITY_DB_PASSWORD','CATALOG_DB_PASSWORD','INVENTORY_DB_PASSWORD',
+    'BORROWING_DB_PASSWORD','NOTIFICATION_DB_PASSWORD','RECOMMENDATION_DB_PASSWORD','REDIS_PASSWORD',
+    'JWT_SIGNING_KEY','INVENTORY_SERVICE_TOKEN','LABLEND_DEMO_ADMIN_PASSWORD','LABLEND_DEMO_USER_PASSWORD')
 foreach ($name in $names) { $savedEnvironment[$name] = [Environment]::GetEnvironmentVariable($name) }
 $started = $false
 try {
+    # The clone's generated .env must be authoritative, even when the caller has a local host environment loaded.
+    foreach ($name in $names) { [Environment]::SetEnvironmentVariable($name, $null) }
     Invoke-Step 'daemon' { docker version --format '{{.Server.Version}}' }
     Invoke-Step 'clean clone' { git clone --no-local -- $Repository $clone }
     Push-Location $clone
@@ -80,6 +85,10 @@ services:
             Invoke-Step 'three-flow Docker E2E' { node e2e/docker-core.mjs }
         } finally { Pop-Location }
         Invoke-Step 'database isolation' { Get-Content -Raw infrastructure/database/verify-isolation.sh | docker compose exec -T postgres bash }
+        $env:LABLEND_DEMO_ADMIN_PASSWORD = $env:Bootstrap__AdminPassword
+        $env:LABLEND_DEMO_USER_PASSWORD = New-Secret
+        Invoke-Step 'prepare reusable demo data' { & ./scripts/Initialize-DemoData.ps1 -Gateway $env:LABLEND_E2E_GATEWAY -Origin $env:LABLEND_E2E_ORIGIN -AdminEmail 'admin@t20.test' -Prefix T20REHEARSAL }
+        Invoke-Step 'repeat demo preparation safely' { & ./scripts/Initialize-DemoData.ps1 -Gateway $env:LABLEND_E2E_GATEWAY -Origin $env:LABLEND_E2E_ORIGIN -AdminEmail 'admin@t20.test' -Prefix T20REHEARSAL }
         $summary.status = 'PASS'
     } finally { Pop-Location }
 } catch {

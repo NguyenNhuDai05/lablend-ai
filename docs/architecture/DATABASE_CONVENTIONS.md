@@ -55,3 +55,7 @@ docker compose exec -T postgres bash /tmp/lablend-verify-isolation.sh
 `docker compose down` dừng/xóa container và network của project, **giữ data volumes**. Khởi động lại bằng `docker compose up -d --build --wait`. Không script nào tự xóa volume hoặc dữ liệu người dùng.
 
 Nếu chính bạn đã xác nhận đây là dữ liệu development có thể bỏ, lệnh `docker compose down -v` xóa toàn bộ named volumes của project; lần up sau sẽ bootstrap lại. Không dùng lệnh này trên dữ liệu cần giữ, không gộp vào setup/preflight.
+
+## Final additive migration
+
+`20261116180731_AddLoanSubmissionIdempotency` adds `LoanSubmissions` to borrowing_db only. Composite `(StudentId,Key)` primary key, required bounded RequestHash, local LoanId FK with restrictive delete. Mapping/history/items/outbox share the submission transaction. API/worker reuse their migration advisory lock; no old migration is removed. Identity global filters and Notification owned aggregate filtering need no schema change. Fresh-install execution is tracked in final acceptance; `dotnet ef migrations has-pending-model-changes --configuration Release --no-build` verifies model consistency without touching a live database.

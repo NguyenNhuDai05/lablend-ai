@@ -1,5 +1,9 @@
 # Architecture overview
 
+## Current checkpoint 2026-11-17
+
+[Final architecture](FINAL_ARCHITECTURE.md) describes implemented core containers, C4 context/container views, local ERD/ownership, loan states and service interactions. Identity, Catalog, Inventory allocation, Borrowing lifecycle/recovery, four business jobs and real Outbox/Streams/Inbox are implemented. Recommendation remains optional/disabled. The sections below record the original Sprint 0 audit and must not be read as current implementation status. Current execution evidence is in [final acceptance](../testing/FINAL_PRODUCT_ACCEPTANCE.md).
+
 ## Audit ban đầu
 
 Git root: `lablend-ai`; remote `https://github.com/NguyenNhuDai05/lablend-ai.git`; branch `main`, working tree sạch. HEAD ban đầu `196a09e` nối tiếp `06faf8d`. Chỉ có README, VisualStudio .gitignore và plan V4. Không có csproj/sln/Dockerfile/package.json nên chưa có lệnh build ứng dụng nào để chạy. PDF đề có tại workspace cha; bản nguyên vẹn được thêm vào `docs/requirements` để người clone đọc được.

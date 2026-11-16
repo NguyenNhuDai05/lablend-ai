@@ -1,10 +1,16 @@
 # Requirements traceability
 
+## Final checkpoint 2026-11-17
+
+Main `68933a1` includes merged M3 PR #14. Final workflow code is `2808d77`; final packaging lives on `feature/final-c-acceptance`. The current R01–R18 table, executed test counts, Docker/T20 evidence, CI links and remaining human decisions are in [FINAL_PRODUCT_ACCEPTANCE](../testing/FINAL_PRODUCT_ACCEPTANCE.md). [Source audit](../testing/FINAL_SOURCE_AUDIT.md) maps requirement → code → tests → gap → risk → correction. [C4/ERD/state/interactions](../architecture/FINAL_ARCHITECTURE.md) describe current implementation.
+
+New compatible features: draft submission idempotency, explicit request/return review, real serial reads, global Admin keyword/role/active filters and owned loan-related inbox filtering. M3 is merged; Admin is no longer page-only filtering. Worker baseline health recovered after Desktop restart; the previous native 139 cause remains unresolved. T20 and final-source deployment must have their own actual result. Old sprint tables below remain historical evidence.
+
 Current M3 P0 delta: real Catalog/Student/Staff loan/Profile/Admin/Notification UI and seven-section demo materials. See [M3 acceptance](../testing/M3_P0_ACCEPTANCE.md) for executed gates and remaining human decisions. Gemini/dashboard deferred; M2 fresh-install T20 is separate. Historical tables below remain provenance and do not override this checkpoint.
 
-## Current P0 checkpoint (M3 implementation branch)
+## Historical M3 P0 checkpoint (before PR #14 merge)
 
-This table is current; older sprint tables below remain historical. Test counts, exact CI SHA and runtime results are recorded in [M3 acceptance](../testing/M3_P0_ACCEPTANCE.md). “Implemented” does not mean human/team final approval.
+This table records the M3 checkpoint; the final report above supersedes current-status claims. Test counts, exact CI SHA and runtime results are recorded in [M3 acceptance](../testing/M3_P0_ACCEPTANCE.md). “Implemented” does not mean human/team final approval.
 
 | ID | Current implementation / evidence | Remaining boundary |
 |---|---|---|
