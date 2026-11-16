@@ -30,10 +30,19 @@ function Get-FreePort {
 }
 $savedEnvironment = @{}
 $names = @('COMPOSE_PROJECT_NAME','COMPOSE_FILE','GATEWAY_PORT','WEB_PORT','Bootstrap__AdminPassword',
-    'LABLEND_E2E_ORIGIN','LABLEND_E2E_GATEWAY','LABLEND_E2E_ADMIN_PASSWORD','LABLEND_E2E_EVIDENCE','LABLEND_E2E_PROJECT')
+    'COMPOSE_PROFILES','LABLEND_E2E_ORIGIN','LABLEND_E2E_GATEWAY','LABLEND_E2E_ADMIN_PASSWORD','LABLEND_E2E_EVIDENCE','LABLEND_E2E_PROJECT',
+    'POSTGRES_ADMIN_PASSWORD','IDENTITY_DB_PASSWORD','CATALOG_DB_PASSWORD','INVENTORY_DB_PASSWORD',
+    'BORROWING_DB_PASSWORD','NOTIFICATION_DB_PASSWORD','RECOMMENDATION_DB_PASSWORD','REDIS_PASSWORD',
+    'JWT_SIGNING_KEY','INVENTORY_SERVICE_TOKEN','LABLEND_DEMO_ADMIN_PASSWORD','LABLEND_DEMO_USER_PASSWORD')
+$names += @(Get-Content -LiteralPath (Join-Path $repoRoot '.env.example') | ForEach-Object {
+    if ($_ -match '^([A-Z_]+)=') { $Matches[1] }
+})
+$names = @($names | Select-Object -Unique)
 foreach ($name in $names) { $savedEnvironment[$name] = [Environment]::GetEnvironmentVariable($name) }
 $started = $false
 try {
+    # The clone's generated .env must be authoritative, even when the caller has a local host environment loaded.
+    foreach ($name in $names) { [Environment]::SetEnvironmentVariable($name, $null) }
     Invoke-Step 'daemon' { docker version --format '{{.Server.Version}}' }
     Invoke-Step 'clean clone' { git clone --no-local -- $Repository $clone }
     Push-Location $clone
@@ -41,6 +50,11 @@ try {
         Invoke-Step 'checkout revision' { git checkout --detach $Revision }
         $summary.commit = (git rev-parse HEAD).Trim()
         Invoke-Step 'generate environment' { & ./scripts/Initialize-Environment.ps1 }
+        # Compose's .env discovery changes when COMPOSE_FILE is set. Load only this clone's generated
+        # values explicitly for every nested Docker/Node command, then restore the caller in finally.
+        foreach ($line in Get-Content -LiteralPath (Join-Path $clone '.env')) {
+            if ($line -match '^([A-Z_]+)=(.*)$') { [Environment]::SetEnvironmentVariable($Matches[1], $Matches[2]) }
+        }
         $env:COMPOSE_PROJECT_NAME = $project
         $env:GATEWAY_PORT = [string](Get-FreePort)
         do { $env:WEB_PORT = [string](Get-FreePort) } while ($env:WEB_PORT -eq $env:GATEWAY_PORT)
@@ -66,7 +80,7 @@ services:
         if ($existing.Count -or $volumes.Count) { throw 'Generated project is not fresh; refusing to reuse resources.' }
         Invoke-Step 'build sequential images' { & ./scripts/Build-Images.ps1 }
         $started = $true
-        Invoke-Step 'start private core' { docker compose up -d --no-build --wait --wait-timeout 240 }
+        Invoke-Step 'start private core sequentially' { & ./scripts/Start-Core.ps1 -WaitTimeout 240 }
         docker compose ps --all --format json | Set-Content -LiteralPath (Join-Path $evidence 'containers.json') -Encoding utf8
         $env:LABLEND_E2E_ORIGIN = "http://localhost:$env:WEB_PORT"
         $env:LABLEND_E2E_GATEWAY = "http://localhost:$env:GATEWAY_PORT"
@@ -79,7 +93,16 @@ services:
             Invoke-Step 'Playwright browser' { npx playwright install chromium }
             Invoke-Step 'three-flow Docker E2E' { node e2e/docker-core.mjs }
         } finally { Pop-Location }
-        Invoke-Step 'database isolation' { Get-Content -Raw infrastructure/database/verify-isolation.sh | docker compose exec -T postgres bash }
+        Invoke-Step 'database isolation' {
+            # Preserve LF bytes; PowerShell's native stdin pipeline can append CRLF and make bash exit 127.
+            docker compose cp infrastructure/database/verify-isolation.sh postgres:/tmp/lablend-t20-verify-isolation.sh
+            if ($LASTEXITCODE -ne 0) { throw 'Could not copy the owned isolation verifier.' }
+            docker compose exec -T postgres bash /tmp/lablend-t20-verify-isolation.sh
+        }
+        $env:LABLEND_DEMO_ADMIN_PASSWORD = $env:Bootstrap__AdminPassword
+        $env:LABLEND_DEMO_USER_PASSWORD = New-Secret
+        Invoke-Step 'prepare reusable demo data' { & ./scripts/Initialize-DemoData.ps1 -Gateway $env:LABLEND_E2E_GATEWAY -Origin $env:LABLEND_E2E_ORIGIN -AdminEmail 'admin@t20.test' -Prefix T20REHEARSAL }
+        Invoke-Step 'repeat demo preparation safely' { & ./scripts/Initialize-DemoData.ps1 -Gateway $env:LABLEND_E2E_GATEWAY -Origin $env:LABLEND_E2E_ORIGIN -AdminEmail 'admin@t20.test' -Prefix T20REHEARSAL }
         $summary.status = 'PASS'
     } finally { Pop-Location }
 } catch {
@@ -87,6 +110,20 @@ services:
     $summary.error = $_.Exception.Message
     if ($summary.stages.Count) { $summary.stages[-1].status = $summary.status }
     Write-Warning $summary.error
+    if ($started) {
+        Push-Location $clone
+        try {
+            docker compose ps --all --format json | Set-Content -LiteralPath (Join-Path $evidence 'failure-containers.json') -Encoding utf8
+            docker inspect "$project-borrowing-worker-1" --format '{{json .State}}' | Set-Content -LiteralPath (Join-Path $evidence 'failure-worker-state.json') -Encoding utf8
+            $workerLogs = docker compose logs --no-color --tail 200 borrowing-worker | Out-String
+            $redactions = @($env:Bootstrap__AdminPassword)
+            foreach ($line in Get-Content -LiteralPath (Join-Path $clone '.env')) {
+                if ($line -match '^[A-Z_]*(PASSWORD|SIGNING_KEY|SERVICE_TOKEN|API_KEY)=(.+)$') { $redactions += $Matches[2] }
+            }
+            foreach ($secret in $redactions) { if ($secret) { $workerLogs = $workerLogs.Replace($secret, '[redacted]') } }
+            $workerLogs | Set-Content -LiteralPath (Join-Path $evidence 'failure-worker.log') -Encoding utf8
+        } finally { Pop-Location }
+    }
 } finally {
     if ($started -and -not $KeepRunning) {
         Push-Location $clone
