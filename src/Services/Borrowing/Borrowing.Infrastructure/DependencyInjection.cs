@@ -15,6 +15,13 @@ public static class DependencyInjection
         services.AddDbContext<BorrowingDbContext>(options => options.UseNpgsql(connection));
         services.AddScoped<ILoanRepository, LoanRepository>();
         services.AddScoped<LoanService>();
+        services.AddScoped<ILoanLifecycle, LoanLifecycle>();
+        services.AddOptions<InventoryOptions>().Bind(configuration.GetSection("Inventory"))
+            .Validate(o => Uri.TryCreate(o.GrpcAddress, UriKind.Absolute, out var uri) && uri.Scheme is "http" or "https"
+                && o.DeadlineSeconds is >= 1 and <= 30, "Invalid Inventory endpoint/deadline.");
+        services.AddSingleton(sp => Grpc.Net.Client.GrpcChannel.ForAddress(sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<InventoryOptions>>().Value.GrpcAddress));
+        services.AddScoped<IInventoryClient, InventoryGrpcClient>();
+        services.AddSingleton(TimeProvider.System);
         services.AddHttpClient<ICatalogClient, CatalogClient>(client =>
         {
             client.BaseAddress = new Uri(configuration["Catalog:BaseAddress"] ?? "http://localhost:5102/");

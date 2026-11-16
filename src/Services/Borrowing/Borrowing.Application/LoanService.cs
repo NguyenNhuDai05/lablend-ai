@@ -47,7 +47,7 @@ public sealed class LoanService(ILoanRepository repository, ICatalogClient catal
     private static LoanDto Dto(LoanRequest loan) => new(loan.Id, loan.StudentId, loan.Purpose, loan.Status.ToString(),
         loan.IsOverdue(DateTimeOffset.UtcNow), loan.RequestedAt, loan.DueAt, loan.ReviewedBy, loan.ReviewedAt, loan.RejectionReason,
         loan.CreatedAt, loan.UpdatedAt,
-        loan.Items.OrderBy(i => i.Id).Select(i => new LoanItemDto(i.Id, i.EquipmentTypeId, i.AssetUnitId, i.ReservationId, i.ItemStatus.ToString())).ToArray(),
+        loan.Items.OrderBy(i => i.Id).Select(i => new LoanItemDto(i.Id, i.EquipmentTypeId, i.AssetUnitId, i.ReservationId, i.ItemStatus.ToString(), i.ReturnCondition, i.ReturnedAt)).ToArray(),
         loan.Histories.OrderBy(h => h.OccurredAt).ThenBy(h => h.Id).Select(h => new LoanHistoryDto(h.Id, h.ActorUserId, h.Action,
-            h.FromStatus?.ToString(), h.ToStatus.ToString(), h.OccurredAt, h.Note)).ToArray());
+            h.FromStatus?.ToString(), h.ToStatus.ToString(), h.OccurredAt, h.Note)).ToArray(), loan.HandedOverBy, loan.HandedOverAt);
 }

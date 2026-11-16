@@ -10,7 +10,8 @@ internal sealed class LiveApi : IAsyncDisposable
     private Task<string>? stdout;
     private Task<string>? stderr;
     public string Address { get; private set; } = "";
-    public async Task Start(string service, string connection, PostgresFixture fixture, string? catalog = null)
+    public string GrpcAddress { get; private set; } = "";
+    public async Task Start(string service, string connection, PostgresFixture fixture, string? catalog = null, IReadOnlyDictionary<string, string>? settings = null)
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);
         while (directory != null && !File.Exists(Path.Combine(directory.FullName, "LabLendAI.sln"))) directory = directory.Parent;
@@ -41,7 +42,9 @@ internal sealed class LiveApi : IAsyncDisposable
             var grpcListener = new TcpListener(IPAddress.Loopback, 0); grpcListener.Start();
             var grpcPort = ((IPEndPoint)grpcListener.LocalEndpoint).Port; grpcListener.Stop();
             start.Environment["Kestrel__Endpoints__Grpc__Url"] = $"http://127.0.0.1:{grpcPort}";
+            GrpcAddress = start.Environment["Kestrel__Endpoints__Grpc__Url"]!;
         }
+        if (settings != null) foreach (var (key, value) in settings) start.Environment[key] = value;
         process = Process.Start(start)!;
         stdout = process.StandardOutput.ReadToEndAsync(); stderr = process.StandardError.ReadToEndAsync();
         using var http = new HttpClient { BaseAddress = new Uri(Address), Timeout = TimeSpan.FromSeconds(1) };

@@ -22,6 +22,69 @@ namespace Borrowing.Infrastructure.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Borrowing.Domain.InventoryOperation", b =>
+                {
+                    b.Property<Guid>("OperationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ActorId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CorrelationId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("LastError")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<Guid>("LoanId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("NextRetryAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("OperationType")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("RequestJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<int>("RetryCount")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset>("StartedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("State")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("OperationId");
+
+                    b.HasIndex("LoanId")
+                        .IsUnique()
+                        .HasFilter("\"State\" NOT IN ('COMPLETED','FAILED')");
+
+                    b.HasIndex("State", "NextRetryAt");
+
+                    b.ToTable("InventoryOperations");
+                });
+
             modelBuilder.Entity("Borrowing.Domain.LoanHistory", b =>
                 {
                     b.Property<Guid>("Id")
@@ -83,6 +146,13 @@ namespace Borrowing.Infrastructure.Migrations
                     b.Property<Guid?>("ReservationId")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("ReturnCondition")
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<DateTimeOffset?>("ReturnedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.HasKey("Id");
 
                     b.HasIndex("EquipmentTypeId");
@@ -101,11 +171,20 @@ namespace Borrowing.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<Guid?>("ApprovalOperationId")
+                        .HasColumnType("uuid");
+
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTimeOffset>("DueAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("HandedOverAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("HandedOverBy")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Purpose")
                         .IsRequired()
@@ -156,6 +235,15 @@ namespace Borrowing.Infrastructure.Migrations
 
                             t.HasCheckConstraint("CK_Loan_Status", "\"Status\" IN ('PENDING','APPROVING','APPROVED','BORROWED','RETURNED','REJECTED','CANCELLED','APPROVAL_FAILED','EXPIRED')");
                         });
+                });
+
+            modelBuilder.Entity("Borrowing.Domain.InventoryOperation", b =>
+                {
+                    b.HasOne("Borrowing.Domain.LoanRequest", null)
+                        .WithMany()
+                        .HasForeignKey("LoanId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Borrowing.Domain.LoanHistory", b =>
