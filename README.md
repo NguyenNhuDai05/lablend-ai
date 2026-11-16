@@ -65,8 +65,7 @@ Cần Git, Docker Desktop chạy **Linux containers** và Docker Compose. Để 
 ```powershell
 git clone https://github.com/NguyenNhuDai05/lablend-ai.git
 cd lablend-ai
-# Nếu Sprint 0 chưa merge main:
-git switch chore/sprint0-foundation
+# main đã có foundation và tích hợp M1/M3.
 ./scripts/Initialize-Environment.ps1
 docker compose config --quiet
 ./scripts/Build-Images.ps1
@@ -129,7 +128,7 @@ npm run dev
 npm run build
 ```
 
-Mở http://localhost:5173. Member 3 tiếp quản frontend shell, routing/auth/pages/components; chưa có UI nghiệp vụ. `VITE_API_BASE_URL` là URL public, mặc định trong env mẫu `http://localhost:5080`. Docker frontend dùng relative requests qua nginx → Gateway. Mọi `VITE_*` đều có thể lộ ra browser; tuyệt đối không đặt Gemini key/JWT secret tại đây.
+Mở http://localhost:5173. Frontend đã có routing, register/login/session restore, notifications và staff UI của M3; backend Catalog/Inventory trong main vẫn chờ nhánh M2. `VITE_API_BASE_URL` là URL public, mặc định trong env mẫu `http://localhost:5080`. Docker frontend dùng relative requests qua nginx → Gateway. Mọi `VITE_*` đều có thể lộ ra browser; tuyệt đối không đặt Gemini key/JWT secret tại đây.
 
 ## Database and environment variables
 
@@ -144,11 +143,11 @@ Mở http://localhost:5173. Member 3 tiếp quản frontend shell, routing/auth/
 | `GATEWAY_PORT`, `WEB_PORT` | Publish loopback, mặc định 5080/3000 |
 | `POSTGRES_DEV_PORT`, `REDIS_DEV_PORT` | Chỉ file Compose dev dùng, mặc định 55432/56379 |
 
-Database/users, migration commands, init/reapply: [DATABASE_CONVENTIONS](docs/architecture/DATABASE_CONVENTIONS.md). Identity/Borrowing Development startup áp dụng migrations thật; production mặc định tắt auto-migrate. Các service khác chưa có model/migrations nghiệp vụ. `docker compose down` giữ volumes. **Không chạy `down -v` nếu chưa chủ động chấp nhận mất dữ liệu development.** Setup/init không tự xóa volume.
+Database/users, migration commands, init/reapply: [DATABASE_CONVENTIONS](docs/architecture/DATABASE_CONVENTIONS.md). Identity/Borrowing/Notification Development startup áp dụng migrations thật; production mặc định tắt auto-migrate. Catalog/Inventory/Recommendation backend trong main vẫn là skeleton. `docker compose down` giữ volumes. **Không chạy `down -v` nếu chưa chủ động chấp nhận mất dữ liệu development.** Setup/init không tự xóa volume.
 
 ## Sprint 1 Identity and Borrowing
 
-Branch `feature/m1-identity-jwt` được tạo từ foundation 3431927 vì main local vẫn chưa có Sprint 0. Chưa push/merge. [Identity contract](docs/api/IDENTITY_API_CONTRACT.md) và [Borrowing contract](docs/api/BORROWING_API_CONTRACT.md) là tài liệu tích hợp hiện hành; [handover](docs/team/SPRINT1_HANDOVER.md) ghi rõ ranh giới M2/M3.
+Branch `feature/m1-identity-jwt` được tạo từ foundation 3431927, sau đó tích hợp M3 và đã push/merge vào main tại `8dac358`. [Identity contract](docs/api/IDENTITY_API_CONTRACT.md) và [Borrowing contract](docs/api/BORROWING_API_CONTRACT.md) là hợp đồng hiện hành; [báo cáo tích hợp](docs/team/M1_M3_INTEGRATION.md) bổ sung trạng thái sau checkpoint [handover Sprint 1](docs/team/SPRINT1_HANDOVER.md).
 
 Register/login qua Gateway; mọi POST `/api/auth/*` cần Origin localhost:5173 hoặc localhost:3000 và `X-LabLend-CSRF: 1`. React dùng credentials include, access JWT 10 phút trong memory và refresh HttpOnly cookie 7 ngày; serialize refresh. Local HTTP dùng Development cookie Secure=false, môi trường HTTPS phải bật Secure. Logout thu hồi refresh family; JWT ở service khác vẫn có thể dùng tới expiry + 30 giây skew. Không lưu refresh vào localStorage.
 
@@ -167,7 +166,7 @@ dotnet test LabLendAI.sln -c Release --no-build --no-restore
 
 Không đặt flag thì PostgreSQL suites báo SKIPPED; đó không phải bằng chứng PASS. Fixture tự tạo project Compose test tên ngẫu nhiên, password tạm thời, identity_db/borrowing_db và DB roles riêng, rồi xóa đúng container test; không nhận connection string thật của nhóm. YARP integration chạy Identity/Borrowing Kestrel thật + Catalog HTTP test double. Hosted CI bật flag; chưa tuyên bố hosted run mới đã PASS khi chưa push.
 
-Runtime verification sau khi Compose đã chạy: `./scripts/Verify-Sprint1.ps1` (thêm `-IncludeBonus` khi Recommendation host đang chạy). Script chỉ đọc readiness/OpenAPI/authorization/migration metadata và kiểm tra isolation; không tạo test user/loan trong database nhóm. Kết quả phiên này: 30 automated tests PASS, Release build 0 warnings/errors, 11 containers healthy; hai migration thật đã áp dụng. [Evidence và giới hạn Catalog](docs/testing/SPRINT1_ACCEPTANCE.md).
+Runtime verification sau khi Compose đã chạy: `./scripts/Verify-Sprint1.ps1` (thêm `-IncludeBonus` khi Recommendation host đang chạy). Script chỉ đọc readiness/OpenAPI/authorization/migration metadata và kiểm tra isolation; không tạo test user/loan trong database nhóm. Sau tích hợp M1/M3: 38 tests .NET và 7 tests frontend PASS, Release build 0 warnings/errors, 11 containers healthy; Identity/Borrowing/Notification migrations đã áp dụng. [Checkpoint M1 và giới hạn Catalog](docs/testing/SPRINT1_ACCEPTANCE.md), [kết quả tích hợp](docs/team/M1_M3_INTEGRATION.md).
 
 ## Team responsibilities
 

@@ -24,5 +24,8 @@ Functional contract differences required small integration changes:
 - npm run build: PASS.
 - npm test: PASS, seven client contract/security tests covering cookie/CSRF transport, single refresh for concurrent 401s, refresh failure, invalid login, session changes, 403 handling and roles[] mapping.
 - Docker Compose configuration: PASS.
+- Hosted CI of feature commit `363baac`: [PASS](https://github.com/NguyenNhuDai05/lablend-ai/actions/runs/43792501054).
+- Main merge `8dac358` was pushed; its [hosted CI passed](https://github.com/NguyenNhuDai05/lablend-ai/actions/runs/43792865651). Its source tree matches the verified feature tree.
+- Updated local frontend/Notification images: PASS. All 11 containers are healthy; Verify-Sprint1 -IncludeBonus passed. The actual notification_db reports `20261115213425_InitialNotification` in EF migration history, read as notification_user.
 
 The existing Sprint 1 acceptance/evidence files describe the earlier M1-only checkpoint. This document records the subsequent integration. Actual Catalog equipment verification and full producer→Redis→Notification delivery remain unverified; M3's consumer proposal still awaits OD-04/OD-05 review.
