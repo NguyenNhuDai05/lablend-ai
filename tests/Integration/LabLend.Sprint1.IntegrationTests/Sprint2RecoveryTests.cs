@@ -15,6 +15,28 @@ namespace LabLend.Sprint1.IntegrationTests;
 public sealed class Sprint2RecoveryTests(PostgresFixture postgres, ITestOutputHelper output)
 {
     [PostgresFact]
+    public async Task A_late_error_after_competing_recovery_commit_never_reopens_or_compensates_a_completed_operation()
+    {
+        await using var stack = new Sprint2Stack(postgres); await stack.Start();
+        foreach (var loseReply in new[] { false, true })
+        {
+            var (type, assets) = await stack.Stock(1); var id = (await stack.Submit(type))["id"]!.GetValue<Guid>();
+            await using var provider = Provider(stack, new WorkflowTestClock(DateTimeOffset.UtcNow), competingCommit: loseReply);
+            await using (var scope = provider.CreateAsyncScope())
+                await scope.ServiceProvider.GetRequiredService<ILoanLifecycle>().Execute(id, "APPROVE", Guid.NewGuid(), "late-completed-race", null, default);
+            await using (var db = Db())
+            {
+                Assert.Equal("COMPLETED", (await db.InventoryOperations.SingleAsync(o => o.LoanId == id)).State);
+                Assert.Equal(LoanStatus.APPROVED, (await db.LoanRequests.SingleAsync(l => l.Id == id)).Status);
+                Assert.Equal(1, await db.LoanHistories.CountAsync(h => h.LoanRequestId == id && h.Action == "APPROVED"));
+                Assert.Equal(1, await db.OutboxMessages.CountAsync(m => m.AggregateId == id && m.EventType == "LoanApproved"));
+            }
+            Assert.Equal("RESERVED", (string?)(await stack.Asset(assets[0]))["status"]);
+            await stack.Command(id, "handover"); await stack.Return(id, ((await Item(id)).Id, "NORMAL"));
+        }
+    }
+
+    [PostgresFact]
     public async Task GateB_real_RPC_reply_loss_process_crash_compensation_expiry_and_bounded_retry()
     {
         await using var stack = new Sprint2Stack(postgres); await stack.Start();
@@ -109,7 +131,7 @@ public sealed class Sprint2RecoveryTests(PostgresFixture postgres, ITestOutputHe
         output.WriteLine("PASS T09/T27/T28: real committed RPC replies dropped for all three commands; real Borrowing process killed after reserve; failed commit compensated; pickup expiry released; unauthorized RPC bounded at manual review.");
     }
 
-    internal ServiceProvider Provider(Sprint2Stack stack, WorkflowTestClock time, string? drop = null, string? token = null, int maxAttempts = 8)
+    internal ServiceProvider Provider(Sprint2Stack stack, WorkflowTestClock time, string? drop = null, string? token = null, int maxAttempts = 8, bool? competingCommit = null)
     {
         var config = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
         {
@@ -120,6 +142,8 @@ public sealed class Sprint2RecoveryTests(PostgresFixture postgres, ITestOutputHe
         services.AddSingleton<TimeProvider>(time);
         if (drop != null) services.AddScoped<IInventoryClient>(sp => new DropCommittedReply(new InventoryGrpcClient(
             sp.GetRequiredService<Grpc.Net.Client.GrpcChannel>(), sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<InventoryOptions>>()), drop));
+        if (competingCommit.HasValue) services.AddScoped<IInventoryClient>(sp => new CompetingRecoveryClient(new InventoryGrpcClient(
+            sp.GetRequiredService<Grpc.Net.Client.GrpcChannel>(), sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<InventoryOptions>>()), postgres.BorrowingConnection, competingCommit.Value));
         return services.BuildServiceProvider();
     }
     internal static async Task Reconcile(ServiceProvider provider)
@@ -151,9 +175,9 @@ public sealed class Sprint2RecoveryTests(PostgresFixture postgres, ITestOutputHe
         await using var db = Db();
         await db.Database.ExecuteSqlRawAsync("DROP TRIGGER s2_local_commit_fault ON \"LoanRequests\"; DROP FUNCTION s2_local_commit_fault()");
     }
-    internal static async Task Wait(Func<Task<bool>> condition)
+    internal static async Task Wait(Func<Task<bool>> condition, int seconds = 30)
     {
-        var deadline = DateTime.UtcNow.AddSeconds(30);
+        var deadline = DateTime.UtcNow.AddSeconds(seconds);
         while (!await condition()) { if (DateTime.UtcNow >= deadline) throw new TimeoutException("Real service condition not reached."); await Task.Delay(100); }
     }
 }
@@ -175,6 +199,31 @@ internal sealed class DropCommittedReply(IInventoryClient inner, string action) 
     public Task<InventorySnapshot> Reserve(Guid op, Guid loan, IReadOnlyDictionary<Guid, Guid> items, string correlation, CancellationToken ct) => Reply(inner.Reserve(op, loan, items, correlation, ct), "APPROVE");
     public Task<InventorySnapshot> Handover(Guid loan, string correlation, CancellationToken ct) => Reply(inner.Handover(loan, correlation, ct), "HANDOVER");
     public Task<InventorySnapshot> Return(Guid loan, IReadOnlyDictionary<Guid, string> items, string correlation, CancellationToken ct) => Reply(inner.Return(loan, items, correlation, ct), "RETURN");
+    public Task<InventorySnapshot> Release(Guid loan, string correlation, CancellationToken ct) => inner.Release(loan, correlation, ct);
+    public Task<InventorySnapshot> Status(Guid op, string correlation, CancellationToken ct) => inner.Status(op, correlation, ct);
+}
+
+// Fault fixture: bypasses the first executor's lock to model a lost coordination session. Inventory is real;
+// a separate real PostgreSQL transaction commits the competing recovery before the first executor resumes.
+internal sealed class CompetingRecoveryClient(IInventoryClient inner, string connection, bool loseReply) : IInventoryClient
+{
+    public async Task<InventorySnapshot> Reserve(Guid op, Guid loanId, IReadOnlyDictionary<Guid, Guid> items, string correlation, CancellationToken ct)
+    {
+        var result = await inner.Reserve(op, loanId, items, correlation, ct);
+        await using var db = new BorrowingDbContext(new DbContextOptionsBuilder<BorrowingDbContext>().UseNpgsql(connection).Options);
+        var loan = await db.LoanRequests.Include(l => l.Items).Include(l => l.Histories).SingleAsync(l => l.Id == loanId, ct);
+        var operation = await db.InventoryOperations.SingleAsync(o => o.OperationId == op, ct);
+        foreach (var allocation in result.Allocations)
+        {
+            var item = loan.Items.Single(i => i.Id == allocation.LoanItemId); item.AssetUnitId = allocation.AssetUnitId; item.ItemStatus = ItemStatus.RESERVED;
+        }
+        loan.Approve(operation.ActorId, DateTimeOffset.UtcNow); operation.State = "COMPLETED"; operation.CompletedAt = DateTimeOffset.UtcNow;
+        db.EventCorrelationId = correlation; await db.SaveChangesAsync(ct);
+        if (loseReply) throw new InventoryFailure(503, "TEST_LATE_REPLY_LOSS", true);
+        return result;
+    }
+    public Task<InventorySnapshot> Handover(Guid loan, string correlation, CancellationToken ct) => inner.Handover(loan, correlation, ct);
+    public Task<InventorySnapshot> Return(Guid loan, IReadOnlyDictionary<Guid, string> items, string correlation, CancellationToken ct) => inner.Return(loan, items, correlation, ct);
     public Task<InventorySnapshot> Release(Guid loan, string correlation, CancellationToken ct) => inner.Release(loan, correlation, ct);
     public Task<InventorySnapshot> Status(Guid op, string correlation, CancellationToken ct) => inner.Status(op, correlation, ct);
 }

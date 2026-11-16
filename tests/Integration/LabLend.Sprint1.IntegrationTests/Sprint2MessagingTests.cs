@@ -80,7 +80,7 @@ public sealed class Sprint2MessagingTests(PostgresFixture postgres, ITestOutputH
         await using (var db = Borrowing()) Assert.All(await db.OutboxMessages.Where(m => m.AggregateId == id).ToListAsync(), m => Assert.NotNull(m.PublishedAt));
 
         // Duplicate XADD and publisher crash after XADD/before marker: same EventId must still make one notification.
-        Borrowing.Domain.OutboxMessage original;
+        global::Borrowing.Domain.OutboxMessage original;
         await using (var db = Borrowing()) original = await db.OutboxMessages.FirstAsync(m => m.AggregateId == id);
         await stream.StreamAddAsync("lablend.events.v1", [new NameValueEntry("event", LoanEvents.Envelope(original))]);
         await using (var db = Borrowing())
@@ -117,5 +117,5 @@ public sealed class Sprint2MessagingTests(PostgresFixture postgres, ITestOutputH
     }
     private BorrowingDbContext Borrowing() => new(new DbContextOptionsBuilder<BorrowingDbContext>().UseNpgsql(postgres.BorrowingConnection).Options);
     private NotificationDbContext Notification() => new(new DbContextOptionsBuilder<NotificationDbContext>().UseNpgsql(postgres.NotificationConnection).Options);
-    private async Task<Borrowing.Domain.LoanRequest> Loan(Guid id) { await using var db = Borrowing(); return await db.LoanRequests.SingleAsync(l => l.Id == id); }
+    private async Task<global::Borrowing.Domain.LoanRequest> Loan(Guid id) { await using var db = Borrowing(); return await db.LoanRequests.SingleAsync(l => l.Id == id); }
 }

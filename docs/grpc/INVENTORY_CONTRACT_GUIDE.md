@@ -1,5 +1,11 @@
 # Inventory gRPC contract guide
 
+## M1 consumer implementation review — Sprint 2
+
+The M1 consumer was checked against the unchanged v1 proto and server implementation on 2026-11-16. Borrowing.Infrastructure generates Client code directly from this file, uses IOptions Inventory:GrpcAddress/ServiceToken/DeadlineSeconds (default 5), sends the service Bearer credential and x-correlation-id, and maps status/trailer codes into business/dependency failures. User JWTs never authorize Inventory RPCs. Stable durable approval operation IDs, GetOperationStatus, full item/asset/state verification, replay and HELD-only release are covered by [Gate A/B](../testing/SPRINT2_M1_ACCEPTANCE.md).
+
+No schema/server change is proposed by this consumer addition. M2 review remains required for the historical return-condition/reservation-ID gap in OPEN_DECISIONS.md. Borrowing leaves ReservationId null and persists immutable per-item return intent; it does not infer historical condition from a currently reused/repaired asset. Team approval of additional contract fields is not claimed.
+
 **Owner schema: Member 2. Consumer/reviewer: Member 1. Status: v1 IMPLEMENTED (server), chờ M1 review OD-01–03.**
 
 Nguồn chuẩn: [`proto/inventory/v1/inventory.proto`](../../proto/inventory/v1/inventory.proto) (package `lablend.inventory.v1`, C# `LabLend.Inventory.Contracts.V1`). Inventory.Host generate server + client (`GrpcServices="Both"`); Borrowing thêm `<Protobuf Include=... GrpcServices="Client" />` trỏ cùng file, không copy proto.

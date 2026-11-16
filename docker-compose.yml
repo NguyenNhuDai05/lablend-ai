@@ -263,6 +263,9 @@ services:
       ConnectionStrings__Database: "Host=postgres;Database=borrowing_db;Username=borrowing_user;Password=${BORROWING_DB_PASSWORD:?Generate .env first};Timeout=3"
       ConnectionStrings__Redis: "redis:6379,password=${REDIS_PASSWORD:?Generate .env first}"
       Worker__HeartbeatPath: "/tmp/lablend-worker.healthy"
+      Inventory__GrpcAddress: "http://inventory:8081"
+      Inventory__ServiceToken: "${INVENTORY_SERVICE_TOKEN:?Generate .env first}"
+      Database__ApplyMigrations: "true"
     depends_on:
       postgres:
         condition: "service_healthy"

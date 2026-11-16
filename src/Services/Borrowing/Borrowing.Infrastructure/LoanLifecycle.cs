@@ -131,6 +131,8 @@ public sealed class LoanLifecycle(BorrowingDbContext db, IInventoryClient invent
             // No loan mutation has been saved. Clear it before recording a retry/failure.
             db.ChangeTracker.Clear();
             operation = await db.InventoryOperations.SingleAsync(o => o.OperationId == operation.OperationId, ct);
+            if (operation.State == "COMPLETED") return; // A competing recovery may already have committed after a lost lock session.
+            if (operation.State == "FAILED") throw new LoanFailure(409, "The persisted operation has already failed.");
             operation.RetryCount++; operation.LastError = failure.Message;
             operation.NextRetryAt = clock.GetUtcNow().AddSeconds(Math.Min(300, Math.Pow(2, Math.Min(operation.RetryCount, 8))));
             if (!failure.Uncertain && operation.OperationType == "APPROVE")
@@ -150,6 +152,8 @@ public sealed class LoanLifecycle(BorrowingDbContext db, IInventoryClient invent
             // If the database itself is down this write can also fail; the original PENDING intent still survives.
             db.ChangeTracker.Clear();
             operation = await db.InventoryOperations.SingleAsync(o => o.OperationId == operation.OperationId, ct);
+            if (operation.State == "COMPLETED") return;
+            if (operation.State == "FAILED") throw new LoanFailure(409, "The persisted operation has already failed.");
             operation.RetryCount++; operation.LastError = "LOCAL_COMMIT_FAILED";
             operation.State = operation.RetryCount >= options.Value.MaxAttempts ? "MANUAL_REVIEW"
                 : operation.OperationType == "APPROVE" ? "COMPENSATING" : "RETRY";
@@ -161,6 +165,9 @@ public sealed class LoanLifecycle(BorrowingDbContext db, IInventoryClient invent
 
     private async Task Compensate(LoanRequest loan, InventoryOperation operation, InventorySnapshot status, CancellationToken ct)
     {
+        if (operation.OperationType == "APPROVE" ? loan.Status != LoanStatus.APPROVING
+            : operation.OperationType != "RELEASE" || loan.Status != LoanStatus.APPROVED)
+            throw new InventoryFailure(503, "COMPENSATION_LOCAL_STATE_REQUIRES_REVIEW", true);
         if (!status.Found)
         {
             // found=false is only a snapshot: an older request might still be in flight. Same-ID replay

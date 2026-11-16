@@ -1,0 +1,17 @@
+Test run for D:\PRN232\Assigment\lablend-ai\tests\Integration\LabLend.Sprint1.IntegrationTests\bin\Debug\net8.0\LabLend.Sprint1.IntegrationTests.dll (.NETCoreApp,Version=v8.0)
+VSTest version 17.11.1 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.4+50e68bbb8b (64-bit .NET 8.0.29)
+[xUnit.net 00:00:00.81]   Discovering: LabLend.Sprint1.IntegrationTests
+[xUnit.net 00:00:00.89]   Discovered:  LabLend.Sprint1.IntegrationTests
+[xUnit.net 00:00:00.94]   Starting:    LabLend.Sprint1.IntegrationTests
+  Passed LabLend.Sprint1.IntegrationTests.Sprint2WorkerTests.Reminder_jobs_use_real_PostgreSQL_time_thresholds_and_concurrent_unique_dispatches [35 s]
+  Passed LabLend.Sprint1.IntegrationTests.Sprint2WorkerTests.GateD_E_real_scheduled_jobs_two_instances_restart_no_spam_and_JWT_to_notification_to_overdue_to_return [1 m 9 s]
+[xUnit.net 00:02:01.00]   Finished:    LabLend.Sprint1.IntegrationTests
+
+Test Run Successful.
+Total tests: 2
+     Passed: 2
+ Total time: 2.0349 Minutes

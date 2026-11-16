@@ -6,6 +6,7 @@
     <ProjectReference Include="../../../src/Services/Catalog/Catalog.Api/Catalog.Api.csproj" />
     <ProjectReference Include="../../../src/Services/Inventory/Inventory.Host/Inventory.Host.csproj" />
     <ProjectReference Include="../../../src/Services/Notification/Notification.Api/Notification.Api.csproj" />
+    <ProjectReference Include="../../../src/Workers/LabLend.Borrowing.Worker/LabLend.Borrowing.Worker.csproj" />
     <ProjectReference Include="../../../src/Gateway/LabLend.Gateway/LabLend.Gateway.csproj" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />

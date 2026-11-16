@@ -1,0 +1,82 @@
+ Image lablend-ai-borrowing-worker Building
+#1 [internal] load local bake definitions
+#1 reading from stdin 773B done
+#1 DONE 0.0s
+
+#2 [internal] load build definition from Dockerfile.dotnet
+#2 transferring dockerfile:
+#2 transferring dockerfile: 1.39kB 0.1s done
+#2 DONE 0.8s
+
+#3 [internal] load metadata for mcr.microsoft.com/dotnet/sdk:8.0
+#3 DONE 0.1s
+
+#4 [internal] load metadata for mcr.microsoft.com/dotnet/aspnet:8.0
+#4 DONE 0.1s
+
+#5 [internal] load .dockerignore
+#5 transferring context:
+#5 transferring context: 325B 0.0s done
+#5 DONE 2.3s
+
+#6 [internal] load build context
+#6 DONE 0.0s
+
+#7 [final 1/4] FROM mcr.microsoft.com/dotnet/aspnet:8.0@sha256:2f202e1169ec507bdc07007cf68c14d0ff3a098110b17c460a60185e1f36a9d1
+#7 resolve mcr.microsoft.com/dotnet/aspnet:8.0@sha256:2f202e1169ec507bdc07007cf68c14d0ff3a098110b17c460a60185e1f36a9d1
+#7 resolve mcr.microsoft.com/dotnet/aspnet:8.0@sha256:2f202e1169ec507bdc07007cf68c14d0ff3a098110b17c460a60185e1f36a9d1 0.2s done
+#7 DONE 0.2s
+
+#8 [restore 1/6] FROM mcr.microsoft.com/dotnet/sdk:8.0@sha256:78235e09001f52b6592c458ac010775ebac6725422e80cd0c1650590f67b2743
+#8 resolve mcr.microsoft.com/dotnet/sdk:8.0@sha256:78235e09001f52b6592c458ac010775ebac6725422e80cd0c1650590f67b2743
+#8 resolve mcr.microsoft.com/dotnet/sdk:8.0@sha256:78235e09001f52b6592c458ac010775ebac6725422e80cd0c1650590f67b2743 0.2s done
+#8 DONE 0.3s
+
+#6 [internal] load build context
+#6 transferring context: 21.84kB 1.7s done
+#6 DONE 1.8s
+
+#9 [restore 2/6] WORKDIR /source
+#9 CACHED
+
+#10 [restore 3/6] COPY . .
+#10 CACHED
+
+#11 [restore 4/6] RUN --mount=type=cache,id=lablend-nuget,target=/root/.nuget/packages,sharing=locked dotnet restore LabLendAI.sln --disable-parallel
+#11 CACHED
+
+#12 [restore 5/6] RUN --mount=type=cache,id=lablend-nuget,target=/root/.nuget/packages,sharing=locked dotnet build LabLendAI.sln -c Release --no-restore --maxcpucount:2
+#12 CACHED
+
+#13 [restore 6/6] RUN --mount=type=cache,id=lablend-nuget,target=/root/.nuget/packages,sharing=locked dotnet publish infrastructure/docker/HealthProbe/HealthProbe.csproj -c Release --no-build --no-restore -o /probe
+#13 CACHED
+
+#14 [build 1/1] RUN --mount=type=cache,id=lablend-nuget,target=/root/.nuget/packages,sharing=locked dotnet publish "src/Workers/LabLend.Borrowing.Worker/LabLend.Borrowing.Worker.csproj" -c Release --no-build --no-restore -o /publish
+#14 9.719   LabLend.Borrowing.Worker -> /publish/
+#14 DONE 10.4s
+
+#15 [final 2/4] WORKDIR /app
+#15 CACHED
+
+#16 [final 3/4] COPY --from=build /publish .
+#16 DONE 0.3s
+
+#17 [final 4/4] COPY --from=restore /probe /probe
+#17 DONE 0.2s
+
+#18 exporting to image
+#18 exporting layers
+#18 exporting layers 1.3s done
+#18 exporting manifest sha256:39b62f34f2595f6832e70182e936dcba69533a3ba8bb8cb8aa855f2f0c95c7e8 0.0s done
+#18 exporting config sha256:c4b48a925d2ecca68a1b0c5a8020fa64c11a45b0de0c3618b89fd341e761e394 0.1s done
+#18 exporting attestation manifest sha256:ada11167b9b5c72f7320460715f54423da322e1e5b9ea344beafa5688153d74d 0.1s done
+#18 exporting manifest list sha256:bec1f78081c34e5ea7c2ec8a0ba68b706b5484471a117dd024e1f8de9143fe1e
+#18 exporting manifest list sha256:bec1f78081c34e5ea7c2ec8a0ba68b706b5484471a117dd024e1f8de9143fe1e 0.0s done
+#18 naming to docker.io/library/lablend-ai-borrowing-worker:latest done
+#18 unpacking to docker.io/library/lablend-ai-borrowing-worker:latest
+#18 unpacking to docker.io/library/lablend-ai-borrowing-worker:latest 0.4s done
+#18 DONE 2.3s
+
+#19 resolving provenance for metadata file
+#19 DONE 0.1s
+ Image lablend-ai-borrowing-worker Built

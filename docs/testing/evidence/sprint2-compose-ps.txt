@@ -1,0 +1,12 @@
+NAME                            IMAGE                         COMMAND                  SERVICE            CREATED              STATUS                        PORTS
+lablend-ai-borrowing-1          lablend-ai-borrowing          "sh -c 'exec dotnet …"   borrowing          About a minute ago   Up About a minute (healthy)   8080/tcp
+lablend-ai-borrowing-worker-1   lablend-ai-borrowing-worker   "sh -c 'exec dotnet …"   borrowing-worker   About a minute ago   Up About a minute (healthy)   8080/tcp
+lablend-ai-catalog-1            lablend-ai-catalog            "sh -c 'exec dotnet …"   catalog            3 hours ago          Up 3 hours (healthy)          8080/tcp
+lablend-ai-gateway-1            lablend-ai-gateway            "sh -c 'exec dotnet …"   gateway            3 hours ago          Up 3 hours (healthy)          127.0.0.1:5080->8080/tcp
+lablend-ai-identity-1           lablend-ai-identity           "sh -c 'exec dotnet …"   identity           3 hours ago          Up 3 hours (healthy)          8080/tcp
+lablend-ai-inventory-1          lablend-ai-inventory          "sh -c 'exec dotnet …"   inventory          3 hours ago          Up 3 hours (healthy)          8080/tcp
+lablend-ai-notification-1       lablend-ai-notification       "sh -c 'exec dotnet …"   notification       3 hours ago          Up 3 hours (healthy)          8080/tcp
+lablend-ai-postgres-1           postgres:16-alpine            "docker-entrypoint.s…"   postgres           28 hours ago         Up 15 hours (healthy)         5432/tcp
+lablend-ai-recommendation-1     lablend-ai-recommendation     "sh -c 'exec dotnet …"   recommendation     3 hours ago          Up 3 hours (healthy)          8080/tcp
+lablend-ai-redis-1              redis:7.4-alpine              "docker-entrypoint.s…"   redis              28 hours ago         Up 15 hours (healthy)         6379/tcp
+lablend-ai-web-1                lablend-ai-web                "/docker-entrypoint.…"   web                3 hours ago          Up 3 hours (healthy)          127.0.0.1:3000->8080/tcp

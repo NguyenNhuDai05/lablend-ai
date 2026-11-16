@@ -18,6 +18,10 @@ public static class DependencyInjection
         services.AddScoped<ILoanLifecycle, LoanLifecycle>();
         services.AddScoped<LoanLifecycle>();
         services.AddScoped<LoanReconciliation>();
+        services.AddScoped<LoanReminderJobs>();
+        services.AddOptions<ReminderOptions>().Bind(configuration.GetSection("Reminders"))
+            .Validate(o => o.DueSoonMinutes is >= 1 and <= 10080 && o.PollSeconds is >= 1 and <= 3600
+                && o.BatchSize is >= 1 and <= 100, "Invalid Reminders configuration.").ValidateOnStart();
         services.AddOptions<BorrowingWorkflowOptions>().Bind(configuration.GetSection("BorrowingWorkflow"))
             .Validate(o => o.BatchSize is >= 1 and <= 100 && o.MaxAttempts is >= 1 and <= 20 && o.PickupHours is >= 1 and <= 168
                 && o.PollSeconds is >= 1 and <= 3600, "Invalid BorrowingWorkflow configuration.").ValidateOnStart();

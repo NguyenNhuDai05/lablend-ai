@@ -36,9 +36,9 @@ Catalog's real controller is now present in the merged baseline. PR #8 and Sprin
 
 ## Responses filters and state
 
-LoanDto: `id,studentId,purpose,status,isOverdue,requestedAt,dueAt,reviewedBy,reviewedAt,rejectionReason,createdAt,updatedAt,items,history`. Items: `id,equipmentTypeId,assetUnitId,reservationId,itemStatus`. History: `id,actorUserId,action,fromStatus,toStatus,occurredAt,note`, ordered OccurredAt then Id. All IDs UUIDs and dates UTC ISO-8601; no EF entities returned.
+LoanDto: `id,studentId,purpose,status,isOverdue,requestedAt,dueAt,reviewedBy,reviewedAt,rejectionReason,createdAt,updatedAt,items,history,handedOverBy,handedOverAt`. Items: `id,equipmentTypeId,assetUnitId,reservationId,itemStatus,returnCondition,returnedAt`. Added fields are nullable before the relevant operation. History: `id,actorUserId,action,fromStatus,toStatus,occurredAt,note`, ordered OccurredAt then Id. All IDs UUIDs and dates UTC ISO-8601; no EF entities returned.
 
-Lifecycle: PENDING, APPROVING, APPROVED, BORROWED, RETURNED, REJECTED, CANCELLED, APPROVAL_FAILED, EXPIRED. Sprint 1 only performs PENDING→CANCELLED/REJECTED. isOverdue is derived when BORROWED, past dueAt and an item remains BORROWED; never stored as lifecycle or accepted as status filter. Item statuses: REQUESTED/RESERVED/BORROWED/RETURNED/DAMAGED/LOST/CANCELLED/REJECTED. Terminal actions update requested item statuses consistently.
+Lifecycle: PENDING→APPROVING→APPROVED→BORROWED→RETURNED; PENDING can also CANCEL/REJECT. Definitive failed approval becomes APPROVAL_FAILED; safe pickup expiry becomes EXPIRED after Inventory release. Unknown results remain recoverable and block conflicting commands. isOverdue is derived when BORROWED, past dueAt and an item remains BORROWED; never stored as lifecycle or accepted as status filter. Item statuses: REQUESTED/RESERVED/BORROWED/RETURNED/DAMAGED/LOST/CANCELLED/REJECTED. Terminal actions update item statuses consistently.
 
 Both lists return `items,total,page,pageSize`, CreatedAt descending then Id ascending; page 1–1,000,000; size 1–100. Status must be an exact uppercase lifecycle name; undefined/numeric/OVERDUE filters return 400. StudentId query parameters cannot change ownership of /my. Staff list has a separate route/policy.
 
@@ -46,4 +46,4 @@ Other students receive 404 for detail/cancel, identical to missing ID. Staff may
 
 Errors: 400 VALIDATION_ERROR, 401 UNAUTHENTICATED, 403 FORBIDDEN, 404 NOT_FOUND, 409 CONFLICT, 429 RATE_LIMITED at Gateway, 503 SERVICE_UNAVAILABLE. Format application/problem+json with status/title/code/correlationId. JWT revocation limits: [Identity contract](IDENTITY_API_CONTRACT.md).
 
-Schema only accesses borrowing_db: local FK LoanItems/LoanHistories→LoanRequests; logical UUID StudentId/EquipmentTypeId; due/purpose/status constraints; indexed owner/status/time; xmin. Development uses real migrations; production migration tools use borrowing_user. Existing aggregate transaction can include an Outbox record in Sprint 2 without changing DB ownership.
+Schema only accesses borrowing_db: LoanRequests/LoanItems/LoanHistories, InventoryOperations, OutboxMessages and ReminderDispatches; local FKs and logical cross-service UUIDs; due/purpose/status constraints, owner/status/due/time indexes, xmin, active-operation and reminder unique indexes. Business history and Outbox commit together, independent of Redis availability. API/worker serialize owned migrations with a schema advisory lock. No other service DbContext or database is used in production Borrowing code.
