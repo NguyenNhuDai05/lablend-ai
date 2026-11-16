@@ -80,7 +80,7 @@ services:
         if ($existing.Count -or $volumes.Count) { throw 'Generated project is not fresh; refusing to reuse resources.' }
         Invoke-Step 'build sequential images' { & ./scripts/Build-Images.ps1 }
         $started = $true
-        Invoke-Step 'start private core' { docker compose up -d --no-build --wait --wait-timeout 240 }
+        Invoke-Step 'start private core sequentially' { & ./scripts/Start-Core.ps1 -WaitTimeout 240 }
         docker compose ps --all --format json | Set-Content -LiteralPath (Join-Path $evidence 'containers.json') -Encoding utf8
         $env:LABLEND_E2E_ORIGIN = "http://localhost:$env:WEB_PORT"
         $env:LABLEND_E2E_GATEWAY = "http://localhost:$env:GATEWAY_PORT"
