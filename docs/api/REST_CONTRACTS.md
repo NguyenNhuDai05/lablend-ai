@@ -24,6 +24,6 @@ Pagination: `items`, `total`, `page` (1-based), `pageSize`. DTO kỹ thuật t�
 | Notification / M3 | GET /api/notifications; PATCH /api/notifications/{id}/read; GET /api/notifications/unread-count | OD-04–05; owner from sub; inbox dedupe; T12–T18 |
 | Recommendation / M3 | POST /api/recommendations; GET /api/recommendations/history | Bonus only; OD-09; 503 AI_UNAVAILABLE / 502 AI_INVALID_RESPONSE; T19/T25/T26 |
 
-**Routes trong bảng là Planned; chưa có business Controller hay business OpenAPI operation.** Gateway routing config chỉ chuẩn bị prefixes. Request tới một business path có thể trả 401 hoặc 404; không có mock HTTP 200 làm giả CRUD.
+Sprint 1: Identity và Borrowing Core đã có Controllers/OpenAPI thật. Hợp đồng hiện hành: [Identity](IDENTITY_API_CONTRACT.md), [Borrowing](BORROWING_API_CONTRACT.md). Các route approve/handover/returns/timeline/dashboard và các module M2/M3 trong bảng vẫn Planned. Catalog validation của create loan chưa nghiệm thu với Catalog thật. Không dùng HTTP 200 giả để thay CRUD.
 
 Swagger ở mỗi REST host: `/swagger`; schema `/swagger/v1/swagger.json`. Gateway allowlist xuất schema qua `/platform/<service>/openapi.json`. Health endpoints không được coi là CRUD operations. Khi thêm controller thực, viết response/status documentation và authorize ở chính service.

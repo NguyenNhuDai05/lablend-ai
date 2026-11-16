@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
     <ProjectReference Include="../../../src/BuildingBlocks/Observability/Observability.csproj" />
+    <ProjectReference Include="../../../src/Services/Borrowing/Borrowing.Domain/Borrowing.Domain.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" />

@@ -11,10 +11,11 @@ namespace LabLend.Platform.IntegrationTests;
 
 public sealed class GatewayFactory : WebApplicationFactory<GatewayMarker>
 {
+    public string SigningKey { get; } = Convert.ToHexString(RandomNumberGenerator.GetBytes(32));
     protected override void ConfigureWebHost(IWebHostBuilder builder) => builder.ConfigureAppConfiguration((_, config) =>
         config.AddInMemoryCollection(new Dictionary<string, string?>
         {
-            ["Jwt:SigningKey"] = Convert.ToHexString(RandomNumberGenerator.GetBytes(32))
+            ["Jwt:SigningKey"] = SigningKey
         }));
 }
 

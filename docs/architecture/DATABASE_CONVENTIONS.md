@@ -11,7 +11,11 @@
 
 Một PostgreSQL instance; mỗi database có owner/login riêng, PUBLIC bị revoke database privileges và schema privileges. Service chỉ nhận connection string của chính mình; không chia sẻ admin login. Worker cùng bounded context Borrowing nên được dùng borrowing_db. DB role bootstrap dùng env password ngẫu nhiên, không có password trong script SQL/source.
 
-Quy tắc: UUID keys, UTC timestamps, local FK chỉ trong cùng database. Cross-service IDs chỉ logical references. Không shared DbContext/domain model; không cross-DB join/FK. Model thật phải có constraints/indexes/idempotency theo use case, không chỉ kiểm tra ở UI. Contexts hiện chưa có DbSet, model nghiệp vụ hoặc migrations: **Scaffolded**.
+Quy tắc: UUID keys, UTC timestamps, local FK chỉ trong cùng database. Cross-service IDs chỉ logical references. Không shared DbContext/domain model; không cross-DB join/FK. Sprint 1: Identity/Borrowing có entities, constraints, repositories và migrations thật; contexts M2/M3 vẫn Scaffolded.
+
+Identity migration InitialIdentity tạo ASP.NET Identity tables + RefreshTokens/UserAuditEvents, normalized email unique, refresh hash unique, family/expiry indexes, xmin refresh concurrency. Borrowing InitialBorrowing tạo LoanRequests/LoanItems/LoanHistories, local FKs, purpose/due/status checks, owner/status/time indexes và xmin. Development startup của hai host chạy MigrateAsync khi Database:ApplyMigrations=true; production mặc định false, chạy migration có kiểm soát bằng user DB riêng. Không EnsureCreated.
+
+PostgreSQL integration dùng `infrastructure/docker/compose.tests.yml`, project name ngẫu nhiên và password tự sinh, không mount production volumes. Fixture chỉ tạo/xóa container của chính project test; không đọc .env để lấy credential. Test role identity_user/borrowing_user bị deny CONNECT sang DB khác. Không truyền connection string môi trường nhóm vào test fixture.
 
 ## Tạo migration khi đã có model thật
 

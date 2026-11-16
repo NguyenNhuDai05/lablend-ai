@@ -1,4 +1,4 @@
-name: Sprint 0 CI
+name: Platform and Sprint 1 CI
 on:
   push:
     branches: [main, 'feature/**', 'fix/**', 'docs/**', 'chore/**']
@@ -23,6 +23,8 @@ jobs:
       - run: dotnet restore LabLendAI.sln
       - run: dotnet build LabLendAI.sln -c Release --no-restore
       - run: dotnet test LabLendAI.sln -c Release --no-build --no-restore
+        env:
+          LABLEND_POSTGRES_TESTS: '1'
       - run: npm ci
         working-directory: apps/web
       - run: npm run build
