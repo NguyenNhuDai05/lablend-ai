@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { useAuth } from '../auth/AuthContext';
 import { errorText, singleFlight } from '../lib/workflows';
+import { Icon } from './Icon';
 
 export function useResource<T>(key: string, load: (signal: AbortSignal) => Promise<T>, pollMs = 0) {
   const { user, status } = useAuth();
@@ -34,6 +35,13 @@ export function useCommand() {
     finally { if (alive.current) setBusy(false); }
   });
   return { busy, error, run, clearError: () => setError('') };
+}
+/** Shows the first 8 characters of a UUID; the full value stays in the tooltip and the copy button. */
+export function ShortId({ id }: { id: string }) {
+  const [copied, setCopied] = useState(false);
+  const short = id.slice(0, 8);
+  return <span className="short-id" title={id}><code>{short}</code><button type="button" className="copy-id" aria-label={copied ? `Đã sao chép mã ${short}` : `Sao chép mã ${short}`}
+    onClick={() => void navigator.clipboard?.writeText(id).then(() => setCopied(true), () => undefined)}><Icon name={copied ? 'check' : 'copy'} size={14} /></button></span>;
 }
 export function InlineError({ message }: { message?: string }) { return message ? <p className="form-error" role="alert">{message}</p> : null; }
 export function ReviewDialog({ title, children, busy, onClose, onConfirm, confirmLabel }: { title: string; children: ReactNode; busy: boolean; onClose: () => void; onConfirm: () => void; confirmLabel: string }) {
