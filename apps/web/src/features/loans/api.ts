@@ -7,6 +7,12 @@ export type LoanSelection = { equipmentTypeId: string; quantity: number };
 export type ReturnCondition = 'NORMAL' | 'DAMAGED' | 'LOST';
 export const loanApi = {
   list: (staff: boolean, status: string, page: number, signal?: AbortSignal) => apiRequest<Paged<Loan>>(`/api/loans${staff ? '' : '/my'}?${query({ status, page, pageSize: 10 })}`, { signal }),
+  staffSummary: async (signal?: AbortSignal) => {
+    const page = (status: string, pageSize: number) => apiRequest<Paged<Loan>>(`/api/loans?${query({ status, pageSize })}`, { signal });
+    // ponytail: overdue is counted within the first 100 borrowed loans (API max page, no overdue filter); add a server-side filter if more are out at once.
+    const [pending, approved, borrowed] = await Promise.all([page('PENDING', 1), page('APPROVED', 1), page('BORROWED', 100)]);
+    return { pending: pending.total, approved: approved.total, borrowed: borrowed.total, overdue: borrowed.items.filter(l => l.isOverdue).length };
+  },
   detail: (id: string, signal?: AbortSignal) => apiRequest<Loan>(`/api/loans/${encodeURIComponent(id)}`, { signal }),
   create: (purpose: string, dueAt: string, selections: LoanSelection[], now = Date.now(), idempotencyKey?: string) => {
     const due = validateLoan(purpose, dueAt, selections.map(s => s.quantity), now);

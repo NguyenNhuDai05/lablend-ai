@@ -69,6 +69,12 @@ export function useAction(reload: () => void) {
       setNotice({ ok: false, text: errorText(e) });
     }
   }
+  // Success toasts fade out on their own; errors stay until dismissed.
+  useEffect(() => {
+    if (!notice?.ok) return;
+    const timer = setTimeout(() => setNotice(undefined), 5000);
+    return () => clearTimeout(timer);
+  }, [notice]);
   const node = notice && <p role={notice.ok ? 'status' : 'alert'} className={notice.ok ? 'notice' : 'notice error'}>
     {notice.text} <button type="button" className="link" onClick={() => setNotice(undefined)} aria-label="Đóng thông báo">×</button>
   </p>;

@@ -1,65 +1,66 @@
-/* Staff feature styles: everything is scoped under .staff so the shared shell (M3) is unaffected. */
-main.staff { max-width: 1240px; padding: 32px 16px 64px; }
-main.staff.narrow { max-width: 640px; }
+/* Staff feature styles, scoped under .staff. Colours come from the shared tokens in styles.css. */
 .staff h1 { font-size: clamp(1.8rem, 4vw, 2.6rem); margin: 4px 0 0; }
-.staff section { margin-top: 24px; }
-.staff pre { background: #172e34; color: #e6f2ef; padding: 12px; border-radius: 8px; overflow-x: auto; }
-.staff .muted { color: #5d7378; }
+.staff > section { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 22px 24px; box-shadow: var(--shadow); }
+.staff > section + section { margin-top: 24px; }
+.staff pre { background: var(--surface-2); color: var(--ink); border: 1px solid var(--line); padding: 12px; border-radius: 8px; overflow-x: auto; }
+.staff .muted { color: var(--muted); }
 .staff .small { font-size: .82rem; }
 .staff .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.staff .error { color: var(--bad-ink); background: var(--bad-bg); padding: 10px 14px; border-radius: var(--radius-sm); }
 
-.staff-header { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: end; gap: 16px; }
-.staff .who { display: flex; align-items: center; gap: 12px; color: #4a6166; font-size: .9rem; }
-.staff .tabs { display: flex; gap: 4px; margin-top: 24px; border-bottom: 1px solid #dce8e4; overflow-x: auto; }
-.staff .tabs button { background: none; color: #4a6166; border-radius: 8px 8px 0 0; border-bottom: 3px solid transparent; white-space: nowrap; }
-.staff .tabs button[aria-current] { color: #175d4d; border-bottom-color: #175d4d; font-weight: 600; }
-.staff .section-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 12px; }
-.staff .section-head h2 { margin: 0; }
+.staff .section-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 16px; padding-bottom: 14px; border-bottom: 1px solid var(--line); }
+.staff .section-head h2 { margin: 0; font-size: 1.35rem; }
 
-.staff button:disabled { cursor: not-allowed; }
-.staff button.ghost { background: transparent; color: #175d4d; border: 1px solid #b9d3cc; padding: 6px 12px; }
-.staff button.ghost:hover:not(:disabled) { background: #eef6f3; }
-.staff button.danger { color: #a52a2a; border-color: #e6c3c3; }
-.staff button.link { background: none; color: inherit; padding: 0 4px; font-size: 1.2rem; line-height: 1; }
+.staff button.ghost { background: var(--surface); color: var(--brand-ink); border-color: var(--line-strong); padding: 5px 11px; font-size: .86rem; font-weight: 600; }
+.staff button.ghost:hover:not(:disabled) { background: var(--brand-soft); border-color: var(--brand); color: var(--brand-ink); }
+.staff button.danger { color: var(--bad-ink); border-color: color-mix(in srgb, var(--bad-ink) 30%, transparent); }
+.staff button.danger:hover:not(:disabled) { background: var(--bad-bg); border-color: var(--bad-ink); color: var(--bad-ink); }
+.staff button.link { background: none; color: inherit; padding: 0 4px; font-size: 1.2rem; line-height: 1; border: 0; }
 
 .staff .form { display: flex; flex-direction: column; gap: 14px; }
-.staff .filters { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; margin-bottom: 12px; }
+/* Staff filters sit inside a section card, so drop the global filter card chrome. */
+.staff .filters { gap: 12px; margin: 0 0 14px; padding: 0; border: 0; background: none; box-shadow: none; }
 .staff .filters .field { flex: 1 1 160px; max-width: 320px; }
 .staff .nowrap { white-space: nowrap; }
-.staff .field { display: flex; flex-direction: column; gap: 4px; font-size: .85rem; color: #4a6166; }
-.staff .field input, .staff .field select, .staff .field textarea {
-  font: inherit; font-size: 1rem; color: #172e34; padding: 8px 10px; border: 1px solid #c9dad5; border-radius: 8px; background: white; min-width: 0;
+.staff .field { display: flex; flex-direction: column; gap: 5px; font-size: .84rem; font-weight: 600; color: var(--muted); }
+.staff .field :is(input, select, textarea) {
+  font: inherit; font-size: .95rem; font-weight: 400; color: var(--ink); padding: 8px 10px; min-width: 0;
+  border: 1px solid var(--line-strong); border-radius: var(--radius-sm); background: var(--surface);
 }
-.staff .field :disabled { background: #f1f4f3; color: #5d7378; }
-.staff :is(input, select, textarea):focus-visible { outline: 3px solid #6dc6ad; outline-offset: 1px; }
+.staff .field :disabled { background: var(--surface-2); color: var(--muted); }
 .staff .check { display: flex; gap: 8px; align-items: center; font-size: .9rem; padding-bottom: 8px; }
-.staff .actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px; }
+.staff .actions { justify-content: flex-end; gap: 8px; margin: 4px 0 0; }
 
-.staff .table-wrap { overflow-x: auto; }
-.staff table { width: 100%; min-width: 720px; border-collapse: collapse; font-size: .95rem; }
-.staff th, .staff td { text-align: left; padding: 10px 8px; border-bottom: 1px solid #e7efec; vertical-align: top; }
-.staff th { font-size: .78rem; text-transform: uppercase; letter-spacing: .06em; color: #4a6166; }
+.staff .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; }
+.staff table { width: 100%; min-width: 720px; border-collapse: collapse; font-size: .93rem; }
+.staff th, .staff td { text-align: left; padding: 11px 12px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+.staff th { font-size: .74rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); background: var(--surface-2); }
+.staff tbody tr:hover { background: var(--surface-2); }
+.staff tbody tr:last-child td { border-bottom: 0; }
 .staff .row-actions { text-align: right; white-space: nowrap; }
 .staff .row-actions button + button { margin-left: 6px; }
 
-.staff .badge { display: inline-block; padding: 2px 8px; margin: 0 4px 4px 0; border-radius: 999px; font-size: .78rem; font-weight: 600; white-space: nowrap; background: #eceeee; color: #4f5a5c; }
-.staff .badge.ok { background: #dff3ea; color: #145c43; }
-.staff .badge.warn { background: #fdf0d5; color: #6e4400; }
-.staff .badge.info { background: #dfeaf8; color: #1f4f8a; }
-.staff .badge.bad { background: #f9dede; color: #8f1f1f; }
-.staff .badge.tag { background: #f0f5f4; color: #2f6a5b; font-weight: 500; }
+.staff .badge { display: inline-block; padding: 2px 9px; margin: 0 4px 4px 0; border-radius: 999px; font-size: .76rem; font-weight: 650; white-space: nowrap; background: var(--off-bg); color: var(--off-ink); }
+.staff .badge.ok { background: var(--ok-bg); color: var(--ok-ink); }
+.staff .badge.warn { background: var(--warn-bg); color: var(--warn-ink); }
+.staff .badge.info { background: var(--info-bg); color: var(--info-ink); }
+.staff .badge.bad { background: var(--bad-bg); color: var(--bad-ink); }
+.staff .badge.tag { background: var(--surface-3); color: var(--brand-ink); font-weight: 500; }
 
-.staff .notice { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; background: #e5f4ee; }
-.staff .notice.error { background: #fbe9e9; }
-.staff .stock { background: #f4f8f7; border-radius: 8px; padding: 8px 12px; }
-.staff .pager { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: flex-end; margin-top: 12px; font-size: .9rem; }
-.staff .timeline { padding-left: 20px; display: grid; gap: 10px; }
-.staff .modal h3 { margin: 18px 0 8px; font-size: 1rem; }
+/* Toast: fixed and click-through (except its close button) so it never covers table actions. */
+.staff .notice { position: fixed; right: 24px; bottom: 24px; z-index: 30; max-width: min(420px, calc(100vw - 48px)); box-shadow: var(--shadow-lg, 0 10px 30px rgb(0 0 0 / .18)); pointer-events: none; animation: toast-in .2s ease-out; display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 10px 14px; border-radius: var(--radius-sm); background: var(--ok-bg); color: var(--ok-ink); }
+.staff .notice button { pointer-events: auto; }
+@keyframes toast-in { from { opacity: 0; transform: translateY(8px); } }
+@media (prefers-reduced-motion: reduce) { .staff .notice { animation: none; } }
+.staff .notice.error { background: var(--bad-bg); color: var(--bad-ink); }
+.staff .stock { background: var(--brand-soft); color: var(--ink); font-weight: 400; border-radius: var(--radius-sm); padding: 10px 14px; margin: 0 0 14px; }
+.staff .pager { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: flex-end; margin-top: 14px; font-size: .9rem; color: var(--muted); }
 
-.staff .modal { border: 0; border-radius: 16px; padding: 24px; width: min(560px, calc(100vw - 32px)); max-height: calc(100vh - 32px); color: inherit; box-shadow: 0 20px 60px rgb(0 0 0 / .2); }
-.staff .modal::backdrop { background: rgb(23 46 52 / .45); }
+.staff .modal { border: 1px solid var(--line); border-radius: 18px; padding: 24px; width: min(560px, calc(100vw - 32px)); max-height: calc(100vh - 32px); color: var(--ink); background: var(--surface); box-shadow: var(--shadow-lg); }
+.staff .modal h2 { margin-top: 0; }
+.staff .modal h3 { margin: 18px 0 10px; font-size: 1rem; }
+.staff .modal::backdrop { background: rgb(8 20 16 / .5); backdrop-filter: blur(2px); }
 
 @media (max-width: 640px) {
-  main.staff { padding: 20px 16px 48px; }
-  .staff section { padding: 18px; }
+  .staff > section { padding: 18px; }
 }
