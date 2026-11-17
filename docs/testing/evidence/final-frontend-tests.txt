@@ -1,0 +1,164 @@
+
+> @lablend/web@0.0.0 test
+> node --test tests/*.test.mjs
+
+TAP version 13
+# Subtest: auth POST sends the HttpOnly-cookie transport and CSRF marker without an old bearer token
+ok 1 - auth POST sends the HttpOnly-cookie transport and CSRF marker without an old bearer token
+  ---
+  duration_ms: 733.3883
+  type: 'test'
+  ...
+# Subtest: concurrent expired requests renew once and retry with the new JWT
+ok 2 - concurrent expired requests renew once and retry with the new JWT
+  ---
+  duration_ms: 231.0949
+  type: 'test'
+  ...
+# Subtest: failed cookie refresh clears the session without a retry loop
+ok 3 - failed cookie refresh clears the session without a retry loop
+  ---
+  duration_ms: 111.9618
+  type: 'test'
+  ...
+# Subtest: invalid login does not renew a session or clear a different existing session
+ok 4 - invalid login does not renew a session or clear a different existing session
+  ---
+  duration_ms: 110.0698
+  type: 'test'
+  ...
+# Subtest: a late response from a previous login cannot retry or clear the current account
+ok 5 - a late response from a previous login cannot retry or clear the current account
+  ---
+  duration_ms: 74.6142
+  type: 'test'
+  ...
+# Subtest: an account switch during refresh success cannot retry as or clear the new account
+ok 6 - an account switch during refresh success cannot retry as or clear the new account
+  ---
+  duration_ms: 66.679
+  type: 'test'
+  ...
+# Subtest: an account switch during refresh failure cannot retry as or clear the new account
+ok 7 - an account switch during refresh failure cannot retry as or clear the new account
+  ---
+  duration_ms: 101.6962
+  type: 'test'
+  ...
+# Subtest: 403 preserves the current session and ProblemDetails
+ok 8 - 403 preserves the current session and ProblemDetails
+  ---
+  duration_ms: 82.2869
+  type: 'test'
+  ...
+# Subtest: Identity roles[] maps to the routed UI and unknown/inactive roles fail closed
+ok 9 - Identity roles[] maps to the routed UI and unknown/inactive roles fail closed
+  ---
+  duration_ms: 172.141
+  type: 'test'
+  ...
+# Subtest: Staff StockMovements uses the shared memory JWT and refreshes an expired session
+ok 10 - Staff StockMovements uses the shared memory JWT and refreshes an expired session
+  ---
+  duration_ms: 303.9456
+  type: 'test'
+  ...
+# Subtest: Staff mutations preserve validation, forbidden and conflict errors without clearing the session
+ok 11 - Staff mutations preserve validation, forbidden and conflict errors without clearing the session
+  ---
+  duration_ms: 86.8951
+  type: 'test'
+  ...
+# Subtest: loan boundaries accept 1–20 physical units and normalize a timezone offset to UTC
+ok 12 - loan boundaries accept 1–20 physical units and normalize a timezone offset to UTC
+  ---
+  duration_ms: 878.9775
+  type: 'test'
+  ...
+# Subtest: loan validation rejects blank/oversize purposes, invalid dates and unit counts
+ok 13 - loan validation rejects blank/oversize purposes, invalid dates and unit counts
+  ---
+  duration_ms: 247.9012
+  type: 'test'
+  ...
+# Subtest: create sends trimmed purpose, UTC and expanded items without client ownership fields
+ok 14 - create sends trimmed purpose, UTC and expanded items without client ownership fields
+  ---
+  duration_ms: 367.0891
+  type: 'test'
+  ...
+# Subtest: invalid create fails before transport and a network failure is never automatically retried
+ok 15 - invalid create fails before transport and a network failure is never automatically retried
+  ---
+  duration_ms: 306.718
+  type: 'test'
+  ...
+# Subtest: double click joins one command; failed flight releases for an explicit retry
+ok 16 - double click joins one command; failed flight releases for an explicit retry
+  ---
+  duration_ms: 159.5585
+  type: 'test'
+  ...
+# Subtest: owner cancellation and partial return preserve exact API paths and per-item condition
+ok 17 - owner cancellation and partial return preserve exact API paths and per-item condition
+  ---
+  duration_ms: 227.0051
+  type: 'test'
+  ...
+# Subtest: cancelled reads retain AbortError so stale resource loads are ignored
+ok 18 - cancelled reads retain AbortError so stale resource loads are ignored
+  ---
+  duration_ms: 115.5077
+  type: 'test'
+  ...
+# Subtest: return destinations accept protected internal URLs and reject external or malformed paths
+ok 19 - return destinations accept protected internal URLs and reject external or malformed paths
+  ---
+  duration_ms: 188.946
+  type: 'test'
+  ...
+# Subtest: Profile and Admin send only supported fields and preserve last-admin conflicts
+ok 20 - Profile and Admin send only supported fields and preserve last-admin conflicts
+  ---
+  duration_ms: 274.6534
+  type: 'test'
+  ...
+# Subtest: action errors expose safe HTTP hints and a correlation ID for recovery
+ok 21 - action errors expose safe HTTP hints and a correlation ID for recovery
+  ---
+  duration_ms: 148.3208
+  type: 'test'
+  ...
+# Subtest: an explicit resubmission preserves its draft key and payload after a lost network reply
+ok 22 - an explicit resubmission preserves its draft key and payload after a lost network reply
+  ---
+  duration_ms: 104.4124
+  type: 'test'
+  ...
+# Subtest: Admin global filters and pagination are encoded together and never expose a page-only filter
+ok 23 - Admin global filters and pagination are encoded together and never expose a page-only filter
+  ---
+  duration_ms: 118.9238
+  type: 'test'
+  ...
+# Subtest: loan-related notifications use the server aggregate filter without accepting a user ID
+ok 24 - loan-related notifications use the server aggregate filter without accepting a user ID
+  ---
+  duration_ms: 110.5569
+  type: 'test'
+  ...
+# Subtest: persisted notification events have Vietnamese copy without inventing full-return state or replacing unknown event content
+ok 25 - persisted notification events have Vietnamese copy without inventing full-return state or replacing unknown event content
+  ---
+  duration_ms: 18.3133
+  type: 'test'
+  ...
+1..25
+# tests 25
+# suites 0
+# pass 25
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 5220.8717

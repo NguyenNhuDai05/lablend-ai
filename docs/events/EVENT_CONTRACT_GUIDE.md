@@ -1,5 +1,7 @@
 # Event contract guide
 
+Final execution checkpoint (2026-11-17): exact-source integration tests and fresh production Docker E2E PASS for actual Outbox/Redis/Inbox delivery, due-soon/overdue notifications, replay dedupe, outage/reconnect and Worker restart. [Evidence](../testing/evidence/FINAL_EVIDENCE.md). Seven producer event payloads remain unchanged; Vietnamese labels are a UI presentation layer. OD-04/05 and retention/archive/replay/parking policy still require human owner approval. No automatic trimming or fabricated signoff is included.
+
 **PROVISIONAL — M1 producer implemented against the existing M3 mapper; M3 owner review remains pending (OD-04/05).** Compatibility tests do not substitute for team approval. No shared Domain entity or M3 code/schema change.
 
 Đề xuất stream `lablend.events.v1`, group `notification-consumers`. Envelope JSON camelCase:

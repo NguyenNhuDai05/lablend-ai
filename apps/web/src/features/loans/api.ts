@@ -8,10 +8,10 @@ export type ReturnCondition = 'NORMAL' | 'DAMAGED' | 'LOST';
 export const loanApi = {
   list: (staff: boolean, status: string, page: number, signal?: AbortSignal) => apiRequest<Paged<Loan>>(`/api/loans${staff ? '' : '/my'}?${query({ status, page, pageSize: 10 })}`, { signal }),
   detail: (id: string, signal?: AbortSignal) => apiRequest<Loan>(`/api/loans/${encodeURIComponent(id)}`, { signal }),
-  create: (purpose: string, dueAt: string, selections: LoanSelection[], now = Date.now()) => {
+  create: (purpose: string, dueAt: string, selections: LoanSelection[], now = Date.now(), idempotencyKey?: string) => {
     const due = validateLoan(purpose, dueAt, selections.map(s => s.quantity), now);
     if (selections.some(s => !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s.equipmentTypeId))) throw new Error('Chọn loại thiết bị hợp lệ.');
-    return apiRequest<Loan>('/api/loans', { method: 'POST', body: JSON.stringify({ purpose: purpose.trim(), dueAt: due, items: selections.flatMap(s => Array.from({ length: s.quantity }, () => ({ equipmentTypeId: s.equipmentTypeId }))) }) });
+    return apiRequest<Loan>('/api/loans', { method: 'POST', ...(idempotencyKey ? { headers: { 'Idempotency-Key': idempotencyKey } } : {}), body: JSON.stringify({ purpose: purpose.trim(), dueAt: due, items: selections.flatMap(s => Array.from({ length: s.quantity }, () => ({ equipmentTypeId: s.equipmentTypeId }))) }) });
   },
   cancel: (id: string) => apiRequest<Loan>(`/api/loans/${encodeURIComponent(id)}/cancel`, { method: 'POST' }),
   approve: (id: string) => apiRequest<Loan>(`/api/loans/${encodeURIComponent(id)}/approve`, { method: 'POST' }),

@@ -17,7 +17,7 @@ public sealed class UsersController(IdentityService service) : ControllerBase
     public async Task<IActionResult> Password(PasswordRequest request, CancellationToken ct)
     { await service.ChangePassword(Actor, request, ct); return NoContent(); }
     [HttpGet, Authorize(Policy = "Admin"), ProducesResponseType<PagedResponse<CurrentUser>>(200)]
-    public Task<PagedResponse<CurrentUser>> List(CancellationToken ct, int page = 1, int pageSize = 10) => service.List(page, pageSize, ct);
+    public Task<PagedResponse<CurrentUser>> List(CancellationToken ct, int page = 1, int pageSize = 10, string? keyword = null, string? role = null, bool? isActive = null) => service.List(page, pageSize, ct, keyword, role, isActive);
     [HttpGet("{id:guid}"), Authorize(Policy = "Admin"), ProducesResponseType<CurrentUser>(200)]
     public Task<CurrentUser> Detail(Guid id) => service.Get(id);
     [HttpPut("{id:guid}"), Authorize(Policy = "Admin"), ProducesResponseType<CurrentUser>(200)]

@@ -1,10 +1,16 @@
 # Requirements traceability
 
-Current M3 P0 delta: real Catalog/Student/Staff loan/Profile/Admin/Notification UI and seven-section demo materials. See [M3 acceptance](../testing/M3_P0_ACCEPTANCE.md) for executed gates and remaining human decisions. Gemini/dashboard deferred; M2 fresh-install T20 is separate. Historical tables below remain provenance and do not override this checkpoint.
+## Final checkpoint 2026-11-17
 
-## Current P0 checkpoint (M3 implementation branch)
+Main `68933a1` includes merged M3 PR #14. Final tested code is `ea868e4`, with identical runtime/web/deployment content in merged review checkpoint `430ff1b` on `feature/final-c-acceptance`. The current R01–R18 table, executed test counts, Docker/T20 evidence, CI links and remaining human decisions are in [FINAL_PRODUCT_ACCEPTANCE](../testing/FINAL_PRODUCT_ACCEPTANCE.md). [Source audit](../testing/FINAL_SOURCE_AUDIT.md) maps requirement → code → tests → gap → risk → correction. [C4/ERD/state/interactions](../architecture/FINAL_ARCHITECTURE.md) describe current implementation.
 
-This table is current; older sprint tables below remain historical. Test counts, exact CI SHA and runtime results are recorded in [M3 acceptance](../testing/M3_P0_ACCEPTANCE.md). “Implemented” does not mean human/team final approval.
+New compatible features: draft submission idempotency, request/return review, real serial/equipment reads, global Admin filters, owned loan-related inbox and Vietnamese event display. Exact-source CI confirms 71 backend and 25 frontend tests, zero failures/skips. Final fresh T20 passed all 13 stages including production three-flow E2E, real reminders, Redis reconnect/worker restart, six-role DB isolation and demo preparation twice. The reproduced cold-start 139 defect was fixed with TCP PostgreSQL health; the older unrecorded M3 crash remains historically uncertain. [Curated evidence](../testing/evidence/FINAL_EVIDENCE.md). Old sprint tables below remain historical and do not override this checkpoint.
+
+The [M3 acceptance](../testing/M3_P0_ACCEPTANCE.md) remains historical provenance. Gemini/dashboard are deferred. R18 team rehearsal/deck visual QA and OD-04/05/retention signoff remain PROVISIONAL; automated evidence does not approve them on behalf of the team.
+
+## Historical M3 P0 checkpoint (before PR #14 merge)
+
+This table records the M3 checkpoint; the final report above supersedes current-status claims. Test counts, exact CI SHA and runtime results are recorded in [M3 acceptance](../testing/M3_P0_ACCEPTANCE.md). “Implemented” does not mean human/team final approval.
 
 | ID | Current implementation / evidence | Remaining boundary |
 |---|---|---|

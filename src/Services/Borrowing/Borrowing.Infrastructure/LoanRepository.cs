@@ -8,6 +8,27 @@ namespace Borrowing.Infrastructure;
 public sealed class LoanRepository(BorrowingDbContext db) : ILoanRepository
 {
     private IQueryable<LoanRequest> Full => db.LoanRequests.Include(l => l.Items).Include(l => l.Histories).AsSplitQuery();
+    public async Task<LoanRequest?> FindSubmission(Guid studentId, Guid key, string hash, CancellationToken ct)
+    {
+        var submission = await db.LoanSubmissions.AsNoTracking().SingleOrDefaultAsync(s => s.StudentId == studentId && s.Key == key, ct);
+        if (submission == null) return null;
+        if (submission.RequestHash != hash) throw new LoanFailure(409, "Idempotency key already used for a different loan request.");
+        return await Get(submission.LoanId, ct) ?? throw new LoanFailure(503, "Submitted loan is unavailable.");
+    }
+    public async Task<LoanRequest> AddSubmission(LoanRequest loan, Guid key, string hash, CancellationToken ct, string correlationId)
+    {
+        await using var transaction = await db.Database.BeginTransactionAsync(ct);
+        // Across replicas: only this student's draft is serialized. No HTTP call is made under this lock.
+        var scope = $"loan-submission:{loan.StudentId:D}:{key:D}";
+        await db.Database.ExecuteSqlInterpolatedAsync($"SELECT pg_advisory_xact_lock(hashtextextended({scope}, 0))", ct);
+        if (await FindSubmission(loan.StudentId, key, hash, ct) is { } previous) return previous;
+        db.EventCorrelationId = correlationId;
+        db.LoanRequests.Add(loan);
+        db.LoanSubmissions.Add(new() { StudentId = loan.StudentId, Key = key, RequestHash = hash, LoanId = loan.Id });
+        await db.SaveChangesAsync(ct);
+        await transaction.CommitAsync(ct);
+        return loan;
+    }
     public async Task Add(LoanRequest loan, CancellationToken ct, string? correlationId = null)
     {
         if (correlationId != null) db.EventCorrelationId = correlationId;

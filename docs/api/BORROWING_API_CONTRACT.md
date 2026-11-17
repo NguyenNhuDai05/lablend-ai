@@ -1,5 +1,13 @@
 # Borrowing Core API contract
 
+## Final compatible extension 2026-11-17
+
+`POST /api/loans` optionally accepts `Idempotency-Key: <nonempty UUID in D format>`. Existing callers without the header retain their behavior. The web review step keeps one random key for the same draft and sends it only after explicit confirmation. A network error is never automatically retried.
+
+The key is scoped to the authenticated StudentId. Same key + canonical payload returns **201 with the same loan ID/Location and its current DTO**, including after the due date or if Catalog becomes unavailable. Purpose whitespace, equivalent UTC offsets and reordered equipment IDs normalize to the same hash; quantity/multiplicity remains significant. Changed payload with the same key returns 409; invalid key returns 400. A short PostgreSQL advisory lock and composite primary key serialize concurrent submissions. Aggregate/items/history/outbox/key mapping commit together. No RPC/HTTP call occurs while holding that transaction. Failed validation/dependency calls do not consume the key.
+
+Migration `20261116180731_AddLoanSubmissionIdempotency` adds only `borrowing_db.LoanSubmissions` with `(StudentId,Key)` PK, RequestHash and owned LoanId FK. Mappings remain for the lifetime of their loan; no expiry/retention cleanup is enabled. The UI keeps the draft key in memory, so a page reload/new draft requires checking My Loans before resubmission. This does not promise deduplication for clients omitting the optional header.
+
 Sprint 2 adds Inventory gRPC approval, handover and partial returns to Sprint 1 submission/reads/cancellation/rejection. Gateway base URL is localhost:5080 or the web nginx same-origin `/api`. Each service validates JWT independently. OD-08 defaults accepted by the repository owner: M2/M3 review remains pending. Executed acceptance is recorded in SPRINT2_M1_ACCEPTANCE.md; source implementation alone is not a PASS.
 
 | Method | Path | Role / scope | Success |

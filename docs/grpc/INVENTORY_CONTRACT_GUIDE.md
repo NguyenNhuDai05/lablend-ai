@@ -1,5 +1,9 @@
 # Inventory gRPC contract guide
 
+## Final executed checkpoint 2026-11-17
+
+Unchanged v1 passes real HTTP/2 PostgreSQL regression, including concurrent/all-or-nothing reserve and timeout/lost-reply recovery. Fresh production Docker E2E verifies Borrowing REST -> Inventory RPC with owning-DB RESERVED/ON_LOAN and NORMAL/DAMAGED/LOST outcomes. See [final acceptance](../testing/FINAL_PRODUCT_ACCEPTANCE.md). This is execution evidence, not approval of new contract fields. Reservation ID and historical condition/time gaps and the single-writer recovery assumption remain documented; M2 owner review: [INVENTORY_V1_REVIEW](INVENTORY_V1_REVIEW.md) (PR #15), M1 sign-off pending.
+
 ## M1 consumer implementation review — Sprint 2
 
 The M1 consumer was checked against the unchanged v1 proto and server implementation on 2026-11-16. Borrowing.Infrastructure generates Client code directly from this file, uses IOptions Inventory:GrpcAddress/ServiceToken/DeadlineSeconds (default 5), sends the service Bearer credential and x-correlation-id, and maps status/trailer codes into business/dependency failures. User JWTs never authorize Inventory RPCs. Stable durable approval operation IDs, GetOperationStatus, full item/asset/state verification, replay and HELD-only release are covered by [Gate A/B](../testing/SPRINT2_M1_ACCEPTANCE.md).

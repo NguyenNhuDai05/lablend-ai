@@ -1,0 +1,30 @@
+PASS: 10 expected containers are running and healthy.
+PASS: Gateway -> identity actual readiness, correlation forwarding and OpenAPI.
+PASS: Gateway -> catalog actual readiness, correlation forwarding and OpenAPI.
+PASS: Gateway -> inventory actual readiness, correlation forwarding and OpenAPI.
+PASS: Gateway -> borrowing actual readiness, correlation forwarding and OpenAPI.
+PASS: Gateway -> notification actual readiness, correlation forwarding and OpenAPI.
+PASS: frontend entry point and nginx -> Gateway health.
+PASS: Borrowing container -> Inventory standard gRPC health (NOT allocation).
+PASS: identity authenticates to own database and cannot connect to other five databases.
+PASS: catalog authenticates to own database and cannot connect to other five databases.
+PASS: inventory authenticates to own database and cannot connect to other five databases.
+PASS: borrowing authenticates to own database and cannot connect to other five databases.
+PASS: notification authenticates to own database and cannot connect to other five databases.
+PASS: recommendation authenticates to own database and cannot connect to other five databases.
+PASS: all 20 Identity/Borrowing operations are present in actual OpenAPI through Gateway.
+PASS: anonymous GET /api/auth/me through running Compose Gateway returns 401.
+PASS: anonymous GET /api/loans/my through running Compose Gateway returns 401.
+PASS: identity_db has applied migration 20261115162335_InitialIdentity (read using identity_user).
+PASS: borrowing_db has applied migration 20261115163138_InitialBorrowing (read using borrowing_user).
+PASS: Sprint 1 Identity/Borrowing runtime checks. Real Catalog integration evidence: PR8_INTEGRATION_ACCEPTANCE.md and MemberIntegrationTests.
+PASS: Gateway OpenAPI POST /api/loans/{id}/approve, anonymous 401.
+PASS: Gateway OpenAPI POST /api/loans/{id}/handover, anonymous 401.
+PASS: Gateway OpenAPI POST /api/loans/{id}/returns, anonymous 401.
+PASS: Borrowing migrations: 20261115163138_InitialBorrowing, 20261116055807_AddInventoryLifecycle, 20261116071914_AddBorrowingOutbox, 20261116073705_AddReminderDispatches, 20261116180731_AddLoanSubmissionIdempotency
+operations=0
+outbox=0
+reminderDispatches=0
+PASS: all four actual scheduled jobs logged completed passes; worker dependency/job heartbeat is healthy.
+PASS: Redis stream/group metadata is reachable (business delivery/fault evidence is in private integration tests).
+PASS: Sprint 2 Docker runtime verification. See SPRINT2_M1_ACCEPTANCE.md for separate E2E/failure evidence.

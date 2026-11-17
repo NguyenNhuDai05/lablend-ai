@@ -7,7 +7,12 @@ const errorText = (e: unknown) => e instanceof Error ? e.message : 'Lỗi không
 export function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
-  useEffect(() => { ref.current?.showModal(); }, []);
+  useEffect(() => {
+    const previous = document.activeElement; const dialog = ref.current;
+    dialog?.showModal();
+    // Do not close here: React StrictMode replays effects and native close would dismiss the parent dialog.
+    return () => { if (previous instanceof HTMLElement && previous.isConnected) previous.focus(); };
+  }, []);
   return <dialog ref={ref} className="modal" aria-labelledby={titleId} onClose={onClose}>
     <h2 id={titleId}>{title}</h2>
     {children}
@@ -20,8 +25,11 @@ export function FormModal({ title, submitLabel, onSubmit, onClose, children }: {
 }) {
   const [error, setError] = useState<string>();
   const [busy, setBusy] = useState(false);
+  const submitting = useRef(false);
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (submitting.current) return;
+    submitting.current = true;
     setBusy(true);
     setError(undefined);
     try {
@@ -30,6 +38,7 @@ export function FormModal({ title, submitLabel, onSubmit, onClose, children }: {
     } catch (err) {
       setError(errorText(err));
       setBusy(false);
+      submitting.current = false;
     }
   }
   return <Modal title={title} onClose={onClose}>

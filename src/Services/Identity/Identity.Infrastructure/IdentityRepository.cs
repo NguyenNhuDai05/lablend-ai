@@ -35,8 +35,21 @@ public sealed class IdentityRepository(IdentityDbContext db) : IIdentityReposito
         foreach (var token in tokens) { token.RevokedAt = DateTimeOffset.UtcNow; token.RevocationReason = reason; }
     }
     public void Audit(Guid? userId, Guid? actor, string action) => db.UserAuditEvents.Add(new() { UserId = userId, ActorUserId = actor, Action = action });
-    public async Task<(IReadOnlyList<ApplicationUser> Users, long Total)> List(int page, int size, CancellationToken ct) =>
-        (await db.Users.AsNoTracking().OrderByDescending(u => u.CreatedAt).ThenBy(u => u.Id).Skip((page - 1) * size).Take(size).ToListAsync(ct), await db.Users.LongCountAsync(ct));
+    public async Task<(IReadOnlyList<ApplicationUser> Users, long Total)> List(int page, int size, CancellationToken ct, string? keyword = null, string? role = null, bool? isActive = null)
+    {
+        var query = db.Users.AsNoTracking();
+        if (!string.IsNullOrWhiteSpace(keyword))
+        {
+            // Treat %, _ and backslash as literal characters, not wildcard syntax supplied by a caller.
+            var pattern = "%" + keyword.Replace("\\", "\\\\").Replace("%", "\\%").Replace("_", "\\_") + "%";
+            query = query.Where(u => EF.Functions.ILike(u.DisplayName, pattern, "\\") || EF.Functions.ILike(u.Email!, pattern, "\\"));
+        }
+        if (isActive is { } active) query = query.Where(u => u.IsActive == active);
+        if (role != null) query = query.Where(u => db.UserRoles.Any(ur => ur.UserId == u.Id && db.Roles.Any(r => r.Id == ur.RoleId && r.Name == role)));
+        var total = await query.LongCountAsync(ct);
+        var rows = await query.OrderByDescending(u => u.CreatedAt).ThenBy(u => u.Id).Skip((page - 1) * size).Take(size).ToListAsync(ct);
+        return (rows, total);
+    }
     public Task<int> ActiveAdminCount(CancellationToken ct) =>
         (from u in db.Users join ur in db.UserRoles on u.Id equals ur.UserId join r in db.Roles on ur.RoleId equals r.Id
          where u.IsActive && r.Name == Roles.Admin select u.Id).Distinct().CountAsync(ct);

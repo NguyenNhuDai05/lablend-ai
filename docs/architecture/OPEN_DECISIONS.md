@@ -1,5 +1,9 @@
 # Open decisions
 
+## Final technical checkpoint 2026-11-17
+
+Exact-source regression (71 backend/25 frontend, zero skips) and fresh Docker T20 now PASS; Catalog lookup, real Inventory gRPC, producer/consumer reminders, outage/replay and all three workflows are exercised. The older Sprint 1 note about a missing Catalog endpoint and pending execution below is historical. [Final acceptance and evidence](../testing/FINAL_PRODUCT_ACCEPTANCE.md) supersede execution status, while the human owner decisions remain **PENDING HUMAN REVIEW**. OD-04/05 and retention/archive/replay horizon are not closed by tests. Inventory v1 gaps/single-writer recovery assumption persist; M2 owner review is recorded in [INVENTORY_V1_REVIEW](../grpc/INVENTORY_V1_REVIEW.md) (PR #15), M1 sign-off pending. No stream trim, shared data reset, breaking proto change or owner approval was introduced.
+
 M3 P0 technical review (2026-11-16): [producer schema, mapper compatibility, retry/parking and retention audit](../events/M3_CONTRACT_REVIEW.md) added. OD-04/05 remain OPEN; no human owner signoff is asserted. Inventory v1 historical-return/reservation-ID gap: M2 owner decision in [INVENTORY_V1_REVIEW](../grpc/INVENTORY_V1_REVIEW.md), M1 sign-off pending.
 
 ## Sprint 2 M1 consumer audit (2026-11-16)

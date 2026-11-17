@@ -40,7 +40,7 @@ public interface IIdentityRepository
     void AddToken(RefreshToken token);
     Task Revoke(Guid userId, Guid? familyId, string reason, CancellationToken ct);
     void Audit(Guid? userId, Guid? actor, string action);
-    Task<(IReadOnlyList<ApplicationUser> Users, long Total)> List(int page, int size, CancellationToken ct);
+    Task<(IReadOnlyList<ApplicationUser> Users, long Total)> List(int page, int size, CancellationToken ct, string? keyword = null, string? role = null, bool? isActive = null);
     Task<int> ActiveAdminCount(CancellationToken ct);
 }
 

@@ -1,0 +1,222 @@
+{
+  "project": "lablend-t20-951a7532ccc3",
+  "commit": "783c2f8",
+  "cause": "Unix-socket health accepted the temporary init-only PostgreSQL server before final TCP startup",
+  "containers": [
+    {
+      "state": {
+        "Status": "exited",
+        "Running": false,
+        "Paused": false,
+        "Restarting": false,
+        "OOMKilled": false,
+        "Dead": false,
+        "Pid": 0,
+        "ExitCode": 139,
+        "Error": "",
+        "StartedAt": "2026-11-16T18:47:03.701368783Z",
+        "FinishedAt": "2026-11-16T18:47:26.28585513Z",
+        "Health": {
+          "Status": "unhealthy",
+          "FailingStreak": 0,
+          "Log": [
+            {
+              "Start": "2026-11-16T18:47:10.66815607Z",
+              "End": "2026-11-16T18:47:15.493341027Z",
+              "ExitCode": 1,
+              "Output": ""
+            },
+            {
+              "Start": "2026-11-16T18:47:20.553163231Z",
+              "End": "2026-11-16T18:47:22.568259273Z",
+              "ExitCode": 1,
+              "Output": ""
+            }
+          ]
+        }
+      },
+      "service": "catalog",
+      "logs": "Unhandled exception. Npgsql.NpgsqlException (0x80004005): Failed to connect to 172.23.0.4:5432\r\n ---> System.Net.Sockets.SocketException (111): Connection refused\r\n   at Npgsql.Internal.NpgsqlConnector.Connect(NpgsqlTimeout timeout)\r\n   at Npgsql.Internal.NpgsqlConnector.Connect(NpgsqlTimeout timeout)\r\n   at Npgsql.Internal.NpgsqlConnector.RawOpen(SslMode sslMode, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken, Boolean isFirstAttempt)\r\n   at Npgsql.Internal.NpgsqlConnector.<Open>g__OpenCore|213_1(NpgsqlConnector conn, SslMode sslMode, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken, Boolean isFirstAttempt)\r\n   at Npgsql.Internal.NpgsqlConnector.Open(NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)\r\n   at Npgsql.UnpooledDataSource.Get(NpgsqlConnection conn, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)\r\n   at Npgsql.NpgsqlConnection.<Open>g__OpenAsync|42_0(Boolean async, CancellationToken cancellationToken)\r\n   at Npgsql.NpgsqlConnection.Open()\r\n   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenDbConnection(Boolean errorsExpected)\r\n   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternal(Boolean errorsExpected)\r\n   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.Open(Boolean errorsExpected)\r\n   at Npgsql.EntityFrameworkCore.PostgreSQL.Storage.Internal.NpgsqlDatabaseCreator.Exists(Boolean async, CancellationToken cancellationToken)\r\n   at Npgsql.EntityFrameworkCore.PostgreSQL.Storage.Internal.NpgsqlDatabaseCreator.Exists(Boolean async, CancellationToken cancellationToken)\r\n   at Npgsql.EntityFrameworkCore.PostgreSQL.Storage.Internal.NpgsqlDatabaseCreator.Exists()\r\n   at Microsoft.EntityFrameworkCore.Migrations.HistoryRepository.Exists()\r\n   at Microsoft.EntityFrameworkCore.Migrations.HistoryRepository.GetAppliedMigrations()\r\n   at Npgsql.EntityFrameworkCore.PostgreSQL.Migrations.Internal.NpgsqlMigrator.Migrate(String targetMigration)\r\n   at Microsoft.EntityFrameworkCore.RelationalDatabaseFacadeExtensions.Migrate(DatabaseFacade databaseFacade)\r\n   at Catalog.Infrastructure.DependencyInjection.MigrateCatalogDatabase(IServiceProvider services) in /source/src/Services/Catalog/Catalog.Infrastructure/DependencyInjection.cs:line 25\r\n   at Program.<Main>$(String[] args) in /source/src/Services/Catalog/Catalog.Api/Program.cs:line 13\r\n"
+    },
+    {
+      "state": {
+        "Status": "exited",
+        "Running": false,
+        "Paused": false,
+        "Restarting": false,
+        "OOMKilled": false,
+        "Dead": false,
+        "Pid": 0,
+        "ExitCode": 139,
+        "Error": "",
+        "StartedAt": "2026-11-16T18:47:03.716463439Z",
+        "FinishedAt": "2026-11-16T18:47:30.981367187Z",
+        "Health": {
+          "Status": "unhealthy",
+          "FailingStreak": 1,
+          "Log": [
+            {
+              "Start": "2026-11-16T18:47:11.164523399Z",
+              "End": "2026-11-16T18:47:15.881507008Z",
+              "ExitCode": 1,
+              "Output": ""
+            },
+            {
+              "Start": "2026-11-16T18:47:20.884733655Z",
+              "End": "2026-11-16T18:47:22.492018694Z",
+              "ExitCode": 1,
+              "Output": ""
+            },
+            {
+              "Start": "2026-11-16T18:47:27.506219991Z",
+              "End": "2026-11-16T18:47:28.591550249Z",
+              "ExitCode": 1,
+              "Output": ""
+            }
+          ]
+        }
+      },
+      "service": "notification",
+      "logs": "Unhandled exception. Npgsql.NpgsqlException (0x80004005): Failed to connect to 172.23.0.4:5432\r\n ---> System.Net.Sockets.SocketException (111): Connection refused\r\n   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)\r\n   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource.GetResult(Int16 token)\r\n   at System.Net.Sockets.Socket.<ConnectAsync>g__WaitForConnectWithCancellation|285_0(AwaitableSocketAsyncEventArgs saea, ValueTask connectTask, CancellationToken cancellationToken)\r\n   at Npgsql.TaskTimeoutAndCancellation.ExecuteAsync(Func`2 getTaskFunc, NpgsqlTimeout timeout, CancellationToken cancellationToken)\r\n   at Npgsql.Internal.NpgsqlConnector.ConnectAsync(NpgsqlTimeout timeout, CancellationToken cancellationToken)\r\n   at Npgsql.Internal.NpgsqlConnector.ConnectAsync(NpgsqlTimeout timeout, CancellationToken cancellationToken)\r\n   at Npgsql.Internal.NpgsqlConnector.RawOpen(SslMode sslMode, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken, Boolean isFirstAttempt)\r\n   at Npgsql.Internal.NpgsqlConnector.<Open>g__OpenCore|213_1(NpgsqlConnector conn, SslMode sslMode, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken, Boolean isFirstAttempt)\r\n   at Npgsql.Internal.NpgsqlConnector.Open(NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)\r\n   at Npgsql.UnpooledDataSource.Get(NpgsqlConnection conn, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)\r\n   at Npgsql.NpgsqlConnection.<Open>g__OpenAsync|42_0(Boolean async, CancellationToken cancellationToken)\r\n   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternalAsync(Boolean errorsExpected, CancellationToken cancellationToken)\r\n   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternalAsync(Boolean errorsExpected, CancellationToken cancellationToken)\r\n   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenAsync(CancellationToken cancellationToken, Boolean errorsExpected)\r\n   at Npgsql.EntityFrameworkCore.PostgreSQL.Storage.Internal.NpgsqlDatabaseCreator.Exists(Boolean async, CancellationToken cancellationToken)\r\n   at Npgsql.EntityFrameworkCore.PostgreSQL.Storage.Internal.NpgsqlDatabaseCreator.Exists(Boolean async, CancellationToken cancellationToken)\r\n   at Microsoft.EntityFrameworkCore.Migrations.HistoryRepository.ExistsAsync(CancellationToken cancellationToken)\r\n   at Microsoft.EntityFrameworkCore.Migrations.HistoryRepository.GetAppliedMigrationsAsync(CancellationToken cancellationToken)\r\n   at Npgsql.EntityFrameworkCore.PostgreSQL.Migrations.Internal.NpgsqlMigrator.MigrateAsync(String targetMigration, CancellationToken cancellationToken)\r\n   at Program.<Main>$(String[] args) in /source/src/Services/Notification/Notification.Api/Program.cs:line 17\r\n   at Program.<Main>$(String[] args) in /source/src/Services/Notification/Notification.Api/Program.cs:line 17\r\n   at Program.<Main>(String[] args)\r\n"
+    },
+    {
+      "state": {
+        "Status": "exited",
+        "Running": false,
+        "Paused": false,
+        "Restarting": false,
+        "OOMKilled": false,
+        "Dead": false,
+        "Pid": 0,
+        "ExitCode": 139,
+        "Error": "",
+        "StartedAt": "2026-11-16T18:47:03.734892107Z",
+        "FinishedAt": "2026-11-16T18:47:31.191169646Z",
+        "Health": {
+          "Status": "unhealthy",
+          "FailingStreak": 1,
+          "Log": [
+            {
+              "Start": "2026-11-16T18:47:11.463513699Z",
+              "End": "2026-11-16T18:47:15.578232314Z",
+              "ExitCode": 1,
+              "Output": ""
+            },
+            {
+              "Start": "2026-11-16T18:47:20.590619261Z",
+              "End": "2026-11-16T18:47:22.48507197Z",
+              "ExitCode": 1,
+              "Output": ""
+            },
+            {
+              "Start": "2026-11-16T18:47:27.506686493Z",
+              "End": "2026-11-16T18:47:28.420294635Z",
+              "ExitCode": 1,
+              "Output": ""
+            }
+          ]
+        }
+      },
+      "service": "borrowing",
+      "logs": "Unhandled exception. Npgsql.PostgresException (0x80004005): 57P03: the database system is starting up\r\n   at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)\r\n   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource<TResult>.GetResult(Int16 token)\r\n   at Npgsql.Internal.NpgsqlConnector.Authenticate(String username, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)\r\n   at Npgsql.Internal.NpgsqlConnector.<Open>g__OpenCore|213_1(NpgsqlConnector conn, SslMode sslMode, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken, Boolean isFirstAttempt)\r\n   at Npgsql.Internal.NpgsqlConnector.Open(NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)\r\n   at Npgsql.PoolingDataSource.OpenNewConnector(NpgsqlConnection conn, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)\r\n   at Npgsql.PoolingDataSource.<Get>g__RentAsync|33_0(NpgsqlConnection conn, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)\r\n   at Npgsql.NpgsqlConnection.<Open>g__OpenAsync|42_0(Boolean async, CancellationToken cancellationToken)\r\n   at Borrowing.Infrastructure.BorrowingMigrations.Apply(BorrowingDbContext db, CancellationToken ct) in /source/src/Services/Borrowing/Borrowing.Infrastructure/BorrowingMigrations.cs:line 11\r\n   at Borrowing.Infrastructure.BorrowingMigrations.Apply(BorrowingDbContext db, CancellationToken ct) in /source/src/Services/Borrowing/Borrowing.Infrastructure/BorrowingMigrations.cs:line 18\r\n   at Program.<Main>$(String[] args) in /source/src/Services/Borrowing/Borrowing.Api/Program.cs:line 17\r\n   at Program.<Main>$(String[] args) in /source/src/Services/Borrowing/Borrowing.Api/Program.cs:line 17\r\n   at Program.<Main>(String[] args)\r\n  Exception data:\r\n    Severity: FATAL\r\n    SqlState: 57P03\r\n    MessageText: the database system is starting up\r\n    File: postmaster.c\r\n    Line: 2356\r\n    Routine: ProcessStartupPacket\r\n"
+    },
+    {
+      "state": {
+        "Status": "exited",
+        "Running": false,
+        "Paused": false,
+        "Restarting": false,
+        "OOMKilled": false,
+        "Dead": false,
+        "Pid": 0,
+        "ExitCode": 139,
+        "Error": "",
+        "StartedAt": "2026-11-16T18:47:03.682204343Z",
+        "FinishedAt": "2026-11-16T18:47:31.013793422Z",
+        "Health": {
+          "Status": "unhealthy",
+          "FailingStreak": 1,
+          "Log": [
+            {
+              "Start": "2026-11-16T18:47:11.277665428Z",
+              "End": "2026-11-16T18:47:14.71195854Z",
+              "ExitCode": 1,
+              "Output": ""
+            },
+            {
+              "Start": "2026-11-16T18:47:19.717167985Z",
+              "End": "2026-11-16T18:47:21.120663902Z",
+              "ExitCode": 1,
+              "Output": ""
+            },
+            {
+              "Start": "2026-11-16T18:47:26.124598949Z",
+              "End": "2026-11-16T18:47:26.788028554Z",
+              "ExitCode": 1,
+              "Output": ""
+            }
+          ]
+        }
+      },
+      "service": "borrowing-worker",
+      "logs": "Unhandled exception. Npgsql.NpgsqlException (0x80004005): Failed to connect to 172.23.0.4:5432\r\n ---> System.Net.Sockets.SocketException (111): Connection refused\r\n   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)\r\n   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource.GetResult(Int16 token)\r\n   at System.Net.Sockets.Socket.<ConnectAsync>g__WaitForConnectWithCancellation|285_0(AwaitableSocketAsyncEventArgs saea, ValueTask connectTask, CancellationToken cancellationToken)\r\n   at Npgsql.TaskTimeoutAndCancellation.ExecuteAsync(Func`2 getTaskFunc, NpgsqlTimeout timeout, CancellationToken cancellationToken)\r\n   at Npgsql.Internal.NpgsqlConnector.ConnectAsync(NpgsqlTimeout timeout, CancellationToken cancellationToken)\r\n   at Npgsql.Internal.NpgsqlConnector.ConnectAsync(NpgsqlTimeout timeout, CancellationToken cancellationToken)\r\n   at Npgsql.Internal.NpgsqlConnector.RawOpen(SslMode sslMode, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken, Boolean isFirstAttempt)\r\n   at Npgsql.Internal.NpgsqlConnector.<Open>g__OpenCore|213_1(NpgsqlConnector conn, SslMode sslMode, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken, Boolean isFirstAttempt)\r\n   at Npgsql.Internal.NpgsqlConnector.Open(NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)\r\n   at Npgsql.PoolingDataSource.OpenNewConnector(NpgsqlConnection conn, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)\r\n   at Npgsql.PoolingDataSource.<Get>g__RentAsync|33_0(NpgsqlConnection conn, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)\r\n   at Npgsql.NpgsqlConnection.<Open>g__OpenAsync|42_0(Boolean async, CancellationToken cancellationToken)\r\n   at Borrowing.Infrastructure.BorrowingMigrations.Apply(BorrowingDbContext db, CancellationToken ct) in /source/src/Services/Borrowing/Borrowing.Infrastructure/BorrowingMigrations.cs:line 11\r\n   at Borrowing.Infrastructure.BorrowingMigrations.Apply(BorrowingDbContext db, CancellationToken ct) in /source/src/Services/Borrowing/Borrowing.Infrastructure/BorrowingMigrations.cs:line 18\r\n   at Program.<Main>$(String[] args) in /source/src/Workers/LabLend.Borrowing.Worker/Program.cs:line 23\r\n   at Program.<Main>$(String[] args) in /source/src/Workers/LabLend.Borrowing.Worker/Program.cs:line 23\r\n   at Program.<Main>(String[] args)\r\n"
+    },
+    {
+      "state": {
+        "Status": "exited",
+        "Running": false,
+        "Paused": false,
+        "Restarting": false,
+        "OOMKilled": false,
+        "Dead": false,
+        "Pid": 0,
+        "ExitCode": 139,
+        "Error": "",
+        "StartedAt": "2026-11-16T18:47:03.687995804Z",
+        "FinishedAt": "2026-11-16T18:47:31.009043001Z",
+        "Health": {
+          "Status": "unhealthy",
+          "FailingStreak": 1,
+          "Log": [
+            {
+              "Start": "2026-11-16T18:47:10.833769659Z",
+              "End": "2026-11-16T18:47:15.192431278Z",
+              "ExitCode": 1,
+              "Output": ""
+            },
+            {
+              "Start": "2026-11-16T18:47:20.195463017Z",
+              "End": "2026-11-16T18:47:22.487770983Z",
+              "ExitCode": 1,
+              "Output": ""
+            },
+            {
+              "Start": "2026-11-16T18:47:27.523045429Z",
+              "End": "2026-11-16T18:47:28.5326857Z",
+              "ExitCode": 1,
+              "Output": ""
+            }
+          ]
+        }
+      },
+      "service": "inventory",
+      "logs": "Unhandled exception. Npgsql.NpgsqlException (0x80004005): Failed to connect to 172.23.0.4:5432\r\n ---> System.Net.Sockets.SocketException (111): Connection refused\r\n   at Npgsql.Internal.NpgsqlConnector.Connect(NpgsqlTimeout timeout)\r\n   at Npgsql.Internal.NpgsqlConnector.Connect(NpgsqlTimeout timeout)\r\n   at Npgsql.Internal.NpgsqlConnector.RawOpen(SslMode sslMode, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken, Boolean isFirstAttempt)\r\n   at Npgsql.Internal.NpgsqlConnector.<Open>g__OpenCore|213_1(NpgsqlConnector conn, SslMode sslMode, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken, Boolean isFirstAttempt)\r\n   at Npgsql.Internal.NpgsqlConnector.Open(NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)\r\n   at Npgsql.UnpooledDataSource.Get(NpgsqlConnection conn, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)\r\n   at Npgsql.NpgsqlConnection.<Open>g__OpenAsync|42_0(Boolean async, CancellationToken cancellationToken)\r\n   at Npgsql.NpgsqlConnection.Open()\r\n   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenDbConnection(Boolean errorsExpected)\r\n   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternal(Boolean errorsExpected)\r\n   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.Open(Boolean errorsExpected)\r\n   at Npgsql.EntityFrameworkCore.PostgreSQL.Storage.Internal.NpgsqlDatabaseCreator.Exists(Boolean async, CancellationToken cancellationToken)\r\n   at Npgsql.EntityFrameworkCore.PostgreSQL.Storage.Internal.NpgsqlDatabaseCreator.Exists(Boolean async, CancellationToken cancellationToken)\r\n   at Npgsql.EntityFrameworkCore.PostgreSQL.Storage.Internal.NpgsqlDatabaseCreator.Exists()\r\n   at Microsoft.EntityFrameworkCore.Migrations.HistoryRepository.Exists()\r\n   at Microsoft.EntityFrameworkCore.Migrations.HistoryRepository.GetAppliedMigrations()\r\n   at Npgsql.EntityFrameworkCore.PostgreSQL.Migrations.Internal.NpgsqlMigrator.Migrate(String targetMigration)\r\n   at Microsoft.EntityFrameworkCore.RelationalDatabaseFacadeExtensions.Migrate(DatabaseFacade databaseFacade)\r\n   at Inventory.Infrastructure.DependencyInjection.MigrateInventoryDatabase(IServiceProvider services) in /source/src/Services/Inventory/Inventory.Infrastructure/DependencyInjection.cs:line 25\r\n   at Program.<Main>$(String[] args) in /source/src/Services/Inventory/Inventory.Host/Program.cs:line 20\r\n"
+    }
+  ],
+  "postgresTimeline": [
+    "waiting for server to start....2026-11-16 18:46:58.113 UTC [53] LOG:  starting PostgreSQL 16.16 on x86_64-pc-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit",
+    "2026-11-16 18:46:58.138 UTC [53] LOG:  listening on Unix socket \"/var/run/postgresql/.s.PGSQL.5432\"",
+    "2026-11-16 18:46:58.245 UTC [53] LOG:  database system is ready to accept connections",
+    "server started",
+    "2026-11-16 18:47:05.070 UTC [54] LOG:  shutting down",
+    "...2026-11-16 18:47:09.072 UTC [103] FATAL:  the database system is shutting down",
+    ".....2026-11-16 18:47:14.723 UTC [110] FATAL:  the database system is shutting down",
+    "server stopped",
+    "PostgreSQL init process complete; ready for start up.",
+    "2026-11-16 18:47:21.099 UTC [1] LOG:  starting PostgreSQL 16.16 on x86_64-pc-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit",
+    "2026-11-16 18:47:21.100 UTC [1] LOG:  listening on IPv4 address \"0.0.0.0\", port 5432",
+    "2026-11-16 18:47:21.100 UTC [1] LOG:  listening on IPv6 address \"::\", port 5432",
+    "2026-11-16 18:47:21.139 UTC [1] LOG:  listening on Unix socket \"/var/run/postgresql/.s.PGSQL.5432\"",
+    "2026-11-16 18:47:21.392 UTC [1] LOG:  database system is ready to accept connections"
+  ]
+}

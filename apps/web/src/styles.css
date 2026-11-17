@@ -44,3 +44,12 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
 .loan-list p,.notification-list p{overflow-wrap:anywhere}.notification-list article>div{min-width:0}
 @media(max-width:800px){.app-header nav{flex:1 0 100%;flex-wrap:wrap;white-space:normal;overflow:visible}}
 @media(max-width:540px){.notification-list article{flex-direction:column;gap:12px}.notification-list article button{align-self:flex-start}}
+/* Native modal keeps keyboard focus inside the review step and restores the triggering control. */
+.review-dialog { width: min(36rem, calc(100vw - 2rem)); max-height: 85vh; overflow: auto; border: 1px solid #cbd5e1; border-radius: 1rem; padding: 1.5rem; color: #172b3a; background: white; }
+.review-dialog::backdrop { background: rgb(15 23 42 / 45%); }
+.review-dialog .actions { margin-top: 1.5rem; }
+.review-dialog p { overflow-wrap: anywhere; }
+.equipment-image { width: 100%; max-height: 16rem; object-fit: contain; border-radius: .5rem; }
+
+.loan-equipment-list { display: flex; flex-wrap: wrap; gap: .5rem 1.25rem; list-style: none; padding: 0; margin: .75rem 0; }
+.loan-equipment-list li { overflow-wrap: anywhere; }

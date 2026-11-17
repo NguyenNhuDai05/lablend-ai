@@ -1,5 +1,9 @@
 # Identity API contract
 
+## Final compatible extension 2026-11-17
+
+Admin `GET /api/users` accepts optional `keyword` (trimmed, at most 100 characters), `role` (`STUDENT`, `LAB_STAFF`, `ADMIN`, exact case), and `isActive` (`true`/`false`). Keyword performs case-insensitive substring search on displayName/email across the whole database. `%`, `_` and backslash are literal input, not search wildcards. All filters apply before total/pagination; existing ordering and response shape are unchanged. Invalid filters return 400. All user list/detail/role/active operations retain server-side Admin authorization and last-admin protection. No Identity migration is required. React Admin uses these server filters and preserves them when changing pages.
+
 Implemented for Sprint 1 on .NET 8. OD-06 defaults accepted by the repository owner in this session; M3 consumer review remains pending. Public base URL is Gateway `http://localhost:5080` (Vite) or same-origin `/api` through web nginx on `http://localhost:3000`. No frontend implementation is included.
 
 ## Browser session

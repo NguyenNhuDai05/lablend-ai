@@ -1,6 +1,10 @@
-# Final Demo — M3 P0
+# Final Demo — LabLend core
 
 Prepared 2026-11-16. Target: about 10 minutes plus Q&A. This is a runnable defense script and rehearsal checklist, not a statement that all members have rehearsed or approved the submission. Gemini and dashboard are deferred by the user. Do not turn on billing or use paid services for this demo.
+
+## Final checkpoint 2026-11-17
+
+Use the [current acceptance](../testing/FINAL_PRODUCT_ACCEPTANCE.md), [C4/ERD](../architecture/FINAL_ARCHITECTURE.md) and [presenter/visual-review checklist](FINAL_DEFENSE_CHECKLIST.md). Run `Test-FinalPreflight.ps1`; prepare repeatable real accounts/equipment with `Initialize-DemoData.ps1` using local passwords; prove fresh deployment with `Test-CleanInstall.ps1`. The initial M3 packet below is retained and updated for the final flow. Automated gates do not replace human rehearsal.
 
 ## Preparation
 
@@ -37,17 +41,17 @@ The example URLs use the repository defaults (`WEB_PORT=3000`, `GATEWAY_PORT=508
 | 3. Background jobs | 60s | Four jobs: reserve-hold expiry, operation reconciliation, due-soon and overdue. Show actual test output and Notification entries from the private fixture; describe unique reminder keys. Do not edit the shared database clock or claim a 30-day timer fired live. |
 | 4. Broker | 75s | Business+Outbox commit atomically; publisher XADD; consumer group persists Notification+Inbox before XACK; pending reclaim and parking. Show real Redis outage/replay test evidence. Say “at least once”; duplicates are deduplicated by eventId. OD-04/05 and retention remain provisional. |
 | 5. gRPC | 75s | Staff approve→reserve all-or-nothing, handover→ON_LOAN, partial return DAMAGED→MAINTENANCE, remaining NORMAL→AVAILABLE. Show staff item IDs/history and real Inventory state. Stable operation ID, deadline/service credential, recovery on ambiguity. Explain the open historical-return/reservation-ID gap in v1. |
-| 6. Deployment | 60s | Show `docker compose ps`, gateway readiness/Swagger and web. All shared volumes stay intact. Existing-stack upgrade verification is distinct from M2 fresh-install acceptance T20. |
+| 6. Deployment | 60s | Show `docker compose ps`, gateway readiness/Swagger and web. All shared volumes stay intact. Existing-stack upgrade verification is distinct from the final fresh-clone T20 harness. |
 | 7. End-to-end | 180s | Student request→Staff approval/handover→Student approved/due/overdue notifications→mark read→Staff partial/full return→Student return notice. Also show pending owner cancellation, Student denied Staff/Admin, profile edit/password re-login, Admin last-active-admin 409 and reversible activation/role controls using authorized demo accounts. |
 
 ## Click sequence
 
 1. Guest: `/catalog` → search → detail → “Đăng nhập để mượn”. Login returns to `/loans/new?equipmentTypeId=...`.
-2. Student: choose quantity 2, enter purpose and future due date, submit once. Record loan ID. Open history and `/loans` status filter. A separate pending request demonstrates cancel confirmation.
+2. Student: choose quantity 2, enter purpose and future due date, open “Xem lại yêu cầu”, inspect and confirm once. Record loan ID. Open history and `/loans` status filter. A separate pending request demonstrates cancel confirmation.
 3. Staff: `/staff/loans` → exact loan → “Duyệt phiếu” → confirmation → “Bàn giao thiết bị” → confirmation. Check Inventory assets and movement history on the existing Staff pages.
 4. Student: `/notifications`, verify title and linked loan, mark read and observe badge. Polling can take 15 seconds; use “Tải lại” if needed. No synthetic messages are inserted.
-5. Staff: select only the first borrowed item as DAMAGED, submit return; confirm other item is still borrowed. Select remaining item NORMAL; loan becomes RETURNED. Student sees return notification.
-6. Admin: `/admin/users` pages/filter (filter applies to current page), user detail, controlled role/active actions. Avoid locking the actual presenters out. Last active admin operation is rejected by server; the private browser test proves 409 safely.
+5. Staff: select only the first borrowed item as DAMAGED, review the selected items/condition and confirm return; confirm other item is still borrowed. Select remaining item NORMAL; loan becomes RETURNED. Student sees return notification.
+6. Admin: `/admin/users` global name/email search and server role/active filters, user detail, controlled role/active actions. Avoid locking the actual presenters out. Last active admin operation is rejected by server; the private browser test proves 409 safely.
 7. Profile: edit display name. Password change ends the current local session and revokes refresh families; re-login. Previously issued access JWTs in other services can survive until their short expiry, so do not claim immediate global JWT invalidation.
 
 ## Failure handling and Q&A

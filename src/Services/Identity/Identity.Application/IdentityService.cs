@@ -133,10 +133,13 @@ public sealed class IdentityService(UserManager<ApplicationUser> users, IIdentit
         return true;
     }, ct);
 
-    public async Task<PagedResponse<CurrentUser>> List(int page, int size, CancellationToken ct)
+    public async Task<PagedResponse<CurrentUser>> List(int page, int size, CancellationToken ct, string? keyword = null, string? role = null, bool? isActive = null)
     {
         if (page < 1 || page > 1000000 || size is < 1 or > 100) throw new IdentityFailure(400, "Invalid pagination.");
-        var result = await repository.List(page, size, ct);
+        keyword = keyword?.Trim();
+        if (keyword?.Length > 100) throw new IdentityFailure(400, "Keyword must be at most 100 characters.");
+        if (role != null && role is not (Roles.Student or Roles.LabStaff or Roles.Admin)) throw new IdentityFailure(400, "Invalid role filter.");
+        var result = await repository.List(page, size, ct, keyword, role, isActive);
         var dtos = new List<CurrentUser>();
         foreach (var user in result.Users) dtos.Add(await Dto(user));
         return new(dtos, result.Total, page, size);

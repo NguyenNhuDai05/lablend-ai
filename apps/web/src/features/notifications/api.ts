@@ -12,7 +12,7 @@ export type Notification = {
 export type NotificationPage = { items: Notification[]; total: number; page: number; pageSize: number };
 
 export const notificationApi = {
-  list: (page: number, pageSize = 20, signal?: AbortSignal) => apiRequest<NotificationPage>(`/api/notifications?page=${page}&pageSize=${pageSize}`, { signal }),
+  list: (page: number, pageSize = 20, signal?: AbortSignal, aggregateId?: string) => apiRequest<NotificationPage>(`/api/notifications?page=${page}&pageSize=${pageSize}${aggregateId ? `&aggregateId=${encodeURIComponent(aggregateId)}` : ''}`, { signal }),
   markRead: (id: string) => apiRequest<Notification>(`/api/notifications/${id}/read`, { method: 'PATCH' }),
   unreadCount: (signal?: AbortSignal) => apiRequest<{ count: number }>('/api/notifications/unread-count', { signal }),
 };
