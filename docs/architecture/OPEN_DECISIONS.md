@@ -2,9 +2,9 @@
 
 ## Final technical checkpoint 2026-11-17
 
-Exact-source regression (71 backend/25 frontend, zero skips) and fresh Docker T20 now PASS; Catalog lookup, real Inventory gRPC, producer/consumer reminders, outage/replay and all three workflows are exercised. The older Sprint 1 note about a missing Catalog endpoint and pending execution below is historical. [Final acceptance and evidence](../testing/FINAL_PRODUCT_ACCEPTANCE.md) supersede execution status, while the human owner decisions remain **PENDING HUMAN REVIEW**. OD-04/05 and retention/archive/replay horizon are not closed by tests. Inventory v1 gaps/single-writer recovery assumption persist; independent owner-review PR #15 is still unmerged. No stream trim, shared data reset, breaking proto change or owner approval was introduced.
+Exact-source regression (71 backend/25 frontend, zero skips) and fresh Docker T20 now PASS; Catalog lookup, real Inventory gRPC, producer/consumer reminders, outage/replay and all three workflows are exercised. The older Sprint 1 note about a missing Catalog endpoint and pending execution below is historical. [Final acceptance and evidence](../testing/FINAL_PRODUCT_ACCEPTANCE.md) supersede execution status, while the human owner decisions remain **PENDING HUMAN REVIEW**. OD-04/05 and retention/archive/replay horizon are not closed by tests. Inventory v1 gaps/single-writer recovery assumption persist; M2 owner review is recorded in [INVENTORY_V1_REVIEW](../grpc/INVENTORY_V1_REVIEW.md) (PR #15), M1 sign-off pending. No stream trim, shared data reset, breaking proto change or owner approval was introduced.
 
-M3 P0 technical review (2026-11-16): [producer schema, mapper compatibility, retry/parking and retention audit](../events/M3_CONTRACT_REVIEW.md) added. OD-04/05 remain OPEN; no human owner signoff is asserted. Inventory v1 historical-return/reservation-ID gap below remains OPEN.
+M3 P0 technical review (2026-11-16): [producer schema, mapper compatibility, retry/parking and retention audit](../events/M3_CONTRACT_REVIEW.md) added. OD-04/05 remain OPEN; no human owner signoff is asserted. Inventory v1 historical-return/reservation-ID gap: M2 owner decision in [INVENTORY_V1_REVIEW](../grpc/INVENTORY_V1_REVIEW.md), M1 sign-off pending.
 
 ## Sprint 2 M1 consumer audit (2026-11-16)
 
@@ -14,13 +14,15 @@ OD-04/05 remain **PROVISIONAL / M3 review pending**: the producer will use the e
 
 v1 gap for M2 review: allocations omit reservation ID and historical return condition/time. Borrowing leaves ReservationId null and persists immutable staff return intent before RPC. Current asset status is not historical return evidence after another borrower or maintenance changes it. Recovery assumes reservation mutations originate from Borrowing; external command writers cannot be safely reconciled without additional contract evidence. No proto or M2 implementation change is made here.
 
+M2 owner decision (2026-11-16, [INVENTORY_V1_REVIEW](../grpc/INVENTORY_V1_REVIEW.md)): no v2. Reservation ID is not needed (`operation_id` + `loan_item_id` identify a reservation). Missing return condition/time is accepted for P0 because Borrowing replays only its immutable intent; an optional additive `return_condition`/`returned_at` and a server-side condition-conflict check are proposed for a separate PR. Borrowing is the only writer for its loan IDs. M1 sign-off pending.
+
 Các mục còn OPEN/PROPOSAL chưa thay thế review của người sở hữu. OD-06/OD-08 đã có implementation defaults được chủ repository chấp thuận trong phiên Sprint 1; review consumer M2/M3 vẫn pending. Không ghi là hai thành viên đã review khi chưa có bằng chứng.
 
 | ID | Quyết định cần chốt | Owner và reviewers | Điều kiện đóng |
 |---|---|---|---|
-| OD-01 | Inventory proto v1: UUID format, LoanItem 1 unit, quantity representation, availability scope | M2 owner; M1 consumer | **PROPOSED + implemented (M2), chờ M1 review**: UUID string, 1 LoanItem = 1 unit, quantity N = N items, availability loại RETIRED/LOST |
-| OD-02 | Reserve all-or-nothing, operationId/replay conflict, operation status, hold expiry, compensation | M2 + M1 | **PROPOSED + implemented (M2), chờ M1 review**: SKIP LOCKED all-or-nothing, SHA-256 payload hash → ALREADY_EXISTS, GetOperationStatus, không auto-expiry (Worker gọi Release); T28 còn lại |
-| OD-03 | gRPC service auth: reserved env credential vs short-lived service JWT; health allowance | M2 + M1 | **PROPOSED + implemented (M2), chờ M1 review**: static `INVENTORY_SERVICE_TOKEN` Bearer, health anonymous; T27 pass |
+| OD-01 | Inventory proto v1: UUID format, LoanItem 1 unit, quantity representation, availability scope | M2 owner; M1 consumer | **Implemented; M2 owner review xong ([INVENTORY_V1_REVIEW](../grpc/INVENTORY_V1_REVIEW.md)), chờ M1 ký**: UUID string, 1 LoanItem = 1 unit, quantity N = N items, availability loại RETIRED/LOST |
+| OD-02 | Reserve all-or-nothing, operationId/replay conflict, operation status, hold expiry, compensation | M2 + M1 | **Implemented; M2 owner review xong ([INVENTORY_V1_REVIEW](../grpc/INVENTORY_V1_REVIEW.md)), chờ M1 ký**: SKIP LOCKED all-or-nothing, SHA-256 payload hash → ALREADY_EXISTS, GetOperationStatus (`found=false` chỉ là snapshot: phải replay cùng operation_id), không auto-expiry (Worker gọi Release); T28 có evidence Gate B |
+| OD-03 | gRPC service auth: reserved env credential vs short-lived service JWT; health allowance | M2 + M1 | **Implemented; M2 owner review xong ([INVENTORY_V1_REVIEW](../grpc/INVENTORY_V1_REVIEW.md)), chờ M1 ký**: static `INVENTORY_SERVICE_TOKEN` Bearer, health anonymous; T27 pass. Token không định danh caller: Borrowing là writer duy nhất cho loan ID của nó |
 | OD-04 | Event envelope casing/time format/type names, payload cho 7 loan events | M1 producer + M3 consumer | JSON examples/schema và versioning review hai bên |
 | OD-05 | Stream fields, group, pending/retry/XAUTOCLAIM, max attempts/parking stream | M1 + M3 | Crash replay/duplicate/Redis-down test plan thống nhất |
 | OD-06 | Auth response, refresh transport, logout/revoke, frontend token handling | M1 + M3 | UX/auth contract và CORS/cookie/CSRF policy được thống nhất |

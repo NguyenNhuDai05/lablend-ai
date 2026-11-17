@@ -84,6 +84,51 @@ stateDiagram-v2
 
 OVERDUE is derived from DueAt and outstanding borrowed items. An uncertain RPC does not imply approval, handover or return success. Persisted operations block conflicting commands until reconciliation; UI shows the actual backend status and a correlation ID on errors. An APPROVING history entry is a real internal transition, displayed as work in progress.
 
+## Inventory asset and reservation state machines
+
+Each AssetUnit is one physical, serial-numbered unit. Staff change it through Inventory REST. Borrowing changes it only through gRPC, by moving the Reservation that binds one loan item to that unit.
+
+```mermaid
+stateDiagram-v2
+  [*] --> AVAILABLE: Staff creates unit
+  AVAILABLE --> MAINTENANCE: Staff starts maintenance
+  MAINTENANCE --> AVAILABLE: Staff completes maintenance
+  AVAILABLE --> RESERVED: ReserveAssets
+  RESERVED --> ON_LOAN: ConfirmHandover
+  RESERVED --> AVAILABLE: ReleaseReservations
+  ON_LOAN --> AVAILABLE: ReturnAssets NORMAL
+  ON_LOAN --> MAINTENANCE: ReturnAssets DAMAGED
+  ON_LOAN --> LOST: ReturnAssets LOST
+  AVAILABLE --> RETIRED: Staff retires
+  MAINTENANCE --> RETIRED: Staff retires
+  LOST --> RETIRED: Staff retires
+  RETIRED --> [*]
+```
+
+```mermaid
+stateDiagram-v2
+  [*] --> HELD: ReserveAssets
+  HELD --> HANDED_OVER: ConfirmHandover
+  HELD --> RELEASED: ReleaseReservations
+  HANDED_OVER --> RETURNED: ReturnAssets with condition
+  RETURNED --> [*]
+  RELEASED --> [*]
+```
+
+| Borrowing step | RPC | Reservation | AssetUnit |
+|---|---|---|---|
+| Approve | ReserveAssets | new HELD | AVAILABLE → RESERVED |
+| Hand over | ConfirmHandover | HELD → HANDED_OVER | RESERVED → ON_LOAN |
+| Return item | ReturnAssets | HANDED_OVER → RETURNED, condition stored | ON_LOAN → AVAILABLE / MAINTENANCE / LOST |
+| Compensation or pickup expiry | ReleaseReservations | HELD → RELEASED | RESERVED → AVAILABLE |
+
+- **Allocation is gRPC-only.** REST refuses maintenance, retirement or an equipment-type change on a RESERVED/ON_LOAN unit with 409. Maintenance starts only from AVAILABLE. LOST and RETIRED never return to AVAILABLE.
+- **At most one active reservation.** Partial unique indexes allow one HELD/HANDED_OVER reservation per unit and per loan item. ReserveAssets takes units with `FOR UPDATE SKIP LOCKED`, all-or-nothing per operation.
+- **Repeats are no-ops.** Repeating ConfirmHandover, ReturnAssets or ReleaseReservations on a reservation that already moved changes nothing. A released operation cannot be replayed; approving again needs a new `operation_id`.
+- **Maintenance records:** a DAMAGED return opens one (no `openedBy`, because gRPC carries no user). Completing maintenance or retiring the unit closes it.
+- **StockMovements:** every unit transition above writes exactly one row in the same transaction: `loanId` for gRPC, `changedBy` for REST. Refused transitions and no-op repeats write none ([M2-03 acceptance](../testing/M2_03_ACCEPTANCE.md)).
+- **Availability:** `available` counts AVAILABLE units; `total` excludes LOST and RETIRED.
+
 ## Interactions and recovery
 
 ```mermaid
@@ -108,7 +153,7 @@ sequenceDiagram
   S->>N: Read own notifications through Gateway
 ```
 
-Lost replies are reconciled using GetOperationStatus and immutable command intent. v1 has no reservation ID or historical return time/condition in its response. Borrowing preserves its own return intent and only supports the documented single-writer workflow. It never interprets current AssetUnit status as historical return evidence. Inventory owner review remains PR #15; no proto modification is included.
+Lost replies are reconciled using GetOperationStatus and immutable command intent. v1 has no reservation ID or historical return time/condition in its response. Borrowing preserves its own return intent and only supports the documented single-writer workflow. It never interprets current AssetUnit status as historical return evidence. Inventory owner review: [INVENTORY_V1_REVIEW](../grpc/INVENTORY_V1_REVIEW.md) (PR #15), M1 sign-off pending; no proto modification is included.
 
 ## Delivery contract and retention
 

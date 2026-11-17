@@ -1,0 +1,72 @@
+M2-03 live acceptance, 2026-11-16 (UTC+7), Docker Compose stack built from main 68933a1 (inventory/catalog/borrowing images rebuilt 23:41; identity/gateway build cache = unchanged source).
+All business calls go through the public Gateway (localhost:5080 for setup and UI, 127.0.0.1:5080 for collect: same listener, avoids a 2 s ::1 fallback per call).
+Login responses are not logged; access tokens stayed in memory. Accounts are local test accounts created in this environment.
+
+== Phase 1: setup (script, staff + student) ==
+23:44:02.993 POST /api/auth/login (local LAB_STAFF test account) -> 200, access token kept in memory only
+23:44:06.536 POST /api/auth/login (local STUDENT test account) -> 200, access token kept in memory only
+23:44:09.877 POST /api/categories (staff, m2-03-7357e41f)
+  > {"name":"M2-03 Quang học 1116234406","description":"Nghiệm thu M2-03"}
+  < 201 {"id":"d38b02b0-7bbc-41c5-8d29-d5c7c5ed6505","name":"M2-03 Quang học 1116234406","description":"Nghiệm thu M2-03","isActive":true,"createdAt":"2026-11-16T16:44:09.5563945+00:00","updatedAt":"2026-11-16T16:44:09.5564835+00:00"}
+23:44:12.289 POST /api/equipment-types (staff, m2-03-91584241)
+  > {"description":"Nghiệm thu M2-03","tags":["m2-03"],"specifications":"10x","categoryId":"d38b02b0-7bbc-41c5-8d29-d5c7c5ed6505","name":"M2-03 Kính lúp 1116234406"}
+  < 201 {"id":"54dd2ccd-0491-46e6-94bc-b28a57c8515b","categoryId":"d38b02b0-7bbc-41c5-8d29-d5c7c5ed6505","categoryName":"M2-03 Quang học 1116234406","name":"M2-03 Kính lúp 1116234406","description":"Nghiệm thu M2-03","specifications":"10x","tags":["m2-03"],"imageUrl":null,"isActive":true,"createdAt":"2026-11-16T16:44:12.2026755+00:00","updatedAt":"2026-11-16T16:44:12.2032624+00:00"}
+23:44:14.779 POST /api/inventory/assets (staff, m2-03-4e39d563)
+  > {"serialNumber":"M203-1116234406-A","location":"Phòng Lab 1","equipmentTypeId":"54dd2ccd-0491-46e6-94bc-b28a57c8515b"}
+  < 201 {"id":"fbd5c8ad-9bbb-40d3-8fdc-4790240e87a9","equipmentTypeId":"54dd2ccd-0491-46e6-94bc-b28a57c8515b","serialNumber":"M203-1116234406-A","location":"Phòng Lab 1","notes":null,"status":"AVAILABLE","createdAt":"2026-11-16T16:44:14.4604388+00:00","updatedAt":"2026-11-16T16:44:14.4605444+00:00"}
+23:44:16.887 POST /api/inventory/assets (staff, m2-03-4c124388)
+  > {"serialNumber":"M203-1116234406-B","location":"Phòng Lab 1","equipmentTypeId":"54dd2ccd-0491-46e6-94bc-b28a57c8515b"}
+  < 201 {"id":"c8f31330-71a1-4cbd-96db-ffbe4ad89d8c","equipmentTypeId":"54dd2ccd-0491-46e6-94bc-b28a57c8515b","serialNumber":"M203-1116234406-B","location":"Phòng Lab 1","notes":null,"status":"AVAILABLE","createdAt":"2026-11-16T16:44:16.8360039+00:00","updatedAt":"2026-11-16T16:44:16.8360067+00:00"}
+23:44:19.243 GET /api/inventory/availability?equipmentTypeIds=54dd2ccd-0491-46e6-94bc-b28a57c8515b (anonymous, m2-03-6f95fb88)
+  < 200 [{"equipmentTypeId":"54dd2ccd-0491-46e6-94bc-b28a57c8515b","available":2,"total":2}]
+23:44:21.381 POST /api/inventory/assets/c8f31330-71a1-4cbd-96db-ffbe4ad89d8c/maintenance (staff, m2-03-c5389234)
+  > {"reason":"M2-03 kiểm tra định kỳ"}
+  < 201 {"id":"8ae8c57c-85c9-47a1-875e-f1db867be86a","assetUnitId":"c8f31330-71a1-4cbd-96db-ffbe4ad89d8c","reason":"M2-03 kiểm tra định kỳ","openedBy":"05464e53-b3b1-40e1-81d2-9db4ea044667","openedAt":"2026-11-16T16:44:21.3390873+00:00","completedAt":null,"completedBy":null,"completionNotes":null}
+23:44:23.437 GET /api/inventory/availability?equipmentTypeIds=54dd2ccd-0491-46e6-94bc-b28a57c8515b (anonymous, m2-03-38a57745)
+  < 200 [{"equipmentTypeId":"54dd2ccd-0491-46e6-94bc-b28a57c8515b","available":1,"total":2}]
+23:44:25.524 POST /api/inventory/assets/c8f31330-71a1-4cbd-96db-ffbe4ad89d8c/maintenance/complete (staff, m2-03-364bf634)
+  > {"notes":"M2-03 đạt"}
+  < 200 {"id":"c8f31330-71a1-4cbd-96db-ffbe4ad89d8c","equipmentTypeId":"54dd2ccd-0491-46e6-94bc-b28a57c8515b","serialNumber":"M203-1116234406-B","location":"Phòng Lab 1","notes":null,"status":"AVAILABLE","createdAt":"2026-11-16T16:44:16.836003+00:00","updatedAt":"2026-11-16T16:44:25.5074858+00:00"}
+23:44:27.564 GET /api/inventory/availability?equipmentTypeIds=54dd2ccd-0491-46e6-94bc-b28a57c8515b (anonymous, m2-03-5ac9211b)
+  < 200 [{"equipmentTypeId":"54dd2ccd-0491-46e6-94bc-b28a57c8515b","available":2,"total":2}]
+23:44:30.282 POST /api/loans (student, m2-03-3bc4d4eb)
+  > {"dueAt":"2026-11-19T16:44:27.5646947Z","items":[{"equipmentTypeId":"54dd2ccd-0491-46e6-94bc-b28a57c8515b"}],"purpose":"Nghiệm thu M2-03: mượn kính lúp cho thực hành quang học."}
+  < 201 {"id":"25e2b216-b4d0-4cb4-854f-dbeac8e9688c","studentId":"1877995a-720f-48e9-a313-eea3c1228a1a","purpose":"Nghiệm thu M2-03: mượn kính lúp cho thực hành quang học.","status":"PENDING","isOverdue":false,"requestedAt":"2026-11-16T16:44:29.7886036+00:00","dueAt":"2026-11-19T16:44:27.5646947+00:00","reviewedBy":null,"reviewedAt":null,"rejectionReason":null,"createdAt":"2026-11-16T16:44:29.7886036+00:00","updatedAt":"2026-11-16T16:44:29.7886036+00:00","items":[{"id":"5d997f9b-b4c5-451e-b7d9-79c999e8fb75","equipmentTypeId":"54dd2ccd-0491-46e6-94bc-b28a57c8515b","assetUnitId":null,"reservationId":null,"itemStatus":"REQUESTED","returnCondition":null,"returnedAt":null}],"history":[{"id":"abdb9399-1036-45bf-ba74-e17188ac16bd","actorUserId":"1877995a-720f-48e9-a313-eea3c1228a1a","action":"SUBMITTED","fromStatus":null,"toStatus":"PENDING","occurredAt":"2026-11-16T16:44:29.7886036+00:00","note":null}],"handedOverBy":null,"handedOverAt":null}
+
+== Phase 2: Staff web UI (localhost:5173, real cookie session, no token in localStorage/sessionStorage/JS cookies) ==
+Network log from the browser (Authorization redacted by the browser tool; OPTIONS = CORS preflight):
+POST /api/loans/25e2b216-b4d0-4cb4-854f-dbeac8e9688c/approve  -> 200 OK  (UI shows "Đã duyệt", item "Đã giữ chỗ", unit fbd5c8ad-9bbb-40d3-8fdc-4790240e87a9)
+POST /api/loans/25e2b216-b4d0-4cb4-854f-dbeac8e9688c/handover -> 200 OK  (UI shows "Đang mượn")
+POST /api/loans/25e2b216-b4d0-4cb4-854f-dbeac8e9688c/returns  -> 200 OK  body condition DAMAGED (UI shows "Đã trả", item "Hư hỏng / DAMAGED", returned 23:46:04)
+GET  /api/loans/25e2b216-b4d0-4cb4-854f-dbeac8e9688c          -> 200 OK  after every command (UI reload)
+
+Staff UI, Kho thiết bị -> M203-1116234406-A -> Lịch sử (dialog text after phase 3):
+  23:46 16/11/26 · Bảo trì → Sẵn sàng          Nhân viên 05464e53
+  23:46 16/11/26 · Đang cho mượn → Bảo trì     Phiếu mượn 25e2b216
+  23:45 16/11/26 · Đã giữ chỗ → Đang cho mượn  Phiếu mượn 25e2b216
+  23:45 16/11/26 · Sẵn sàng → Đã giữ chỗ       Phiếu mượn 25e2b216
+  23:44 16/11/26 · Khởi tạo: Sẵn sàng          Nhân viên 05464e53
+  Bảo trì: 23:46 16/11/26 · Returned DAMAGED from loan 25e2b216-b4d0-4cb4-854f-dbeac8e9688c. · Hoàn tất 23:46 · M2-03 đã sửa sau khi trả DAMAGED
+
+== Phase 3: collect (script) ==
+23:46:57.880 POST /api/auth/login (local LAB_STAFF test account) -> 200, access token kept in memory only
+23:46:57.987 POST /api/auth/login (local STUDENT test account) -> 200, access token kept in memory only
+23:46:58.046 GET /api/loans/25e2b216-b4d0-4cb4-854f-dbeac8e9688c (staff, m2-03-08a8986c)
+  < 200 {"id":"25e2b216-b4d0-4cb4-854f-dbeac8e9688c","studentId":"1877995a-720f-48e9-a313-eea3c1228a1a","purpose":"Nghiệm thu M2-03: mượn kính lúp cho thực hành quang học.","status":"RETURNED","isOverdue":false,"requestedAt":"2026-11-16T16:44:29.788603+00:00","dueAt":"2026-11-19T16:44:27.564694+00:00","reviewedBy":"05464e53-b3b1-40e1-81d2-9db4ea044667","reviewedAt":"2026-11-16T16:45:38.480833+00:00","rejectionReason":null,"createdAt":"2026-11-16T16:44:29.788603+00:00","updatedAt":"2026-11-16T16:46:04.165264+00:00","items":[{"id":"5d997f9b-b4c5-451e-b7d9-79c999e8fb75","equipmentTypeId":"54dd2ccd-0491-46e6-94bc-b28a57c8515b","assetUnitId":"fbd5c8ad-9bbb-40d3-8fdc-4790240e87a9","reservationId":null,"itemStatus":"DAMAGED","returnCondition":"DAMAGED","returnedAt":"2026-11-16T16:46:04.165264+00:00"}],"history":[{"id":"abdb9399-1036-45bf-ba74-e17188ac16bd","actorUserId":"1877995a-720f-48e9-a313-eea3c1228a1a","action":"SUBMITTED","fromStatus":null,"toStatus":"PENDING","occurredAt":"2026-11-16T16:44:29.788603+00:00","note":null},{"id":"59df7e71-658c-44a7-87bd-7b0f145d2c58","actorUserId":"05464e53-b3b1-40e1-81d2-9db4ea044667","action":"APPROVING","fromStatus":"PENDING","toStatus":"APPROVING","occurredAt":"2026-11-16T16:45:38.147163+00:00","note":null},{"id":"fa8fdf7f-7517-4912-b75a-14aaf53337c6","actorUserId":"05464e53-b3b1-40e1-81d2-9db4ea044667","action":"APPROVED","fromStatus":"APPROVING","toStatus":"APPROVED","occurredAt":"2026-11-16T16:45:38.480833+00:00","note":null},{"id":"3f316cf3-83d3-4da1-80a4-edb94ea0cfc3","actorUserId":"05464e53-b3b1-40e1-81d2-9db4ea044667","action":"HANDED_OVER","fromStatus":"APPROVED","toStatus":"BORROWED","occurredAt":"2026-11-16T16:45:50.039692+00:00","note":null},{"id":"b7e4b598-9ba9-41a0-a3d8-08dffbced794","actorUserId":"05464e53-b3b1-40e1-81d2-9db4ea044667","action":"RETURNED","fromStatus":"BORROWED","toStatus":"RETURNED","occurredAt":"2026-11-16T16:46:04.165264+00:00","note":null}],"handedOverBy":"05464e53-b3b1-40e1-81d2-9db4ea044667","handedOverAt":"2026-11-16T16:45:50.039692+00:00"}
+23:46:58.084 GET /api/inventory/availability?equipmentTypeIds=54dd2ccd-0491-46e6-94bc-b28a57c8515b (anonymous, m2-03-aadcdb49)
+  < 200 [{"equipmentTypeId":"54dd2ccd-0491-46e6-94bc-b28a57c8515b","available":1,"total":2}]
+23:46:58.101 GET /api/inventory/assets/fbd5c8ad-9bbb-40d3-8fdc-4790240e87a9/maintenance (staff, m2-03-5d8fe0bf)
+  < 200 [{"id":"bc95f86a-5038-4c32-bd9f-5f59c89cd51b","assetUnitId":"fbd5c8ad-9bbb-40d3-8fdc-4790240e87a9","reason":"Returned DAMAGED from loan 25e2b216-b4d0-4cb4-854f-dbeac8e9688c.","openedBy":null,"openedAt":"2026-11-16T16:46:04.156956+00:00","completedAt":null,"completedBy":null,"completionNotes":null}]
+23:46:58.132 GET /api/inventory/assets/fbd5c8ad-9bbb-40d3-8fdc-4790240e87a9/movements (student, m2-03-20688edc)
+  < 403 {"type":"https://tools.ietf.org/html/rfc9110#section-15.5.4","title":"Forbidden","status":403,"correlationId":"m2-03-20688edc","code":"FORBIDDEN"}
+23:46:58.172 POST /api/inventory/assets/fbd5c8ad-9bbb-40d3-8fdc-4790240e87a9/maintenance/complete (staff, m2-03-1659a546)
+  > {"notes":"M2-03 đã sửa sau khi trả DAMAGED"}
+  < 200 {"id":"fbd5c8ad-9bbb-40d3-8fdc-4790240e87a9","equipmentTypeId":"54dd2ccd-0491-46e6-94bc-b28a57c8515b","serialNumber":"M203-1116234406-A","location":"Phòng Lab 1","notes":null,"status":"AVAILABLE","createdAt":"2026-11-16T16:44:14.460438+00:00","updatedAt":"2026-11-16T16:46:58.1648161+00:00"}
+23:46:58.194 DELETE /api/inventory/assets/c8f31330-71a1-4cbd-96db-ffbe4ad89d8c (staff, m2-03-6441a405)
+  < 204 
+23:46:58.206 GET /api/inventory/availability?equipmentTypeIds=54dd2ccd-0491-46e6-94bc-b28a57c8515b (anonymous, m2-03-53f5658f)
+  < 200 [{"equipmentTypeId":"54dd2ccd-0491-46e6-94bc-b28a57c8515b","available":1,"total":1}]
+23:46:58.216 GET /api/inventory/assets/fbd5c8ad-9bbb-40d3-8fdc-4790240e87a9/movements (staff, m2-03-c4a13313)
+  < 200 [{"id":40,"assetUnitId":"fbd5c8ad-9bbb-40d3-8fdc-4790240e87a9","fromStatus":"MAINTENANCE","toStatus":"AVAILABLE","loanId":null,"changedBy":"05464e53-b3b1-40e1-81d2-9db4ea044667","occurredAt":"2026-11-16T16:46:58.164815+00:00"},{"id":39,"assetUnitId":"fbd5c8ad-9bbb-40d3-8fdc-4790240e87a9","fromStatus":"ON_LOAN","toStatus":"MAINTENANCE","loanId":"25e2b216-b4d0-4cb4-854f-dbeac8e9688c","changedBy":null,"occurredAt":"2026-11-16T16:46:04.15693+00:00"},{"id":38,"assetUnitId":"fbd5c8ad-9bbb-40d3-8fdc-4790240e87a9","fromStatus":"RESERVED","toStatus":"ON_LOAN","loanId":"25e2b216-b4d0-4cb4-854f-dbeac8e9688c","changedBy":null,"occurredAt":"2026-11-16T16:45:50.03194+00:00"},{"id":37,"assetUnitId":"fbd5c8ad-9bbb-40d3-8fdc-4790240e87a9","fromStatus":"AVAILABLE","toStatus":"RESERVED","loanId":"25e2b216-b4d0-4cb4-854f-dbeac8e9688c","changedBy":null,"occurredAt":"2026-11-16T16:45:38.397451+00:00"},{"id":33,"assetUnitId":"fbd5c8ad-9bbb-40d3-8fdc-4790240e87a9","fromStatus":null,"toStatus":"AVAILABLE","loanId":null,"changedBy":"05464e53-b3b1-40e1-81d2-9db4ea044667","occurredAt":"2026-11-16T16:44:14.460889+00:00"}]
+23:46:58.226 GET /api/inventory/assets/c8f31330-71a1-4cbd-96db-ffbe4ad89d8c/movements (staff, m2-03-bbbf0309)
+  < 200 [{"id":41,"assetUnitId":"c8f31330-71a1-4cbd-96db-ffbe4ad89d8c","fromStatus":"AVAILABLE","toStatus":"RETIRED","loanId":null,"changedBy":"05464e53-b3b1-40e1-81d2-9db4ea044667","occurredAt":"2026-11-16T16:46:58.18786+00:00"},{"id":36,"assetUnitId":"c8f31330-71a1-4cbd-96db-ffbe4ad89d8c","fromStatus":"MAINTENANCE","toStatus":"AVAILABLE","loanId":null,"changedBy":"05464e53-b3b1-40e1-81d2-9db4ea044667","occurredAt":"2026-11-16T16:44:25.507484+00:00"},{"id":35,"assetUnitId":"c8f31330-71a1-4cbd-96db-ffbe4ad89d8c","fromStatus":"AVAILABLE","toStatus":"MAINTENANCE","loanId":null,"changedBy":"05464e53-b3b1-40e1-81d2-9db4ea044667","occurredAt":"2026-11-16T16:44:21.338927+00:00"},{"id":34,"assetUnitId":"c8f31330-71a1-4cbd-96db-ffbe4ad89d8c","fromStatus":null,"toStatus":"AVAILABLE","loanId":null,"changedBy":"05464e53-b3b1-40e1-81d2-9db4ea044667","occurredAt":"2026-11-16T16:44:16.836007+00:00"}]

@@ -1,0 +1,70 @@
+M2-03 read-only PostgreSQL evidence, 2026-11-16 23:47 (UTC+7). Each psql session runs SET default_transaction_read_only = on first; no row was written by these queries.
+Timestamps are UTC. Inventory and Borrowing are separate databases; the timeline is compared by time, never joined.
+
+-- inventory_db | StockMovements of both units (Id = write order)
+SELECT m."Id", u."SerialNumber", coalesce(m."FromStatus", '-') || ' -> ' || m."ToStatus" AS change, m."LoanId", m."ChangedBy", m."OccurredAt"
+FROM "StockMovements" m JOIN "AssetUnits" u ON u."Id" = m."AssetUnitId" WHERE m."AssetUnitId" IN ('fbd5c8ad-9bbb-40d3-8fdc-4790240e87a9','c8f31330-71a1-4cbd-96db-ffbe4ad89d8c') ORDER BY m."Id";
+ Id |   SerialNumber    |          change          |                LoanId                |              ChangedBy               |          OccurredAt           
+----+-------------------+--------------------------+--------------------------------------+--------------------------------------+-------------------------------
+ 33 | M203-1116234406-A | - -> AVAILABLE           |                                      | 05464e53-b3b1-40e1-81d2-9db4ea044667 | 2026-11-16 16:44:14.460889+00
+ 34 | M203-1116234406-B | - -> AVAILABLE           |                                      | 05464e53-b3b1-40e1-81d2-9db4ea044667 | 2026-11-16 16:44:16.836007+00
+ 35 | M203-1116234406-B | AVAILABLE -> MAINTENANCE |                                      | 05464e53-b3b1-40e1-81d2-9db4ea044667 | 2026-11-16 16:44:21.338927+00
+ 36 | M203-1116234406-B | MAINTENANCE -> AVAILABLE |                                      | 05464e53-b3b1-40e1-81d2-9db4ea044667 | 2026-11-16 16:44:25.507484+00
+ 37 | M203-1116234406-A | AVAILABLE -> RESERVED    | 25e2b216-b4d0-4cb4-854f-dbeac8e9688c |                                      | 2026-11-16 16:45:38.397451+00
+ 38 | M203-1116234406-A | RESERVED -> ON_LOAN      | 25e2b216-b4d0-4cb4-854f-dbeac8e9688c |                                      | 2026-11-16 16:45:50.03194+00
+ 39 | M203-1116234406-A | ON_LOAN -> MAINTENANCE   | 25e2b216-b4d0-4cb4-854f-dbeac8e9688c |                                      | 2026-11-16 16:46:04.15693+00
+ 40 | M203-1116234406-A | MAINTENANCE -> AVAILABLE |                                      | 05464e53-b3b1-40e1-81d2-9db4ea044667 | 2026-11-16 16:46:58.164815+00
+ 41 | M203-1116234406-B | AVAILABLE -> RETIRED     |                                      | 05464e53-b3b1-40e1-81d2-9db4ea044667 | 2026-11-16 16:46:58.18786+00
+(9 rows)
+
+-- inventory_db | Reservation and reserve operation of the loan
+SELECT r."OperationId", r."LoanItemId", r."AssetUnitId", r."Status", r."ReturnCondition", r."CreatedAt", r."UpdatedAt", o."CreatedAt" AS "OperationCreatedAt"
+FROM "Reservations" r JOIN "ReserveOperations" o ON o."OperationId" = r."OperationId" WHERE r."LoanId" = '25e2b216-b4d0-4cb4-854f-dbeac8e9688c';
+             OperationId              |              LoanItemId              |             AssetUnitId              |  Status  | ReturnCondition |           CreatedAt           |           UpdatedAt           |      OperationCreatedAt       
+--------------------------------------+--------------------------------------+--------------------------------------+----------+-----------------+-------------------------------+-------------------------------+-------------------------------
+ 0fb68413-48df-4a85-ac8c-5b50f2224c6e | 5d997f9b-b4c5-451e-b7d9-79c999e8fb75 | fbd5c8ad-9bbb-40d3-8fdc-4790240e87a9 | RETURNED | DAMAGED         | 2026-11-16 16:45:38.397288+00 | 2026-11-16 16:46:04.156947+00 | 2026-11-16 16:45:38.356104+00
+(1 row)
+
+-- inventory_db | Maintenance records of both units
+SELECT "AssetUnitId", "Reason", "OpenedBy", "OpenedAt", "CompletedBy", "CompletedAt", "CompletionNotes" FROM "MaintenanceRecords" WHERE "AssetUnitId" IN ('fbd5c8ad-9bbb-40d3-8fdc-4790240e87a9','c8f31330-71a1-4cbd-96db-ffbe4ad89d8c') ORDER BY "OpenedAt";
+             AssetUnitId              |                              Reason                              |               OpenedBy               |           OpenedAt            |             CompletedBy              |          CompletedAt          |         CompletionNotes          
+--------------------------------------+------------------------------------------------------------------+--------------------------------------+-------------------------------+--------------------------------------+-------------------------------+----------------------------------
+ c8f31330-71a1-4cbd-96db-ffbe4ad89d8c | M2-03 kiểm tra định kỳ                                           | 05464e53-b3b1-40e1-81d2-9db4ea044667 | 2026-11-16 16:44:21.339087+00 | 05464e53-b3b1-40e1-81d2-9db4ea044667 | 2026-11-16 16:44:25.516634+00 | M2-03 đạt
+ fbd5c8ad-9bbb-40d3-8fdc-4790240e87a9 | Returned DAMAGED from loan 25e2b216-b4d0-4cb4-854f-dbeac8e9688c. |                                      | 2026-11-16 16:46:04.156956+00 | 05464e53-b3b1-40e1-81d2-9db4ea044667 | 2026-11-16 16:46:58.166055+00 | M2-03 đã sửa sau khi trả DAMAGED
+(2 rows)
+
+-- inventory_db | Current units
+SELECT "Id", "SerialNumber", "Status" FROM "AssetUnits" WHERE "Id" IN ('fbd5c8ad-9bbb-40d3-8fdc-4790240e87a9','c8f31330-71a1-4cbd-96db-ffbe4ad89d8c') ORDER BY "SerialNumber";
+                  Id                  |   SerialNumber    |  Status   
+--------------------------------------+-------------------+-----------
+ fbd5c8ad-9bbb-40d3-8fdc-4790240e87a9 | M203-1116234406-A | AVAILABLE
+ c8f31330-71a1-4cbd-96db-ffbe4ad89d8c | M203-1116234406-B | RETIRED
+(2 rows)
+
+-- borrowing_db | Loan history
+SELECT "Action", "FromStatus", "ToStatus", "ActorUserId", "OccurredAt" FROM "LoanHistories" WHERE "LoanRequestId" = '25e2b216-b4d0-4cb4-854f-dbeac8e9688c' ORDER BY "OccurredAt", "Id";
+   Action    | FromStatus | ToStatus  |             ActorUserId              |          OccurredAt           
+-------------+------------+-----------+--------------------------------------+-------------------------------
+ SUBMITTED   |            | PENDING   | 1877995a-720f-48e9-a313-eea3c1228a1a | 2026-11-16 16:44:29.788603+00
+ APPROVING   | PENDING    | APPROVING | 05464e53-b3b1-40e1-81d2-9db4ea044667 | 2026-11-16 16:45:38.147163+00
+ APPROVED    | APPROVING  | APPROVED  | 05464e53-b3b1-40e1-81d2-9db4ea044667 | 2026-11-16 16:45:38.480833+00
+ HANDED_OVER | APPROVED   | BORROWED  | 05464e53-b3b1-40e1-81d2-9db4ea044667 | 2026-11-16 16:45:50.039692+00
+ RETURNED    | BORROWED   | RETURNED  | 05464e53-b3b1-40e1-81d2-9db4ea044667 | 2026-11-16 16:46:04.165264+00
+(5 rows)
+
+-- borrowing_db | Inventory operations (durable intent before each RPC)
+SELECT "OperationType", "OperationId", "State", "RetryCount", "LastError", "StartedAt", "CompletedAt" FROM "InventoryOperations" WHERE "LoanId" = '25e2b216-b4d0-4cb4-854f-dbeac8e9688c' ORDER BY "StartedAt";
+ OperationType |             OperationId              |   State   | RetryCount | LastError |           StartedAt           |          CompletedAt          
+---------------+--------------------------------------+-----------+------------+-----------+-------------------------------+-------------------------------
+ APPROVE       | 0fb68413-48df-4a85-ac8c-5b50f2224c6e | COMPLETED |          0 |           | 2026-11-16 16:45:38.144856+00 | 2026-11-16 16:45:38.481114+00
+ HANDOVER      | fb6347ec-f4d4-4f00-bb94-5dfe253f9025 | COMPLETED |          0 |           | 2026-11-16 16:45:49.993695+00 | 2026-11-16 16:45:50.040105+00
+ RETURN        | 4db78a53-2589-4274-ad6f-50e59579756f | COMPLETED |          0 |           | 2026-11-16 16:46:04.12824+00  | 2026-11-16 16:46:04.165945+00
+(3 rows)
+
+-- borrowing_db | Loan items and loan
+SELECT i."Id", i."AssetUnitId", i."ReservationId", i."ItemStatus", i."ReturnCondition", i."ReturnedAt", l."Status", l."ApprovalOperationId", l."ReviewedAt", l."HandedOverAt"
+FROM "LoanItems" i JOIN "LoanRequests" l ON l."Id" = i."LoanRequestId" WHERE l."Id" = '25e2b216-b4d0-4cb4-854f-dbeac8e9688c';
+                  Id                  |             AssetUnitId              | ReservationId | ItemStatus | ReturnCondition |          ReturnedAt           |  Status  |         ApprovalOperationId          |          ReviewedAt           |         HandedOverAt          
+--------------------------------------+--------------------------------------+---------------+------------+-----------------+-------------------------------+----------+--------------------------------------+-------------------------------+-------------------------------
+ 5d997f9b-b4c5-451e-b7d9-79c999e8fb75 | fbd5c8ad-9bbb-40d3-8fdc-4790240e87a9 |               | DAMAGED    | DAMAGED         | 2026-11-16 16:46:04.165264+00 | RETURNED | 0fb68413-48df-4a85-ac8c-5b50f2224c6e | 2026-11-16 16:45:38.480833+00 | 2026-11-16 16:45:50.039692+00
+(1 row)

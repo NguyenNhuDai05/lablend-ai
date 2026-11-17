@@ -1,0 +1,25 @@
+M2-03 regression test, 2026-11-16 23:42 (UTC+7), source = main 68933a1 + new test file only.
+Command: LABLEND_POSTGRES_TESTS=1 dotnet test tests/Integration/LabLend.Sprint1.IntegrationTests -c Release --no-build --filter "FullyQualifiedName~M2LoanStockMovementTests"
+Fixture: task-owned Docker Compose project lablend-s1-test-<random> with generated passwords; real Identity, Catalog, Inventory (HTTP/2 gRPC) and Borrowing executables on their own databases. No team database or volume used; 0 lablend-s1-test containers left afterwards.
+Timeline printed by the test (UTC): unit created | APPROVING | AVAILABLE->RESERVED | APPROVED | RESERVED->ON_LOAN | HANDED_OVER | ON_LOAN->MAINTENANCE | item returnedAt | MAINTENANCE->AVAILABLE
+
+Test run for D:\Project\FPT\lablend-ai\tests\Integration\LabLend.Sprint1.IntegrationTests\bin\Release\net8.0\LabLend.Sprint1.IntegrationTests.dll (.NETCoreApp,Version=v8.0)
+Passed LabLend.Sprint1.IntegrationTests.M2LoanStockMovementTests.Real_loan_writes_one_movement_per_transition_inside_its_loan_step_and_availability_follows [35 s]
+PASS M2-03: loan 347013bd-5211-49a3-b3a5-a617ea9b0385, unit 96326741-5899-446d-b724-d545a6f4501e: 16:42:44.819217 | 16:42:47.338023 | 16:42:47.811765 | 16:42:47.980881 | 16:42:48.162311 | 16:42:48.178601 | 16:42:48.374356 | 16:42:48.417153 | 16:42:48.469417
+Test Run Successful.
+Total tests: 1
+Passed: 1
+Total time: 46.8456 Seconds
+
+Second run, 2026-11-16 23:5x (UTC+7): same filter plus MemberIntegrationTests and Sprint2LifecycleTests (one shared fixture).
+Command: LABLEND_POSTGRES_TESTS=1 dotnet test tests/Integration/LabLend.Sprint1.IntegrationTests -c Release --no-build --filter "FullyQualifiedName~M2LoanStockMovementTests|FullyQualifiedName~MemberIntegrationTests|FullyQualifiedName~Sprint2LifecycleTests"
+
+Test run for D:\Project\FPT\lablend-ai\tests\Integration\LabLend.Sprint1.IntegrationTests\bin\Release\net8.0\LabLend.Sprint1.IntegrationTests.dll (.NETCoreApp,Version=v8.0)
+Passed LabLend.Sprint1.IntegrationTests.Sprint2LifecycleTests.GateA_real_JWT_REST_to_HTTP2_grpc_full_lifecycle_atomicity_and_competition [15 s]
+Passed LabLend.Sprint1.IntegrationTests.MemberIntegrationTests.Real_identity_staff_catalog_inventory_and_borrowing_interoperate_through_gateway [15 s]
+Passed LabLend.Sprint1.IntegrationTests.M2LoanStockMovementTests.Real_loan_writes_one_movement_per_transition_inside_its_loan_step_and_availability_follows [12 s]
+Test Run Successful.
+Total tests: 3
+Passed: 3
+Total time: 51.6394 Seconds
+Leftover lablend-s1-test containers: 0
