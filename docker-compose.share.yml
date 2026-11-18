@@ -1,0 +1,18 @@
+# Temporary public demo link through a Cloudflare Quick Tunnel (free, no account).
+# Use scripts/Share-Web.ps1; it starts the tunnel, reads the random https URL and
+# lets Identity accept sign-ins from that origin. Nothing else is opened: web and
+# Gateway stay bound to 127.0.0.1 and the tunnel only reaches the web container.
+services:
+  tunnel:
+    image: "cloudflare/cloudflared:2025.9.1"
+    command: ["tunnel", "--no-autoupdate", "--url", "http://web:8080"]
+    depends_on:
+      web:
+        condition: "service_healthy"
+    networks:
+      - "edge"
+    restart: "unless-stopped"
+  identity:
+    environment:
+      # Refresh/logout cookies are checked against this origin (must be https).
+      SessionCookie__AllowedOrigins__2: "${PUBLIC_ORIGIN:-http://localhost:5173}"
