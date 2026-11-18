@@ -1,0 +1,73 @@
+{
+  "environment": "lablend-gemini-live-572cee811d",
+  "webUrl": "http://localhost:61999",
+  "gatewayUrl": "http://localhost:61998",
+  "mocked": false,
+  "configuredModel": "gemini-3.5-flash-lite",
+  "generationRequests": 1,
+  "steps": {
+    "testDataIsolation": {
+      "status": "PASS",
+      "evidence": "Separate Docker project, databases, credentials and new test accounts; no production writes."
+    },
+    "authorization": {
+      "status": "PASS",
+      "evidence": "Anonymous 401; JWT LAB_STAFF and ADMIN 403 before provider invocation."
+    },
+    "catalog": {
+      "status": "PASS",
+      "evidence": "5 actual active records from isolated Catalog REST/PostgreSQL, not mock responses."
+    },
+    "studentLogin": {
+      "status": "PASS",
+      "evidence": "Real Identity login in the browser; JWT retained only in memory."
+    },
+    "formValidation": {
+      "status": "PASS",
+      "evidence": "Empty purpose disables submit; valid non-personal experiment description entered."
+    },
+    "loading": {
+      "status": "PASS",
+      "evidence": "Observed analyzing state during the live request."
+    },
+    "recommendationApi": {
+      "status": "PASS",
+      "evidence": "HTTP 201; 4 validated results, model gemini-3.5-flash-lite."
+    },
+    "businessResult": {
+      "status": "PASS",
+      "evidence": "Actual Gemini choices belong to the real Catalog; metadata matches Catalog and stock matches Inventory REST."
+    },
+    "frontendResults": {
+      "status": "PASS",
+      "evidence": "Live backend result rendered by production Docker frontend, no mocked cards."
+    },
+    "historyOwnership": {
+      "status": "PASS",
+      "evidence": "Owner history contains the session; separate real Student gets 404 detail and empty own history."
+    },
+    "multiSelect": {
+      "status": "PASS",
+      "evidence": "3 actual Gemini equipment types selected."
+    },
+    "loanWorkflow": {
+      "status": "PASS",
+      "evidence": "Purpose/types prefilled, quantity and due date edited, explicit review before exactly one real Borrowing POST, HTTP 201, detail and Student list verified."
+    },
+    "historyUi": {
+      "status": "PASS",
+      "evidence": "Saved live session visible in Student history UI."
+    }
+  },
+  "recommendationId": "2d75f87e-8e56-49c0-a502-e26dd5b664ea",
+  "loanId": "387699cf-f600-4de8-9630-bd13c3a8a780",
+  "recommendationHttpStatus": 201,
+  "correlationId": "3c4e4f67-0897-4e65-b849-fef6b54323b5",
+  "recommendationCount": 4,
+  "selectedTypeIds": [
+    "e0000000-0000-0000-0000-000000000003",
+    "e0000000-0000-0000-0000-000000000001",
+    "e0000000-0000-0000-0000-000000000002"
+  ],
+  "loanUnits": 4
+}

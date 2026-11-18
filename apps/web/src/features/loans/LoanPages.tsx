@@ -1,5 +1,5 @@
 import { useRef, useState, type FormEvent } from 'react';
-import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../auth/AuthContext';
 import { EmptyState, ErrorState, PageLoading } from '../../components/States';
 import { InlineError, Pager, ReviewDialog, ShortId, useCommand, useResource } from '../../components/Workflow';
@@ -8,6 +8,7 @@ import { formatDate, loanStatuses, statusLabels, validateLoan, type LoanStatus }
 import { catalogApi, type EquipmentType } from '../catalog/api';
 import { apiRequest } from '../../lib/api';
 import { loanApi, type Loan, type LoanSelection, type ReturnCondition } from './api';
+import { parseLoanPrefill } from './prefill';
 
 export function LoansPage({ staff = false }: { staff?: boolean }) {
   const [params, setParams] = useSearchParams(); const status = params.get('status') ?? ''; const page = Math.max(1, Number(params.get('page')) || 1);
@@ -66,14 +67,28 @@ function LoanStepper({ status }: { status: LoanStatus }) {
 }
 
 export function CreateLoanPage() {
-  const [params] = useSearchParams(); const navigate = useNavigate();
-  const [selections, setSelections] = useState<LoanSelection[]>(() => params.get('equipmentTypeId') ? [{ equipmentTypeId: params.get('equipmentTypeId')!, quantity: 1 }] : []);
+  const [params] = useSearchParams(); const navigate = useNavigate(); const location = useLocation();
+  const [prefill] = useState(() => parseLoanPrefill(location.state, params.get('equipmentTypeId')));
+  const [selections, setSelections] = useState<LoanSelection[]>(prefill.selections);
   const [selectedNames, setSelectedNames] = useState<Record<string, EquipmentType>>({});
-  const [purpose, setPurpose] = useState(''); const [due, setDue] = useState(''); const [term, setTerm] = useState(''); const [search, setSearch] = useState('');
+  const [purpose, setPurpose] = useState(prefill.purpose); const [due, setDue] = useState(''); const [term, setTerm] = useState(''); const [search, setSearch] = useState('');
   const command = useCommand(); const [reviewCreate, setReviewCreate] = useState(false);
   const submission = useRef<{ fingerprint: string; key: string } | null>(null);
   const choices = useResource(search, s => catalogApi.list({ keyword: search, pageSize: 20 }, s));
   const chosen = useResource(selections.map(s => s.equipmentTypeId).join(','), async s => Promise.all(selections.map(item => catalogApi.detail(item.equipmentTypeId, s))));
+  const stock = useResource('loan-stock:' + selections.map(s => s.equipmentTypeId).join(','), signal => catalogApi.availability(selections.map(s => s.equipmentTypeId), signal));
+  async function revalidateSelections() {
+    const types = await Promise.all(selections.map(row => catalogApi.detail(row.equipmentTypeId)));
+    if (types.some(t => !t.isActive)) throw new Error('Có thiết bị đã ngừng cho mượn. Vui lòng bỏ thiết bị đó.');
+    // AI selections must be rechecked; ordinary Catalog requests retain their existing pending-loan semantics.
+    if (prefill.fromRecommendation) {
+      const availability = await catalogApi.availability(selections.map(row => row.equipmentTypeId));
+      if (selections.some(row => { const current = availability.find(a => a.equipmentTypeId === row.equipmentTypeId); return !current || current.available < row.quantity; })) {
+        stock.reload(); chosen.reload();
+        throw new Error('Tồn kho của thiết bị được AI gợi ý đã thay đổi hoặc chưa đủ. Hãy điều chỉnh số lượng hoặc bỏ thiết bị không còn khả dụng.');
+      }
+    }
+  }
   const known = Object.fromEntries([...(choices.data?.items ?? []), ...(chosen.data ?? []), ...Object.values(selectedNames)].map(item => [item.id, item]));
   function add(item: EquipmentType) { setSelectedNames(n => ({ ...n, [item.id]: item })); setSelections(rows => rows.some(r => r.equipmentTypeId === item.id) ? rows : [...rows, { equipmentTypeId: item.id, quantity: 1 }]); }
   const setQuantity = (id: string, quantity: number) => setSelections(rows => rows.map(r => r.equipmentTypeId === id ? { ...r, quantity } : r));
@@ -82,18 +97,20 @@ export function CreateLoanPage() {
     await command.run(async () => {
       if (chosen.error || chosen.loading || chosen.data?.some(i => !i.isActive)) throw new Error('Hãy kiểm tra lại các loại thiết bị đã chọn.');
       validateLoan(purpose, due, selections.map(s => s.quantity));
+      await revalidateSelections();
       setReviewCreate(true);
     });
   }
   async function confirmCreate() {
     await command.run(async () => {
+      await revalidateSelections();
       const fingerprint = JSON.stringify([purpose.trim(), due, selections]);
       if (submission.current?.fingerprint !== fingerprint) submission.current = { fingerprint, key: crypto.randomUUID() };
       const loan = await loanApi.create(purpose, due, selections, Date.now(), submission.current.key);
       navigate(`/loans/${loan.id}`, { replace: true });
     });
   }
-  return <section><Link to="/loans">← Phiếu mượn của tôi</Link><div className="detail-heading"><p className="eyebrow">YÊU CẦU MỚI</p><h1>Tạo phiếu mượn</h1><p>Mỗi số lượng tương ứng một thiết bị. Nhân viên sẽ xác nhận và giữ thiết bị khi duyệt.</p></div><div className="detail-grid loan-cart"><form className="surface form-stack" onSubmit={e => void submit(e)}><label>Mục đích mượn<textarea value={purpose} onChange={e => setPurpose(e.target.value)} minLength={10} maxLength={2000} required rows={4} /></label><label>Hạn trả dự kiến<input type="datetime-local" step={1} value={due} onChange={e => setDue(e.target.value)} required /></label><p className="muted">Giờ trên màn hình là giờ địa phương, được gửi thành UTC. Hạn trả tối đa 30 ngày.</p><h2>Thiết bị đã chọn</h2>{chosen.loading && selections.length > 0 && <p role="status">Đang kiểm tra thiết bị…</p>}<InlineError message={chosen.error} />{!selections.length && <p>Chọn ít nhất một loại thiết bị ở danh sách bên cạnh.</p>}{selections.map(row => <div className="selection-row" key={row.equipmentTypeId}><div><strong>{known[row.equipmentTypeId]?.name ?? row.equipmentTypeId}</strong>{known[row.equipmentTypeId]?.isActive === false && <p role="alert">Đã ngừng cho mượn.</p>}</div><div className="qty-control"><button type="button" className="button-quiet" aria-label={`Giảm số lượng ${known[row.equipmentTypeId]?.name ?? row.equipmentTypeId}`} disabled={row.quantity <= 1} onClick={() => setQuantity(row.equipmentTypeId, row.quantity - 1)}><Icon name="minus" size={16} /></button><input aria-label={`Số lượng ${known[row.equipmentTypeId]?.name ?? row.equipmentTypeId}`} type="number" min={1} max={20} value={row.quantity} onChange={e => setQuantity(row.equipmentTypeId, Number(e.target.value))} /><button type="button" className="button-quiet" aria-label={`Tăng số lượng ${known[row.equipmentTypeId]?.name ?? row.equipmentTypeId}`} disabled={row.quantity >= 20} onClick={() => setQuantity(row.equipmentTypeId, row.quantity + 1)}><Icon name="plus" size={16} /></button></div><button type="button" className="button-quiet" onClick={() => setSelections(rows => rows.filter(r => r.equipmentTypeId !== row.equipmentTypeId))}>Bỏ</button></div>)}<p className="cart-total">Tổng: {selections.reduce((sum, row) => sum + row.quantity, 0)}/20 thiết bị</p><InlineError message={command.error} />{command.error && <p>Nếu kết nối bị ngắt sau khi gửi, hãy <Link to="/loans">kiểm tra danh sách phiếu</Link> trước khi tạo lại.</p>}<button disabled={command.busy || !selections.length || chosen.loading}>{command.busy ? 'Đang kiểm tra…' : 'Xem lại yêu cầu'}</button></form>
+  return <section><Link to="/loans">← Phiếu mượn của tôi</Link><div className="detail-heading"><p className="eyebrow">YÊU CẦU MỚI</p><h1>Tạo phiếu mượn</h1><p>Mỗi số lượng tương ứng một thiết bị. Nhân viên sẽ xác nhận và giữ thiết bị khi duyệt.</p></div><div className="detail-grid loan-cart"><form className="surface form-stack" onSubmit={e => void submit(e)}><label>Mục đích mượn<textarea value={purpose} onChange={e => setPurpose(e.target.value)} minLength={10} maxLength={2000} required rows={4} /></label><label>Hạn trả dự kiến<input type="datetime-local" step={1} value={due} onChange={e => setDue(e.target.value)} required /></label><p className="muted">Giờ trên màn hình là giờ địa phương, được gửi thành UTC. Hạn trả tối đa 30 ngày.</p><h2>Thiết bị đã chọn</h2>{prefill.invalid && <p role="alert">Dữ liệu thiết bị chuyển sang không hợp lệ. Vui lòng chọn lại từ danh mục.</p>}{prefill.fromRecommendation && <p className="muted">Đã điền từ tư vấn AI. Vui lòng kiểm tra thiết bị, số lượng và chọn hạn trả trước khi gửi.</p>}{stock.error && <ErrorState message={stock.error} retry={stock.reload} />}{chosen.loading && selections.length > 0 && <p role="status">Đang kiểm tra thiết bị…</p>}<InlineError message={chosen.error} />{!selections.length && <p>Chọn ít nhất một loại thiết bị ở danh sách bên cạnh.</p>}{selections.map(row => <div className="selection-row" key={row.equipmentTypeId}><div><strong>{known[row.equipmentTypeId]?.name ?? row.equipmentTypeId}</strong><small className="muted">{stock.loading ? "Đang kiểm tra tồn kho…" : stock.data?.find(a => a.equipmentTypeId === row.equipmentTypeId) ? stock.data.find(a => a.equipmentTypeId === row.equipmentTypeId)!.available + " thiết bị khả dụng (tham khảo)" : "Chưa thể kiểm tra tồn kho"}</small>{known[row.equipmentTypeId]?.isActive === false && <p role="alert">Đã ngừng cho mượn.</p>}</div><div className="qty-control"><button type="button" className="button-quiet" aria-label={`Giảm số lượng ${known[row.equipmentTypeId]?.name ?? row.equipmentTypeId}`} disabled={row.quantity <= 1} onClick={() => setQuantity(row.equipmentTypeId, row.quantity - 1)}><Icon name="minus" size={16} /></button><input aria-label={`Số lượng ${known[row.equipmentTypeId]?.name ?? row.equipmentTypeId}`} type="number" min={1} max={20} value={row.quantity} onChange={e => setQuantity(row.equipmentTypeId, Number(e.target.value))} /><button type="button" className="button-quiet" aria-label={`Tăng số lượng ${known[row.equipmentTypeId]?.name ?? row.equipmentTypeId}`} disabled={row.quantity >= 20} onClick={() => setQuantity(row.equipmentTypeId, row.quantity + 1)}><Icon name="plus" size={16} /></button></div><button type="button" className="button-quiet" onClick={() => setSelections(rows => rows.filter(r => r.equipmentTypeId !== row.equipmentTypeId))}>Bỏ</button></div>)}{!prefill.fromRecommendation && selections.some(row => (stock.data?.find(a => a.equipmentTypeId === row.equipmentTypeId)?.available ?? Infinity) < row.quantity) && <p role="status" className="muted">Tồn kho hiện tại chưa đủ. Bạn vẫn có thể gửi yêu cầu; nhân viên sẽ kiểm tra và chỉ giữ thiết bị khi duyệt.</p>}<p className="cart-total">Tổng: {selections.reduce((sum, row) => sum + row.quantity, 0)}/20 thiết bị</p><InlineError message={command.error} />{command.error && <p>Nếu kết nối bị ngắt sau khi gửi, hãy <Link to="/loans">kiểm tra danh sách phiếu</Link> trước khi tạo lại.</p>}<button disabled={command.busy || !selections.length || chosen.loading}>{command.busy ? 'Đang kiểm tra…' : 'Xem lại yêu cầu'}</button></form>
       <aside className="surface"><h2>Chọn từ danh mục</h2><form className="form-stack" onSubmit={e => { e.preventDefault(); setSearch(term); }}><label>Tìm thiết bị<input value={term} maxLength={100} onChange={e => setTerm(e.target.value)} /></label><button>Tìm</button></form>{choices.loading ? <p role="status">Đang tải…</p> : choices.error ? <ErrorState message={choices.error} retry={choices.reload} /> : <><p className="muted">Hiển thị tối đa 20 kết quả. Có thể tìm thêm theo tên hoặc <Link to="/catalog">mở danh mục đầy đủ</Link>.</p><ul className="choice-list">{choices.data?.items.map(item => <li key={item.id}><span>{item.name}</span><button type="button" disabled={selections.some(s => s.equipmentTypeId === item.id) || selections.length >= 20} onClick={() => add(item)}>{selections.some(s => s.equipmentTypeId === item.id) ? 'Đã chọn' : 'Thêm'}</button></li>)}</ul></>}</aside></div>{reviewCreate && <ReviewDialog title="Xem lại yêu cầu mượn" busy={command.busy} onClose={() => setReviewCreate(false)} onConfirm={() => void confirmCreate()} confirmLabel="Gửi yêu cầu mượn"><p className="preserve-lines">{purpose.trim()}</p><p>Hạn trả: {formatDate(new Date(due).toISOString())}</p><ul>{selections.map(row => <li key={row.equipmentTypeId}>{known[row.equipmentTypeId]?.name ?? row.equipmentTypeId} × {row.quantity}</li>)}</ul><p>Nhân viên sẽ duyệt và cấp thiết bị sau khi gửi.</p><InlineError message={command.error} />{command.error && <p>Nếu kết quả chưa rõ, hãy kiểm tra phiếu đã tạo trước khi thay đổi yêu cầu. Gửi lại cùng nội dung sử dụng cùng mã chống trùng.</p>}</ReviewDialog>}</section>;
 }
 

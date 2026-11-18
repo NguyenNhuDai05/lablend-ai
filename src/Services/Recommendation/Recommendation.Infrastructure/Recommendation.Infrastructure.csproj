@@ -1,9 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <ProjectReference Include="../Recommendation.Application/Recommendation.Application.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+    <PackageReference Include="Grpc.Net.Client" />
+    <PackageReference Include="Grpc.Tools" PrivateAssets="all" />
+    <PackageReference Include="Google.Protobuf" />
   </ItemGroup>
   <ItemGroup><PackageReference Include="Microsoft.EntityFrameworkCore.Design" PrivateAssets="all" /></ItemGroup>
+  <ItemGroup><Protobuf Include="../../../../proto/inventory/v1/inventory.proto" GrpcServices="Client" Link="Protos/inventory.proto" /></ItemGroup>
 </Project>

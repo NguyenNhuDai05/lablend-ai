@@ -1,4 +1,9 @@
 # Recommendation migrations
 
-Planned. No business model exists in Sprint 0; do not invent migrations just to fill this folder.
-See docs/architecture/DATABASE_CONVENTIONS.md for the per-service commands.
+`InitialRecommendations` creates sessions, items and atomic daily-attempt usage. No database is recreated or shared with Catalog/Inventory. Development/Compose applies migrations at startup through `Database:AutoMigrate`; other environments default to manual deployment.
+
+```powershell
+dotnet ef database update --project src/Services/Recommendation/Recommendation.Infrastructure --startup-project src/Services/Recommendation/Recommendation.Api
+```
+
+Load the existing service-local connection via `scripts/Set-LocalEnvironment.ps1 -Service recommendation` first. The design-time factory reads `ConnectionStrings__Database`; its no-password fallback is only for generating migration source. Do not use EnsureCreated for this service.

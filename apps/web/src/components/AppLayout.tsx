@@ -27,6 +27,7 @@ export function AppLayout() {
         <NavLink to="/catalog"><Icon name="equipment" />Thiết bị</NavLink>
         {user?.role === 'ADMIN' && <NavLink to="/admin/users"><Icon name="users" />Tài khoản</NavLink>}
         {user?.role === 'STUDENT' && <NavLink to="/loans"><Icon name="loans" />Phiếu mượn</NavLink>}
+        {user?.role === 'STUDENT' && <NavLink to="/recommendations"><Icon name="sparkles" />AI tư vấn thiết bị</NavLink>}
       </nav>
       <div className="account-actions">
         {user ? <><UserMenu user={user} unread={unread.data?.count ?? 0} /><button className="logout" onClick={() => void logout()}><Icon name="logout" />Đăng xuất</button></>

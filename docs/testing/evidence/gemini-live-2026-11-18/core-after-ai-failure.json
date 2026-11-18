@@ -1,0 +1,9 @@
+{
+  "mocked": false,
+  "status": "PASS",
+  "recommendationPosts": 0,
+  "loanId": "a805c1b0-d0a2-461d-9e3f-26babd1e7932",
+  "borrowingHttpStatus": 201,
+  "loanUnits": 2,
+  "explanation": "Ordinary Catalog -> real Borrowing -> Student detail/list succeeded in isolated test DB after Gemini HTTP 503. This is not a successful live AI-to-loan flow."
+}

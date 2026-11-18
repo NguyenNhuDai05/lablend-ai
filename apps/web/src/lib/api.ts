@@ -41,7 +41,7 @@ export function configureApiClient(options: {
   sessionVersionProvider = options.getSessionVersion ?? (() => 0);
 }
 
-export async function apiRequest<T>(path: string, init: RequestInit = {}, retry = true): Promise<T> {
+export async function apiRequest<T>(path: string, init: RequestInit = {}, retry = true, timeoutMs = 10_000): Promise<T> {
   const headers = new Headers(init.headers);
   const token = accessTokenProvider();
   const version = sessionVersionProvider();
@@ -52,7 +52,7 @@ export async function apiRequest<T>(path: string, init: RequestInit = {}, retry 
   headers.set('X-Correlation-ID', crypto.randomUUID());
 
   const controller = new AbortController();
-  const timeout = globalThis.setTimeout(() => controller.abort(), 10_000);
+  const timeout = globalThis.setTimeout(() => controller.abort(), timeoutMs);
   const abort = () => controller.abort();
   init.signal?.addEventListener('abort', abort, { once: true });
 
@@ -69,7 +69,7 @@ export async function apiRequest<T>(path: string, init: RequestInit = {}, retry 
           catch (error) { assertCurrentSession(version); unauthorizedHandler(); throw error; }
         }
         assertCurrentSession(version);
-        return await apiRequest<T>(path, init, false);
+        return await apiRequest<T>(path, init, false, timeoutMs);
       }
       unauthorizedHandler();
     }

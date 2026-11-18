@@ -1,5 +1,6 @@
 // ponytail: a handful of inline stroke icons; switch to an icon package only if the set grows a lot.
 const paths = {
+  sparkles: 'm12 3 2.3 6.7L21 12l-6.7 2.3L12 21l-2.3-6.7L3 12l6.7-2.3zM20 2v4M18 4h4',
   loans: 'M9 3h6v3H9zM7 4.5H5V21h14V4.5h-2M9 11h6M9 15h4',
   catalog: 'M3.5 3.5h7l10 10-7 7-10-10zM7.5 7.5h.01',
   inventory: 'M3 7.5 12 3l9 4.5-9 4.5zM3 7.5v9L12 21l9-4.5v-9M12 12v9',
