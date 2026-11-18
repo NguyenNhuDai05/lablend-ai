@@ -14,10 +14,10 @@
 .ai-result h3 { font-size: .94rem; margin-bottom: .5rem; }
 .ai-card-heading { display: flex; gap: 16px; align-items: start; }
 .ai-card-heading > div { min-width: 0; }
-.ai-card-heading img { width: 92px; height: 92px; object-fit: contain; border-radius: 10px; background: var(--surface-2); }
+.ai-card-heading img { width: 92px; height: 92px; object-fit: contain; border-radius: var(--radius-btn); background: var(--surface-2); }
 .ai-card-heading .eyebrow { font-size: .7rem; margin-bottom: .7rem; }
 .ai-card-heading h2 { margin-bottom: .6rem; }
-.ai-reason { padding: 16px; border-radius: 10px; background: var(--surface-2); flex: 1; }
+.ai-reason { padding: 16px; border-radius: var(--radius-btn); border: 1px solid var(--line); background: var(--surface-2); flex: 1; }
 .ai-reason p + h3 { margin-top: 16px; }
 .ai-stock { color: var(--brand-ink); font-weight: 600; }
 .ai-select { display: flex; align-items: center; gap: 8px; max-width: 65%; }

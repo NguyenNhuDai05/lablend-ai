@@ -68,10 +68,16 @@ function Test-Catalog($data) {
             if ($tag -isnot [string] -or $tag -cnotmatch '^[a-z0-9][a-z0-9-]{0,49}$') { $e.Add("${at}: tag '$tag' must be lowercase a-z, 0-9, '-' (max 50).") }
         }
         if ($null -ne $t.imageUrl) {
+            # Same rule as Catalog's [ImageUrl]: http(s) URL, or an image bundled in apps/web/public/equipment.
             $uri = $null
-            if ($t.imageUrl -isnot [string] -or $t.imageUrl.Length -gt 500 -or
+            if ($t.imageUrl -is [string] -and $t.imageUrl -cmatch '^/equipment/[a-z0-9][a-z0-9-]{0,99}\.(webp|png|jpe?g)$') {
+                if (-not (Test-Path -LiteralPath (Join-Path $PSScriptRoot "../apps/web/public$($t.imageUrl)") -PathType Leaf)) {
+                    $e.Add("${at}: image file apps/web/public$($t.imageUrl) does not exist.")
+                }
+            }
+            elseif ($t.imageUrl -isnot [string] -or $t.imageUrl.Length -gt 500 -or
                 -not [uri]::TryCreate($t.imageUrl, [UriKind]::Absolute, [ref]$uri) -or $uri.Scheme -notin 'http', 'https') {
-                $e.Add("${at}: imageUrl must be null or an absolute http(s) URL (max 500).")
+                $e.Add("${at}: imageUrl must be null, an absolute http(s) URL (max 500) or /equipment/<name>.webp|png|jpg.")
             }
         }
         if ($t.isActive -isnot [bool]) { $e.Add("${at}: isActive must be true or false.") }
