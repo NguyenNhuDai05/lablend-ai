@@ -52,7 +52,7 @@ Pagination: `items`, `total`, `page` (1-based), `pageSize`. DTO kỹ thuật t�
   "description": "...", "specifications": "2 kênh; 100 MHz", "tags": ["oscilloscope"], "imageUrl": null }
 ```
 
-PUT nhận thêm `isActive`. Seed qua migration: 3 categories `c0000000-…-00000000000{1..3}` và 5 equipment types `e0000000-…-00000000000{1..5}`, ID cố định để Inventory seed asset theo logical reference. Migrations tự áp dụng khi Catalog khởi động.
+`imageUrl` (tối đa 500 ký tự) là `null`, một URL `http(s)` tuyệt đối, hoặc ảnh đi kèm web dạng `/equipment/<tên>.webp|png|jpg|jpeg` (tên chỉ gồm `a-z0-9-`, tệp nằm trong `apps/web/public/equipment`). Giá trị khác trả 400 `VALIDATION_ERROR`. PUT nhận thêm `isActive`. Seed qua migration: 3 categories `c0000000-…-00000000000{1..3}` và 5 equipment types `e0000000-…-00000000000{1..5}`, ID cố định để Inventory seed asset theo logical reference. Migrations tự áp dụng khi Catalog khởi động.
 
 ## Inventory v1 (Implemented, M2)
 

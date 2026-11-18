@@ -87,6 +87,8 @@ public sealed class CatalogApiTests(CatalogApiFactory factory) : IClassFixture<C
         var update = new UpdateEquipmentTypeRequest(category.Id, "Beta lens 50mm", null, "f/1.8", ["optics"], "https://example.com/b.png", true);
         var updated = await (await staff.PutAsJsonAsync($"/api/equipment-types/{beta.Id}", update)).Content.ReadFromJsonAsync<EquipmentTypeResponse>(Json);
         Assert.Equal(("Beta lens 50mm", "f/1.8"), (updated!.Name, updated.Specifications));
+        var bundled = await (await staff.PutAsJsonAsync($"/api/equipment-types/{beta.Id}", update with { ImageUrl = "/equipment/beta-lens.webp" })).Content.ReadFromJsonAsync<EquipmentTypeResponse>(Json);
+        Assert.Equal("/equipment/beta-lens.webp", bundled!.ImageUrl); // image shipped in apps/web/public/equipment
 
         Assert.Equal(HttpStatusCode.NoContent, (await staff.DeleteAsync($"/api/equipment-types/{alpha.Id}")).StatusCode);
         Assert.Equal(2, (await SearchAsync(factory.ClientAs(null), $"{url}&includeInactive=true")).Total); // ignored for anonymous
@@ -111,6 +113,9 @@ public sealed class CatalogApiTests(CatalogApiFactory factory) : IClassFixture<C
         await AssertProblemAsync(await staff.DeleteAsync($"/api/categories/{category.Id}"), HttpStatusCode.Conflict, "CONFLICT");
         await AssertProblemAsync(await staff.PostAsJsonAsync("/api/equipment-types",
             new CreateEquipmentTypeRequest(Guid.NewGuid(), "Không có loại", null, null, null, null)), HttpStatusCode.BadRequest, "VALIDATION_ERROR");
+        foreach (var bad in new[] { "javascript:alert(1)", "ftp://example.com/a.png", "/etc/passwd", "/equipment/../x.png", "/equipment/A.webp", "equipment/a.webp" })
+            await AssertProblemAsync(await staff.PostAsJsonAsync("/api/equipment-types",
+                new CreateEquipmentTypeRequest(category.Id, $"Ảnh {Guid.NewGuid():N}", null, null, null, bad)), HttpStatusCode.BadRequest, "VALIDATION_ERROR");
     }
 
     private static async Task<T> CreateAsync<T>(HttpClient client, string url, object body)
