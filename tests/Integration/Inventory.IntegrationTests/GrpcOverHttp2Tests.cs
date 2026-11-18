@@ -17,8 +17,8 @@ public sealed class GrpcOverHttp2Tests(KestrelInventoryFactory factory) : IClass
     private GrpcChannel Channel => channel ??= GrpcChannel.ForAddress(factory.GrpcAddress, new GrpcChannelOptions { HttpHandler = http });
     private V1.InventoryAllocation.InventoryAllocationClient Client => new(Channel);
 
-    [Fact] // T23: renaming, renumbering or retyping anything below breaks Borrowing's generated client -> must be a v2, not an edit
-    public void Proto_v1_schema_is_unchanged()
+    [Fact] // T23: existing names/numbers/types remain pinned; incident RPCs/messages are intentional additive v1 extensions.
+    public void Proto_v1_existing_schema_and_additive_replacement_extension_are_pinned()
     {
         var file = V1.InventoryReflection.Descriptor;
         var actual = string.Join("\n", new[] { $"package {file.Package};" }
@@ -33,6 +33,9 @@ public sealed class GrpcOverHttp2Tests(KestrelInventoryFactory factory) : IClass
             InventoryAllocation.ReturnAssets(ReturnAssetsRequest) returns (AllocationReply)
             InventoryAllocation.ReleaseReservations(LoanRequest) returns (AllocationReply)
             InventoryAllocation.GetOperationStatus(OperationStatusRequest) returns (OperationStatusReply)
+            InventoryAllocation.GetLoanAllocations(LoanRequest) returns (AllocationReply)
+            InventoryAllocation.ReplaceLoanAsset(ReplaceLoanAssetRequest) returns (ReplacementOperationReply)
+            InventoryAllocation.GetReplacementOperationStatus(OperationStatusRequest) returns (ReplacementOperationReply)
             message CheckAvailabilityRequest { repeated string equipment_type_ids = 1; }
             message Availability { string equipment_type_id = 1; int32 available = 2; int32 total = 3; }
             message CheckAvailabilityReply { repeated Availability items = 1; }
@@ -45,6 +48,8 @@ public sealed class GrpcOverHttp2Tests(KestrelInventoryFactory factory) : IClass
             message AllocationReply { string loan_id = 1; repeated Allocation allocations = 2; }
             message OperationStatusRequest { string operation_id = 1; }
             message OperationStatusReply { bool found = 1; string loan_id = 2; repeated Allocation allocations = 3; }
+            message ReplaceLoanAssetRequest { string operation_id = 1; string incident_id = 2; string original_loan_id = 3; string original_loan_item_id = 4; string original_asset_unit_id = 5; string equipment_type_id = 6; string replacement_loan_id = 7; string replacement_loan_item_id = 8; string actor_id = 9; bool already_returned = 10; string due_at = 11; }
+            message ReplacementOperationReply { bool found = 1; string request_hash = 2; string original_loan_id = 3; string original_loan_item_id = 4; string original_asset_unit_id = 5; string replacement_loan_id = 6; string replacement_loan_item_id = 7; string replacement_asset_unit_id = 8; string serial_number = 9; string error_code = 10; }
             enum ReturnCondition { RETURN_CONDITION_UNSPECIFIED = 0; RETURN_CONDITION_NORMAL = 1; RETURN_CONDITION_DAMAGED = 2; RETURN_CONDITION_LOST = 3; }
             """;
         Assert.Equal(expected.ReplaceLineEndings("\n"), actual);
@@ -81,6 +86,22 @@ public sealed class GrpcOverHttp2Tests(KestrelInventoryFactory factory) : IClass
         await Client.ReserveAssetsAsync(other, auth);
         var released = await Client.ReleaseReservationsAsync(new V1.LoanRequest { LoanId = other.LoanId }, auth);
         Assert.Equal("RELEASED", released.Allocations.Single().ReservationStatus);
+
+        var exchangeLoan = Reserve(typeId);
+        await Client.ReserveAssetsAsync(exchangeLoan, auth);
+        var original = (await Client.ConfirmHandoverAsync(new V1.LoanRequest { LoanId = exchangeLoan.LoanId }, auth)).Allocations.Single();
+        Assert.Equal(original, (await Client.GetLoanAllocationsAsync(new V1.LoanRequest { LoanId = exchangeLoan.LoanId }, auth)).Allocations.Single());
+        var replacement = new V1.ReplaceLoanAssetRequest { OperationId = Guid.NewGuid().ToString(), IncidentId = Guid.NewGuid().ToString(),
+            OriginalLoanId = exchangeLoan.LoanId, OriginalLoanItemId = original.LoanItemId, OriginalAssetUnitId = original.AssetUnitId,
+            EquipmentTypeId = typeId.ToString(), ReplacementLoanId = exchangeLoan.LoanId, ReplacementLoanItemId = Guid.NewGuid().ToString(),
+            ActorId = Guid.NewGuid().ToString(), DueAt = DateTimeOffset.UtcNow.AddDays(1).ToString("O") };
+        var exchanged = await Client.ReplaceLoanAssetAsync(replacement, auth);
+        Assert.True(exchanged.Found); Assert.Empty(exchanged.ErrorCode); Assert.NotEqual(original.AssetUnitId, exchanged.ReplacementAssetUnitId);
+        Assert.Equal(exchanged, await Client.ReplaceLoanAssetAsync(replacement, auth));
+        Assert.Equal(exchanged, await Client.GetReplacementOperationStatusAsync(new V1.OperationStatusRequest { OperationId = replacement.OperationId }, auth));
+        var denied = await Assert.ThrowsAsync<RpcException>(() => Client.GetReplacementOperationStatusAsync(new V1.OperationStatusRequest { OperationId = replacement.OperationId }).ResponseAsync);
+        Assert.Equal(StatusCode.Unauthenticated, denied.StatusCode);
+        Assert.Equal(2, (await Client.GetLoanAllocationsAsync(new V1.LoanRequest { LoanId = exchangeLoan.LoanId }, auth)).Allocations.Count);
 
         Assert.NotEmpty(http.Versions);
         Assert.All(http.Versions, v => Assert.Equal(HttpVersion.Version20, v));

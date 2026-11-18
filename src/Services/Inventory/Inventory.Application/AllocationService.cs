@@ -58,7 +58,11 @@ public sealed class AllocationService(IAllocationRepository allocations, AssetSe
             var reservation = reservations.FirstOrDefault(r => r.LoanItemId == item.LoanItemId
                     && r.Status is ReservationStatus.HandedOver or ReservationStatus.Returned)
                 ?? throw InventoryException.NotFound($"Loan item '{item.LoanItemId}' is not on loan.");
-            if (reservation.Status == ReservationStatus.Returned) continue; // replay
+            if (reservation.Status == ReservationStatus.Returned)
+            {
+                if (reservation.ReturnCondition != item.Condition) throw InventoryException.Conflict("Already returned with a different condition.");
+                continue;
+            }
             reservation.Return(item.Condition);
             if (item.Condition == ReturnCondition.Damaged)
                 allocations.Add(new MaintenanceRecord(reservation.AssetUnitId, $"Returned DAMAGED from loan {loanId}.", null));

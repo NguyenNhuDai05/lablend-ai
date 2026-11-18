@@ -28,6 +28,9 @@ service InventoryAllocation {
   rpc ReleaseReservations (LoanRequest) returns (AllocationReply);
   // For unknown RPC outcomes and reconciliation: found=false means nothing was reserved for this operation.
   rpc GetOperationStatus (OperationStatusRequest) returns (OperationStatusReply);
+  rpc GetLoanAllocations (LoanRequest) returns (AllocationReply);
+  rpc ReplaceLoanAsset (ReplaceLoanAssetRequest) returns (ReplacementOperationReply);
+  rpc GetReplacementOperationStatus (OperationStatusRequest) returns (ReplacementOperationReply);
 }
 
 message CheckAvailabilityRequest {
@@ -97,4 +100,30 @@ message OperationStatusReply {
   bool found = 1;
   string loan_id = 2;
   repeated Allocation allocations = 3;
+}
+
+message ReplaceLoanAssetRequest {
+  string operation_id = 1;
+  string incident_id = 2;
+  string original_loan_id = 3;
+  string original_loan_item_id = 4;
+  string original_asset_unit_id = 5;
+  string equipment_type_id = 6;
+  string replacement_loan_id = 7;
+  string replacement_loan_item_id = 8;
+  string actor_id = 9;
+  bool already_returned = 10;
+  string due_at = 11; // ISO-8601 UTC; reject new allocations after the unchanged original due date
+}
+message ReplacementOperationReply {
+  bool found = 1;
+  string request_hash = 2;
+  string original_loan_id = 3;
+  string original_loan_item_id = 4;
+  string original_asset_unit_id = 5;
+  string replacement_loan_id = 6;
+  string replacement_loan_item_id = 7;
+  string replacement_asset_unit_id = 8;
+  string serial_number = 9;
+  string error_code = 10; // a persisted definitive rejection; empty only for a successful exchange
 }

@@ -6,7 +6,8 @@ namespace Notification.Application;
 public sealed class ProposedLoanEventMapper : ILoanEventMapper
 {
     private static readonly HashSet<string> SupportedTypes =
-    ["LoanSubmitted", "LoanApproved", "LoanRejected", "LoanHandedOver", "LoanReturned", "LoanDueSoon", "LoanOverdue"];
+    ["LoanSubmitted", "LoanApproved", "LoanRejected", "LoanHandedOver", "LoanReturned", "LoanDueSoon", "LoanOverdue",
+        "IncidentReported", "IncidentInspectionStarted", "IncidentInspectionCompleted", "EquipmentReplaced", "IncidentResolved"];
 
     public IncomingNotification Map(string streamMessageId, string json)
     {

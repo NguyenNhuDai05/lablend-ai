@@ -43,19 +43,19 @@ public sealed class Reservation
     public DateTimeOffset UpdatedAt { get; private set; }
 
     // Each transition is idempotent: repeating it on an already-moved reservation is a no-op.
-    public void HandOver()
+    public void HandOver(Guid? actor = null)
     {
         if (Status == ReservationStatus.HandedOver) return;
         Require(ReservationStatus.Held);
-        AssetUnit!.HandOver(LoanId);
+        AssetUnit!.HandOver(LoanId, actor);
         SetStatus(ReservationStatus.HandedOver);
     }
 
-    public void Return(string condition)
+    public void Return(string condition, Guid? actor = null)
     {
         if (Status == ReservationStatus.Returned) return;
         Require(ReservationStatus.HandedOver);
-        AssetUnit!.Return(condition, LoanId);
+        AssetUnit!.Return(condition, LoanId, actor);
         ReturnCondition = condition;
         SetStatus(ReservationStatus.Returned);
     }

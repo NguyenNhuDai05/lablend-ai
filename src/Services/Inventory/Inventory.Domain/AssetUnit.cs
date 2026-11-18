@@ -71,22 +71,22 @@ public sealed class AssetUnit
 
     // Allocation transitions are driven by Reservation (gRPC); Reserve itself is a locked SQL update
     // that writes its own movement row (AllocationRepository.TryReserveAsync).
-    public void HandOver(Guid loanId) => Transition(AssetStatus.Reserved, AssetStatus.OnLoan, loanId);
+    public void HandOver(Guid loanId, Guid? actor = null) => Transition(AssetStatus.Reserved, AssetStatus.OnLoan, loanId, actor);
     public void Release(Guid loanId) => Transition(AssetStatus.Reserved, AssetStatus.Available, loanId);
 
-    public void Return(string condition, Guid loanId) => Transition(AssetStatus.OnLoan, condition switch
+    public void Return(string condition, Guid loanId, Guid? actor = null) => Transition(AssetStatus.OnLoan, condition switch
     {
         ReturnCondition.Normal => AssetStatus.Available,
         ReturnCondition.Damaged => AssetStatus.Maintenance,
         ReturnCondition.Lost => AssetStatus.Lost,
         _ => throw new DomainRuleException($"Unknown return condition '{condition}'.")
-    }, loanId);
+    }, loanId, actor);
 
-    private void Transition(string from, string to, Guid loanId)
+    private void Transition(string from, string to, Guid loanId, Guid? actor = null)
     {
         if (Status != from)
             throw new DomainRuleException($"Unit {SerialNumber} is {Status}, expected {from}.");
-        SetStatus(to, loanId, null);
+        SetStatus(to, loanId, actor);
     }
 
     // Single choke point for status changes, so every change leaves a movement row.

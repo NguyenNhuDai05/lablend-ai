@@ -12,6 +12,11 @@ public sealed class BorrowingDbContext(DbContextOptions<BorrowingDbContext> opti
     public DbSet<InventoryOperation> InventoryOperations => Set<InventoryOperation>();
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
     public DbSet<ReminderDispatch> ReminderDispatches => Set<ReminderDispatch>();
+    public DbSet<EquipmentIncident> EquipmentIncidents => Set<EquipmentIncident>();
+    public DbSet<IncidentInspection> IncidentInspections => Set<IncidentInspection>();
+    public DbSet<IncidentHistory> IncidentHistories => Set<IncidentHistory>();
+    public DbSet<EquipmentReplacement> EquipmentReplacements => Set<EquipmentReplacement>();
+    public DbSet<IncidentEvidence> IncidentEvidence => Set<IncidentEvidence>();
     public string EventCorrelationId { get; set; } = Guid.NewGuid().ToString("N");
 
     public override int SaveChanges(bool acceptAllChangesOnSuccess)
@@ -33,9 +38,11 @@ public sealed class BorrowingDbContext(DbContextOptions<BorrowingDbContext> opti
             var loan = ChangeTracker.Entries<LoanRequest>().Single(e => e.Entity.Id == history.LoanRequestId).Entity;
             OutboxMessages.Add(LoanEvents.Create(loan, type, history.Id, EventCorrelationId, history.OccurredAt));
         }
+        IncidentEvents.Capture(this);
     }
     protected override void OnModelCreating(ModelBuilder model)
     {
+        IncidentModel.Configure(model);
         model.Entity<LoanSubmission>(b =>
         {
             b.HasKey(x => new { x.StudentId, x.Key });

@@ -38,7 +38,9 @@ jobs:
         if: failure()
         with:
           name: browser-failure-screenshots
-          path: .tmp/m3-browser/failure-*.png
+          path: |
+            .tmp/m3-browser/failure-*.png
+            .tmp/incident-browser/failure-*.png
           if-no-files-found: ignore
           retention-days: 7
       - run: ./scripts/Initialize-Environment.ps1

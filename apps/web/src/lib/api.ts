@@ -41,7 +41,7 @@ export function configureApiClient(options: {
   sessionVersionProvider = options.getSessionVersion ?? (() => 0);
 }
 
-export async function apiRequest<T>(path: string, init: RequestInit = {}, retry = true, timeoutMs = 10_000): Promise<T> {
+export async function apiRequest<T>(path: string, init: RequestInit = {}, retry = true, timeoutMs = 10_000, responseType: 'json' | 'blob' = 'json'): Promise<T> {
   const headers = new Headers(init.headers);
   const token = accessTokenProvider();
   const version = sessionVersionProvider();
@@ -69,12 +69,13 @@ export async function apiRequest<T>(path: string, init: RequestInit = {}, retry 
           catch (error) { assertCurrentSession(version); unauthorizedHandler(); throw error; }
         }
         assertCurrentSession(version);
-        return await apiRequest<T>(path, init, false, timeoutMs);
+        return await apiRequest<T>(path, init, false, timeoutMs, responseType);
       }
       unauthorizedHandler();
     }
     if (!response.ok) throw await toApiError(response);
     if (response.status === 204) return undefined as T;
+    if (responseType === 'blob') return await response.blob() as T;
     return await response.json() as T;
   } catch (error) {
     if (error instanceof ApiError) throw error;

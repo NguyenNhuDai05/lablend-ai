@@ -13,7 +13,7 @@ public sealed class InventoryOptions
     public int DeadlineSeconds { get; set; } = 5;
 }
 
-public sealed class InventoryGrpcClient(GrpcChannel channel, IOptions<InventoryOptions> options) : IInventoryClient
+public sealed class InventoryGrpcClient(GrpcChannel channel, IOptions<InventoryOptions> options) : IInventoryClient, IInventoryIncidentClient
 {
     private readonly V1.InventoryAllocation.InventoryAllocationClient client = new(channel);
     private CallOptions Call(string correlation, CancellationToken ct)
@@ -45,9 +45,26 @@ public sealed class InventoryGrpcClient(GrpcChannel channel, IOptions<InventoryO
         return result.Found ? new(true, Parse(result.LoanId), result.Allocations.Select(Map).ToArray()) : new(false, Guid.Empty, []);
     });
     private static InventorySnapshot Map(V1.AllocationReply result) => new(true, Parse(result.LoanId), result.Allocations.Select(Map).ToArray());
-    private static InventoryAllocation Map(V1.Allocation item) => new(Parse(item.LoanItemId), Parse(item.AssetUnitId), item.ReservationStatus, item.AssetStatus);
+    private static InventoryAllocation Map(V1.Allocation item) => new(Parse(item.LoanItemId), Parse(item.AssetUnitId), item.ReservationStatus, item.AssetStatus, item.SerialNumber);
     private static Guid Parse(string value) => Guid.TryParse(value, out var id) && id != Guid.Empty ? id : throw new InventoryFailure(502, "INVALID_INVENTORY_REPLY", true);
-    private static async Task<InventorySnapshot> Send(Func<Task<InventorySnapshot>> call)
+    public Task<InventorySnapshot> LoanStatus(Guid loanId, Guid operationId, string correlationId, CancellationToken ct) => LoanAssets(loanId, correlationId, ct);
+    public Task<InventorySnapshot> LoanAssets(Guid loanId, string correlationId, CancellationToken ct) => Send(async () =>
+        Map(await client.GetLoanAllocationsAsync(new V1.LoanRequest { LoanId = loanId.ToString() }, Call(correlationId, ct))));
+    public Task<ReplacementSnapshot> ReplacementStatus(Guid operationId, string correlationId, CancellationToken ct) => SendCall<ReplacementSnapshot>(async () =>
+        MapReplacement(await client.GetReplacementOperationStatusAsync(new V1.OperationStatusRequest { OperationId = operationId.ToString() }, Call(correlationId, ct))));
+    public Task<ReplacementSnapshot> Replace(ReplacementCommand c, string correlationId, CancellationToken ct) => SendCall<ReplacementSnapshot>(async () =>
+        MapReplacement(await client.ReplaceLoanAssetAsync(new V1.ReplaceLoanAssetRequest { OperationId = c.OperationId.ToString(), IncidentId = c.IncidentId.ToString(),
+            OriginalLoanId = c.OriginalLoanId.ToString(), OriginalLoanItemId = c.OriginalLoanItemId.ToString(), OriginalAssetUnitId = c.OriginalAssetUnitId.ToString(),
+            EquipmentTypeId = c.EquipmentTypeId.ToString(), ReplacementLoanId = c.ReplacementLoanId.ToString(), ReplacementLoanItemId = c.ReplacementLoanItemId.ToString(),
+            ActorId = c.ActorId.ToString(), AlreadyReturned = c.AlreadyReturned, DueAt = c.DueAt.ToUniversalTime().ToString("O") }, Call(correlationId, ct))));
+    private static ReplacementSnapshot MapReplacement(V1.ReplacementOperationReply r)
+    {
+        if (r.Found && !string.IsNullOrEmpty(r.ErrorCode)) throw new InventoryFailure(409, r.ErrorCode, false);
+        return r.Found ? new(true, r.RequestHash, Parse(r.OriginalLoanId), Parse(r.OriginalLoanItemId), Parse(r.OriginalAssetUnitId), Parse(r.ReplacementLoanId), Parse(r.ReplacementLoanItemId), Parse(r.ReplacementAssetUnitId), r.SerialNumber)
+            : new(false, "", default, default, default, default, default, default, "");
+    }
+    private static Task<InventorySnapshot> Send(Func<Task<InventorySnapshot>> call) => SendCall(call);
+    private static async Task<T> SendCall<T>(Func<Task<T>> call)
     {
         try { return await call(); }
         catch (RpcException ex)

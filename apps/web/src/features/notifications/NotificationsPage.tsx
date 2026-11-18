@@ -1,3 +1,4 @@
+import { useAuth } from '../../auth/AuthContext';
 import { Link, useSearchParams } from 'react-router-dom';
 import { EmptyState, ErrorState, PageLoading } from '../../components/States';
 import { InlineError, Pager, useCommand, useResource } from '../../components/Workflow';
@@ -5,6 +6,7 @@ import { notificationApi } from './api';
 import { notificationCopy } from './copy';
 
 export function NotificationsPage() {
+  const { user } = useAuth();
   const [params, setParams] = useSearchParams(); const aggregateId = params.get('loanId') ?? '';
   const page = Math.max(1, Number(params.get('page')) || 1); const command = useCommand();
   const setPage = (value: number) => setParams({ ...(aggregateId ? { loanId: aggregateId } : {}), page: String(value) });
@@ -13,5 +15,5 @@ export function NotificationsPage() {
   if (state.loading) return <PageLoading />;
   if (state.error || !state.data) return <ErrorState message={state.error ?? 'Không tải được thông báo.'} retry={state.reload} />;
   const data = state.data.page;
-  return <section className="notifications"><div className="section-title"><div><p className="eyebrow">HỘP THƯ</p><h1>Thông báo</h1></div><div><p>{state.data.unread.count} chưa đọc · {data.total} mục</p><button className="button-quiet" onClick={state.reload}>Tải lại</button></div></div>{aggregateId && <p>Thông báo của bạn cho phiếu {aggregateId.slice(0, 8)}. <Link to="/notifications">Xem tất cả thông báo</Link></p>}<p className="muted">Tự cập nhật mỗi 15 giây khi mở trang.</p><InlineError message={command.error} />{!data.items.length ? <EmptyState message="Chưa có thông báo nào cho tài khoản này." /> : <div className="notification-list">{data.items.map(item => <article key={item.id} className={item.readAt ? 'read' : 'unread'}><div><h2>{notificationCopy(item).title}</h2><p>{notificationCopy(item).message}</p><time dateTime={item.createdAt}>{new Date(item.createdAt).toLocaleString('vi-VN')}</time>{/^[0-9a-f-]{36}$/i.test(item.aggregateId) && <p><Link to={`/loans/${encodeURIComponent(item.aggregateId)}`}>Xem phiếu mượn</Link></p>}</div>{item.readAt ? <span>Đã đọc</span> : <button className="button-quiet" disabled={command.busy} onClick={() => void mark(item.id)}>Đánh dấu đã đọc</button>}</article>)}</div>}<Pager page={page} total={data.total} pageSize={data.pageSize} onChange={setPage} /></section>;
+  return <section className="notifications"><div className="section-title"><div><p className="eyebrow">HỘP THƯ</p><h1>Thông báo</h1></div><div><p>{state.data.unread.count} chưa đọc · {data.total} mục</p><button className="button-quiet" onClick={state.reload}>Tải lại</button></div></div>{aggregateId && <p>Thông báo của bạn cho phiếu {aggregateId.slice(0, 8)}. <Link to="/notifications">Xem tất cả thông báo</Link></p>}<p className="muted">Tự cập nhật mỗi 15 giây khi mở trang.</p><InlineError message={command.error} />{!data.items.length ? <EmptyState message="Chưa có thông báo nào cho tài khoản này." /> : <div className="notification-list">{data.items.map(item => <article key={item.id} className={item.readAt ? 'read' : 'unread'}><div><h2>{notificationCopy(item).title}</h2><p>{notificationCopy(item).message}</p><time dateTime={item.createdAt}>{new Date(item.createdAt).toLocaleString('vi-VN')}</time>{/^[0-9a-f-]{36}$/i.test(item.aggregateId) && <p><Link to={`${/^(Incident|EquipmentReplaced)/.test(item.eventType) ? (user?.role === 'STUDENT' ? '/incidents' : '/staff/incidents') : '/loans'}/${encodeURIComponent(item.aggregateId)}`}>{/^(Incident|EquipmentReplaced)/.test(item.eventType) ? 'Xem sự cố thiết bị' : 'Xem phiếu mượn'}</Link></p>}</div>{item.readAt ? <span>Đã đọc</span> : <button className="button-quiet" disabled={command.busy} onClick={() => void mark(item.id)}>Đánh dấu đã đọc</button>}</article>)}</div>}<Pager page={page} total={data.total} pageSize={data.pageSize} onChange={setPage} /></section>;
 }

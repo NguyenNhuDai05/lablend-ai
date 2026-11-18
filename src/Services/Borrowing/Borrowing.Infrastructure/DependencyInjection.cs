@@ -30,6 +30,9 @@ public static class DependencyInjection
                 && o.DeadlineSeconds is >= 1 and <= 30, "Invalid Inventory endpoint/deadline.");
         services.AddSingleton(sp => Grpc.Net.Client.GrpcChannel.ForAddress(sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<InventoryOptions>>().Value.GrpcAddress));
         services.AddScoped<IInventoryClient, InventoryGrpcClient>();
+        services.AddScoped<IInventoryIncidentClient, InventoryGrpcClient>();
+        services.AddScoped<IncidentService>();
+        services.AddScoped<IncidentWorkflow>();
         services.AddSingleton(TimeProvider.System);
         services.AddHttpClient<ICatalogClient, CatalogClient>(client =>
         {
