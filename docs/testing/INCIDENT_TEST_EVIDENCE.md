@@ -2,6 +2,10 @@
 
 Ngày chạy: 18/11/2026, Windows/.NET 8/Node 22, Docker Desktop Linux, Chromium. Các test dữ liệu thật dùng PostgreSQL/Redis fixture riêng, Kestrel thật và gRPC HTTP/2. Không reset hoặc xóa volume/database demo. Cấu hình `LABLEND_POSTGRES_TESTS=1`, `LABLEND_BROWSER_TESTS=1`; không đánh dấu PASS cho test bị bỏ qua.
 
+## Sửa lỗi CI tìm nút bảo trì
+
+Hai lượt CI đầu của PR #23 trên Linux phát hiện M3 browser dùng locator nút bảo trì toàn trang khi kết quả lọc serial đang cập nhật. Collection browser dùng chung database nên có thể có nhiều thiết bị bảo trì hợp lệ; Playwright báo strict-mode khi thấy hai nút. Các thao tác hoàn tất/bắt đầu bảo trì và xem lịch sử nay được giới hạn vào hàng có cell serial khớp chính xác. Browser Flow 3 cũng dùng cùng cách. Không chọn `.first()` để né lỗi, không xóa dữ liệu fixture và không bỏ assertion hay test. Các số PASS local bên dưới thuộc lượt đã thực thi trước bản sửa locator; CI bản cập nhật được theo dõi riêng tại PR.
+
 ## Lệnh đã thực thi
 
 ```powershell

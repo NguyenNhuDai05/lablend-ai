@@ -96,7 +96,9 @@ try {
   await admin.getByRole('link', { name: (await read(`api/incidents/${incidentId}`, studentSession.accessToken)).code, exact: true }).waitFor();
   await admin.getByRole('heading', { name: 'Thiết bị có lỗi đã được xác nhận', exact: true }).waitFor(); await shot(admin, 'admin-statistics');
   await staff.goto(origin + '/staff/inventory'); await staff.getByPlaceholder('Serial hoặc vị trí').fill(old.serialNumber);
-  await staff.getByRole('button', { name: 'Tìm', exact: true }).click(); await staff.getByRole('button', { name: 'Hoàn tất bảo trì', exact: true }).click();
+  await staff.getByRole('button', { name: 'Tìm', exact: true }).click();
+  const originalRow = staff.getByRole('row').filter({ has: staff.getByRole('cell', { name: old.serialNumber, exact: true }) });
+  await originalRow.getByRole('button', { name: 'Hoàn tất bảo trì', exact: true }).click();
   await staff.getByLabel('Kết quả bảo trì').fill('Đã sửa lỗi nguồn, kiểm tra đạt và đưa vào sử dụng.');
   await staff.getByRole('button', { name: 'Hoàn tất', exact: true }).click();
   await staff.goto(`${origin}/staff/loans/${loanId}`); await staff.getByRole('combobox', { name: /Tình trạng trả/ }).selectOption('NORMAL');
