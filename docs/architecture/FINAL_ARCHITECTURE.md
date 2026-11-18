@@ -1,6 +1,6 @@
 # Final architecture checkpoint
 
-Implemented core: React, YARP, five business REST hosts, independently deployed Inventory gRPC, Borrowing Worker, Redis Streams and PostgreSQL. Recommendation remains an optional skeleton with Gemini disabled. Every production UI mutation uses an authorized API. A browser does not allocate physical assets or write service databases.
+Implemented core: React, YARP, five business REST hosts, independently deployed Inventory gRPC, Borrowing Worker, Redis Streams and PostgreSQL. Recommendation implements optional Gemini advice, per-user PostgreSQL history and read-only Inventory availability; Gemini remains disabled by default. Every production UI mutation uses an authorized API. A browser does not allocate physical assets or write service databases.
 
 ## C4 context
 
@@ -46,7 +46,7 @@ API/controller calls Application services and ports. Infrastructure implements r
 | inventory_db / inventory_user | AssetUnits, Reservations, ReserveOperations, MaintenanceRecords, StockMovements |
 | borrowing_db / borrowing_user | LoanRequests, LoanItems, LoanHistories, LoanSubmissions, InventoryOperations, OutboxMessages, ReminderDispatches |
 | notification_db / notification_user | notifications, inbox_messages |
-| recommendation_db / recommendation_user | Reserved optional context; no implemented AI history migration |
+| recommendation_db / recommendation_user | RecommendationSessions, RecommendationItems and atomic per-user/day RecommendationDailyUsage; no cross-service FK |
 
 All lines below are local foreign keys. EquipmentTypeId, StudentId and cross-service loan/asset IDs elsewhere are logical references with no cross-database FK or SQL join.
 
@@ -160,3 +160,7 @@ Lost replies are reconciled using GetOperationStatus and immutable command inten
 Stream `lablend.events.v1`, field `event`, version 1, group `notification-consumers`; seven event types are in the schema and executable producer/consumer tests. XAUTOCLAIM reclaims idle pending entries. Inbox EventId deduplicates notification effects. Repeated non-Redis failures park after the configured attempt limit; Redis failures remain pending.
 
 OD-04/05, retention/archive horizon, replay and parking policy remain **PENDING HUMAN REVIEW**. No stream trimming, inbox deletion, outbox dropping, group resetting or fabricated owner signoff was introduced. The tradeoff is unbounded storage until an approved retention policy exists. See [event contract](../events/EVENT_CONTRACT_GUIDE.md) and [technical review](../events/M3_CONTRACT_REVIEW.md).
+
+## Optional Gemini Recommendation
+
+The .NET Recommendation API orchestrates Catalog REST candidates, Google Gemini HTTPS structured output and Inventory v1 CheckAvailability over authenticated HTTP/2. Only Student JWTs can create/read their own sessions; PostgreSQL stores references and explanations, without Catalog copies. The browser calls the Gateway and sends validated multi-selections to the existing Borrowing form through navigation state. No Recommendation path reserves, approves or allocates assets. See [contract](../api/RECOMMENDATION_API_CONTRACT.md) and [deployment/demo](../demo/RECOMMENDATION_DEMO.md). Core has no dependency on this optional service or Google.

@@ -1,0 +1,43 @@
+{
+  "environment": "lablend-gemini-live-cfd6026e2a",
+  "webUrl": "http://localhost:61119",
+  "gatewayUrl": "http://localhost:61118",
+  "mocked": false,
+  "configuredModel": "gemini-3.5-flash-lite",
+  "generationRequests": 1,
+  "steps": {
+    "testDataIsolation": {
+      "status": "PASS",
+      "evidence": "Separate Docker project, databases, credentials and new test accounts; no production writes."
+    },
+    "authorization": {
+      "status": "PASS",
+      "evidence": "Anonymous 401; JWT LAB_STAFF and ADMIN 403 before provider invocation."
+    },
+    "catalog": {
+      "status": "PASS",
+      "evidence": "5 actual active records from isolated Catalog REST/PostgreSQL, not mock responses."
+    },
+    "studentLogin": {
+      "status": "PASS",
+      "evidence": "Real Identity login in the browser; JWT retained only in memory."
+    },
+    "formValidation": {
+      "status": "PASS",
+      "evidence": "Empty purpose disables submit; valid non-personal experiment description entered."
+    },
+    "loading": {
+      "status": "PASS",
+      "evidence": "Observed analyzing state during the live request."
+    },
+    "recommendationApi": {
+      "status": "FAIL",
+      "evidence": "HTTP 503, code AI_UNAVAILABLE; no automatic retry."
+    }
+  },
+  "recommendationId": null,
+  "loanId": null,
+  "recommendationHttpStatus": 503,
+  "correlationId": "94514c30-e3cc-41c9-b612-f65bd303191c",
+  "error": "Live backend request failed: HTTP 503, AI_UNAVAILABLE. No second generation request sent."
+}

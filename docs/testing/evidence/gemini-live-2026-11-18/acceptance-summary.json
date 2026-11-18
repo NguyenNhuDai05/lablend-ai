@@ -1,0 +1,77 @@
+{
+  "date": "2026-11-18",
+  "apiKey": "Configured",
+  "model": "gemini-3.5-flash-lite",
+  "modelMetadataHttpStatus": 200,
+  "modelSupportsGenerateContent": true,
+  "freeTierProject": "PASS based on explicit user confirmation and model Free Tier documentation; private billing console not independently audited",
+  "mainHealthyServices": 11,
+  "runtimeTimeoutSeconds": 30,
+  "runtimeMaxOutputTokens": 4096,
+  "runtimeDailyLimit": 20,
+  "generationAttempts": 2,
+  "providerHttpStatus": 200,
+  "providerHttpSuccess": "PASS",
+  "recommendationHttpStatus": 201,
+  "recommendationCode": "SUCCESS",
+  "correlationId": "3c4e4f67-0897-4e65-b849-fef6b54323b5",
+  "liveAiToLoan": "PASS",
+  "recommendationsSaved": 1,
+  "recommendationItemsSaved": 4,
+  "dailyAttemptsSaved": 1,
+  "coreBorrowing": {
+    "loanId": "a805c1b0-d0a2-461d-9e3f-26babd1e7932",
+    "inventoryReservations": 0,
+    "additionalRecommendationPosts": 0,
+    "loansSaved": 1,
+    "environment": "isolated test project",
+    "itemsSaved": 2,
+    "status": "PASS"
+  },
+  "secrets": {
+    "keyInServedFrontendBundle": false,
+    "keyInFixtureServiceLogs": false,
+    "keyInGitVisibleFiles": false,
+    "keyUnchanged": true
+  },
+  "frontend": {
+    "mockBrowser": "PASS",
+    "productionBuild": "PASS",
+    "unitTestsPassed": 30
+  },
+  "npmAudit": {
+    "publishedPatch": "None at verification time",
+    "allDependenciesHigh": 4,
+    "affectedDevPackage": "picomatch 4.0.7",
+    "runtimeOnlyVulnerabilities": 0
+  },
+  "billingChanged": false,
+  "automatedBackend": {
+    "status": "PASS",
+    "aggregateCommandStatus": "FAIL",
+    "aggregatePassed": 138,
+    "aggregateFailed": 1,
+    "aggregateTotal": 139,
+    "recommendationPassed": 67,
+    "failedCase": "Member3BrowserTests Staff login response timeout in full run",
+    "retry": "PASS: same test and timeouts, 1 passed, 0 failed/skipped, 3m25s",
+    "distinctTestsPassed": 139,
+    "googleCallsInAutomatedTests": 0
+  },
+  "providerHttpStatuses": [
+    503,
+    200
+  ],
+  "additionalAttemptAuthorization": "User explicitly approved one additional live call after initial HTTP 503.",
+  "liveBorrowing": {
+    "status": "PASS",
+    "recommendationId": "2d75f87e-8e56-49c0-a502-e26dd5b664ea",
+    "loanId": "387699cf-f600-4de8-9630-bd13c3a8a780",
+    "recommendedTypes": 4,
+    "selectedTypes": 3,
+    "loanUnits": 4,
+    "inventoryReservations": 0,
+    "historyOwnership": "PASS",
+    "environment": "lablend-gemini-live-572cee811d"
+  }
+}

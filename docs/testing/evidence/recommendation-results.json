@@ -1,0 +1,66 @@
+{
+  "date": "2026-11-18",
+  "baseline": "f85c357",
+  "recommendation": {
+    "passed": 66,
+    "failed": 0,
+    "status": "PASS",
+    "gemini": "mock HTTP only",
+    "skipped": 0,
+    "realDependencies": [
+      "PostgreSQL migrations and constraints",
+      "Catalog REST",
+      "Inventory HTTP/2 CheckAvailability"
+    ]
+  },
+  "frontend": {
+    "status": "PASS",
+    "productionBuild": "PASS",
+    "desktopAndMobile": "PASS",
+    "playwrightMockWorkflow": "PASS",
+    "unitTests": 30
+  },
+  "docker": {
+    "isolatedRuntimeSmoke": "PASS",
+    "linuxImageBuild": "PASS",
+    "linuxSolutionBuildWarnings": 0,
+    "linuxSolutionBuildErrors": 0,
+    "disabledFeature": "503 AI_UNAVAILABLE",
+    "jwtStaff": 403,
+    "jwtAnonymous": 401,
+    "automaticMigrations": "PASS",
+    "composeConfig": "PASS"
+  },
+  "efSnapshot": "PASS",
+  "regression": {
+    "status": "PASS (separate suite runs)",
+    "completedSuites": {
+      "platformIntegration": 10,
+      "inventory": 11,
+      "catalog": 3,
+      "platformUnit": 20,
+      "sprint1": 27,
+      "coreBrowser": 1
+    },
+    "legacyBrowser": "PASS with LABLEND_POSTGRES_TESTS=1 and LABLEND_BROWSER_TESTS=1, unmodified Member3BrowserTests",
+    "reason": "Initial aggregate command interrupted for memory pressure; each suite subsequently completed. 138 distinct backend/E2E tests passed, including 66 Recommendation tests and 1 real-service core browser test.",
+    "distinctPassed": 138,
+    "failed": 0,
+    "remainingUnverified": 0
+  },
+  "liveGemini": {
+    "status": "NOT RUN",
+    "billingEnabled": false,
+    "reason": "No key or paid tier configured by this task"
+  },
+  "sandboxRetries": [
+    "git DNS retry",
+    "dotnet build outside constrained process sandbox",
+    "npm ci after EPERM"
+  ],
+  "notes": [
+    "Previous real dependency attempt returned 503 while running concurrently with full regression; isolated retry and final 66-test Recommendation run passed",
+    "Smoke checker was corrected to decode application/problem+json byte content in PowerShell",
+    "Core browser exposed a frontend regression blocking ordinary Catalog loans at zero stock; source fixed to scope blocking to AI prefill only, old test unchanged and rerun PASS. Added browser regression coverage for both prefill sources."
+  ]
+}

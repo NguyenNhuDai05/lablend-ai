@@ -33,7 +33,9 @@ flowchart LR
   Borrowing -->|transactional Outbox| Worker[Borrowing Worker]
   Worker -->|XADD| Redis[Redis Streams]
   Redis -->|consumer group and Inbox| Notification
-  Recommendation -. planned HTTPS .-> Gemini[Google Gemini external]
+  Recommendation -->|HTTPS generateContent| Gemini[Google Gemini external]
+  Recommendation -->|REST candidates| Catalog
+  Recommendation -->|gRPC CheckAvailability| Inventory
   DB[(PostgreSQL: 6 isolated databases)]
   Identity --> DB
   Catalog --> DB
@@ -43,7 +45,7 @@ flowchart LR
   Recommendation --> DB
 ```
 
-Mỗi service có `Host/Api → Application → Domain`; Infrastructure triển khai repositories/ports và DbContext riêng. Inventory được deploy riêng, proto allocation v1 có sáu RPC; Borrowing dùng service credential, deadline và correlation metadata. Worker quét hạn/operations và publish Outbox qua Redis; Notification dùng consumer group + Inbox dedupe. Một PostgreSQL instance chứa 6 database với 6 login riêng; không FK/SQL join/DbContext xuyên service. Nét đứt chỉ phần bonus Planned.
+Mỗi service có `Host/Api → Application → Domain`; Infrastructure triển khai repositories/ports và DbContext riêng. Inventory được deploy riêng, proto allocation v1 có sáu RPC; Borrowing dùng service credential, deadline và correlation metadata. Worker quét hạn/operations và publish Outbox qua Redis; Notification dùng consumer group + Inbox dedupe. Một PostgreSQL instance chứa 6 database với 6 login riêng; không FK/SQL join/DbContext xuyên service. Recommendation là bonus opt-in; Gemini disabled mặc định.
 
 ## Technology stack
 
@@ -57,7 +59,7 @@ Mỗi service có `Host/Api → Application → Domain`; Infrastructure triển 
 | Frontend | React, TypeScript, Vite, npm lockfile |
 | Tests | xUnit; WebApplicationFactory cho platform tests |
 | Deploy | Docker Compose local, multi-stage images |
-| Bonus | Google Gemini API, chưa tích hợp, tắt mặc định |
+| Bonus | Google Gemini API, backend + UI + history đã triển khai, tắt mặc định |
 
 Backend versions khóa tại `Directory.Packages.props`; SDK tại `global.json`; frontend versions khóa trong `apps/web/package.json` và `package-lock.json`. Không dùng .NET/EF Core 9 hoặc 10. **.NET 8 đã hết hỗ trợ vào 10/11/2026**, chỉ dùng cho coursework local theo quyết định V4; cần nâng cấp trước khi vận hành public lâu dài ([Microsoft policy](https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core)). Image tags theo nhánh phiên bản, không phải digest bất biến.
 
@@ -78,7 +80,7 @@ docker compose ps
 ./scripts/Verify-Sprint2.ps1  # current Borrowing endpoints/migrations, four job passes and readiness
 ```
 
-Script setup sinh `.env` với random credentials, **không in secrets và không ghi đè file đã tồn tại**. Không chỉ copy `.env.example` rồi để password rỗng. Compose core chạy mặc định: web, gateway, identity, catalog, inventory, borrowing, notification, worker, postgres, redis. Optional recommendation host sau khi đã build bonus: `./scripts/Start-Core.ps1 -IncludeBonus`; host này chưa tích hợp AI và không nhận API key trong Sprint 0. Observability dashboard là **Planned**, chưa tạo profile giả. Core không phụ thuộc Gemini hoặc Internet khi đã tải image/package.
+Script setup sinh `.env` với random credentials, **không in secrets và không ghi đè file đã tồn tại**. Không chỉ copy `.env.example` rồi để password rỗng. Compose core chạy mặc định: web, gateway, identity, catalog, inventory, borrowing, notification, worker, postgres, redis. Optional recommendation host sau khi đã build bonus: `./scripts/Start-Core.ps1 -IncludeBonus`; host nhận key server-side từ .env khi chủ động bật AI; xem hướng dẫn Recommendation bên dưới. Observability dashboard là **Planned**, chưa tạo profile giả. Core không phụ thuộc Gemini hoặc Internet khi đã tải image/package.
 
 | URL mặc định | Dùng để làm gì |
 |---|---|
@@ -90,7 +92,7 @@ Script setup sinh `.env` với random credentials, **không in secrets và khôn
 | http://localhost:5080/platform/notification/health/ready | Notification → PostgreSQL + Redis PING |
 | http://localhost:5080/platform/identity/openapi.json | OpenAPI schema của host qua Gateway |
 
-Chỉ web và gateway publish cổng **loopback**; DB/Redis/API/gRPC nằm trong Docker network `backend` internal. Gateway có thêm network `edge`. Khi bonus tắt, route Recommendation có thể trả 502; core vẫn chạy, không coi đây là AI endpoint đã hoàn thiện.
+Chỉ web và gateway publish cổng **loopback**; DB/Redis/API/gRPC nằm trong Docker network `backend` internal. Gateway và Recommendation bonus có thêm network `edge` (Recommendation cần outbound HTTPS đến Google). Khi bonus tắt, route Recommendation có thể trả 502; core vẫn chạy, UI hiển thị AI không khả dụng và liên kết về danh mục.
 
 `/health/live` kiểm tra process; REST `/health/ready` kiểm tra dependency kết nối thực, chưa chứng nhận toàn nghiệp vụ. Worker heartbeat yêu cầu PostgreSQL, Redis, Inventory RPC được xác thực và recent passes của cả bốn jobs; dependency lỗi sẽ xóa heartbeat. Nghiệm thu overdue vẫn cần event/notification và logs thực trong acceptance. Standard `grpc.health.v1.Health` không thay ReserveAssets.
 
@@ -186,11 +188,11 @@ Mở http://localhost:5173. Frontend đã có routing, register/login/session re
 | `REDIS_PASSWORD` | Redis auth và các host cần Redis |
 | `JWT_SIGNING_KEY` | Random tối thiểu 32 byte; Identity phát JWT và Gateway/REST validate cùng issuer/audience/key |
 | `INVENTORY_SERVICE_TOKEN` | Bearer service credential cho mọi Inventory business RPC; Borrowing API/worker dùng cùng credential nội bộ, không dùng user JWT |
-| `GEMINI_ENABLED`, `GEMINI_API_KEY`, `GEMINI_MODEL` | Dành cho bonus tương lai; hiện disabled, không truyền key vào container |
+| `GEMINI_ENABLED`, `GEMINI_API_KEY`, `GEMINI_MODEL` | Bonus Recommendation; server-side, disabled mặc định; Free tier project do người dùng tự cấu hình |
 | `GATEWAY_PORT`, `WEB_PORT` | Publish loopback, mặc định 5080/3000 |
 | `POSTGRES_DEV_PORT`, `REDIS_DEV_PORT` | Chỉ file Compose dev dùng, mặc định 55432/56379 |
 
-Database/users, migration commands, init/reapply: [DATABASE_CONVENTIONS](docs/architecture/DATABASE_CONVENTIONS.md). Identity/Borrowing/Notification Development startup áp dụng migrations thật; production mặc định tắt auto-migrate. Catalog/Inventory áp dụng migrations + seed idempotent của M2 khi host khởi động; Recommendation vẫn skeleton. `docker compose down` giữ volumes. **Không chạy `down -v` nếu chưa chủ động chấp nhận mất dữ liệu development.** Setup/init không tự xóa volume.
+Database/users, migration commands, init/reapply: [DATABASE_CONVENTIONS](docs/architecture/DATABASE_CONVENTIONS.md). Identity/Borrowing/Notification Development startup áp dụng migrations thật; production mặc định tắt auto-migrate. Catalog/Inventory áp dụng migrations + seed idempotent của M2 khi host khởi động; Recommendation có migrations session/items và atomic daily usage, áp dụng theo Database:AutoMigrate (Development/Compose bật). `docker compose down` giữ volumes. **Không chạy `down -v` nếu chưa chủ động chấp nhận mất dữ liệu development.** Setup/init không tự xóa volume.
 
 ## Sprint 1 Identity and Borrowing
 
@@ -253,4 +255,12 @@ Trước khi main có Sprint 0, checkout branch bootstrap rồi tạo feature br
 
 Chẩn đoán startup 139: [bằng chứng PostgreSQL bootstrap/health race và correction](docs/testing/FINAL_DOCKER_DIAGNOSIS.md). Không suy luận OOM từ exit code hoặc xóa volumes để xử lý.
 
-Không có hosting, domain, managed DB/Redis hoặc API trả phí. Gemini chưa được tích hợp; lúc triển khai bonus chỉ dùng Free Tier đủ điều kiện và không bật billing. Trạng thái **Implemented / Scaffolded / Planned / Blocked** phải được cập nhật theo bằng chứng thật, không theo số lượng project.
+Không có hosting, domain, managed DB/Redis hoặc API trả phí. Gemini đã được tích hợp trong backend Recommendation; chỉ bật với Free Tier đủ điều kiện và không bật billing. Live provider verification được ghi riêng, không suy từ mock tests. Trạng thái **Implemented / Scaffolded / Planned / Blocked** phải được cập nhật theo bằng chứng thật, không theo số lượng project.
+
+## Google Gemini equipment recommendation
+
+Student có thể vào `/recommendations`, nhập mục tiêu, xem gợi ý từ Catalog thật với Inventory read-only, chọn nhiều thiết bị rồi chuyển sang form mượn để chọn hạn trả và xác nhận. History riêng từng user tại `/recommendations/history`. Gemini không giữ kho hoặc duyệt phiếu.
+
+Xem [API contract](docs/api/RECOMMENDATION_API_CONTRACT.md), [cấu hình Free Tier và demo Windows](docs/demo/RECOMMENDATION_DEMO.md), [báo cáo triển khai và kết quả kiểm thử](docs/testing/RECOMMENDATION_IMPLEMENTATION.md). Mặc định AI tắt; không có key thì trả AI_UNAVAILABLE, core vẫn chạy. Không gửi key qua chat, không đặt vào VITE_* hoặc commit .env.
+
+[Nghiệm thu live ngày 18/11/2026](docs/testing/GEMINI_LIVE_ACCEPTANCE_REPORT.md) ghi riêng cấu hình runtime, một lượt Google HTTP thực tế, kết quả API/UI, fixture Borrowing và automated tests. Không coi metadata/model lookup hoặc mock tests là bằng chứng Gemini inference thành công.

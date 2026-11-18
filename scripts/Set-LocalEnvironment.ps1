@@ -16,8 +16,13 @@ $env:Jwt__Issuer = 'lablend-ai'
 $env:Jwt__Audience = 'lablend-web'
 $env:ConnectionStrings__Redis = "localhost:$($settings['REDIS_DEV_PORT']),password=$($settings['REDIS_PASSWORD'])"
 $env:Inventory__ServiceToken = $settings['INVENTORY_SERVICE_TOKEN']
-$env:Gemini__Enabled = 'false'
-$env:Gemini__ApiKey = ''
+$env:Gemini__Enabled = if ($Service -eq 'recommendation' -and $settings['GEMINI_ENABLED']) { $settings['GEMINI_ENABLED'] } else { 'false' }
+$env:Gemini__ApiKey = if ($Service -eq 'recommendation') { $settings['GEMINI_API_KEY'] } else { '' }
+$env:Gemini__Model = if ($settings['GEMINI_MODEL']) { $settings['GEMINI_MODEL'] } else { 'gemini-3.5-flash-lite' }
+$env:Gemini__TimeoutSeconds = if ($settings['GEMINI_TIMEOUT_SECONDS']) { $settings['GEMINI_TIMEOUT_SECONDS'] } else { '30' }
+$env:Gemini__MaxOutputTokens = if ($settings['GEMINI_MAX_OUTPUT_TOKENS']) { $settings['GEMINI_MAX_OUTPUT_TOKENS'] } else { '4096' }
+$env:Recommendation__DailyLimit = if ($settings['RECOMMENDATION_DAILY_LIMIT']) { $settings['RECOMMENDATION_DAILY_LIMIT'] } else { '20' }
+$env:Catalog__BaseAddress = 'http://localhost:5102/'
 $env:Inventory__GrpcAddress = 'http://localhost:5181'
 $ports = @{gateway=5080; identity=5101; catalog=5102; inventory=5103; borrowing=5104; notification=5105; recommendation=5106}
 if ($Service -eq 'gateway') {

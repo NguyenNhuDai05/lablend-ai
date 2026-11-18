@@ -28,7 +28,7 @@ Pagination: `items`, `total`, `page` (1-based), `pageSize`. DTO kỹ thuật t�
 | Inventory Admin / M2 | Implemented — xem Inventory v1 bên dưới | OD-01–03 chờ M1 review |
 | Borrowing / M1 (Core implemented) | POST /api/loans; GET /api/loans/my; GET /api/loans/{id}; staff list; POST .../{id}/cancel,/reject | OD-08; owner from sub. Approve/handover/returns/timeline và REST→gRPC vẫn PLANNED, xem Borrowing contract |
 | Notification / M3 (REST implemented) | GET /api/notifications; PATCH /api/notifications/{id}/read; GET /api/notifications/unread-count | OD-04–05; owner from sub; inbox dedupe; T12–T18 |
-| Recommendation / M3 (planned bonus) | POST /api/recommendations; GET /api/recommendations/history | Bonus only; OD-09; 503 AI_UNAVAILABLE / 502 AI_INVALID_RESPONSE; T19/T25/T26 |
+| Recommendation / M3 (implemented bonus) | POST /api/recommendations; GET /api/recommendations/history; GET /api/recommendations/{id} | STUDENT + owner; real Gemini integration disabled by default; see RECOMMENDATION_API_CONTRACT.md |
 
 ## Catalog v1 (Implemented, M2, chờ M3 review OD-07)
 
@@ -71,9 +71,9 @@ PUT nhận thêm `isActive`. Seed qua migration: 3 categories `c0000000-…-0000
 
 Asset status: AVAILABLE, RESERVED, ON_LOAN, MAINTENANCE, LOST, RETIRED. Mỗi lần đổi status ghi một dòng StockMovements trong cùng transaction: `fromStatus` null = trạng thái đầu tiên (tạo mới, hoặc baseline khi migration chạy); thay đổi qua REST có `changedBy` (JWT `sub`), thay đổi qua gRPC có `loanId`. Replay gRPC và retire lặp lại không ghi thêm dòng. Reserve/handover/return **không** có REST: chỉ Borrowing gọi qua gRPC ([guide](../grpc/INVENTORY_CONTRACT_GUIDE.md)). Seed 13 units `a0000000-…-0000000000NN` cho 5 equipment types của Catalog; `e…04` (kính hiển vi) chỉ có 1 unit để demo tranh chấp. Lỗi nghiệp vụ trả `code` như `CONFLICT`, `NOT_FOUND`.
 
-Identity và Borrowing Core xem contracts dưới đây. Borrowing approval/handover/returns/timeline và Recommendation vẫn PLANNED; routing prefix không chứng minh business implementation.
+Identity và Borrowing Core xem contracts dưới đây. Trạng thái Borrowing approval/handover/returns/timeline xem Borrowing contract; Recommendation bonus đã triển khai theo contract bên dưới. Routing prefix riêng lẻ không chứng minh business implementation.
 
-Sprint 1: Identity và Borrowing Core đã có Controllers/OpenAPI thật. Hợp đồng hiện hành: [Identity](IDENTITY_API_CONTRACT.md), [Borrowing](BORROWING_API_CONTRACT.md). Catalog/Inventory đã có controllers và migrations thật. Notification REST đã có list, mark-read và unread-count theo owner JWT; Redis consumer giữ proposal OD-04/05. Recommendation vẫn skeleton. Borrowing approve/handover/returns/timeline/dashboard vẫn PLANNED. Bằng chứng tích hợp Catalog thật được ghi riêng trong PR8_INTEGRATION_ACCEPTANCE.md. Không dùng HTTP 200 giả để thay CRUD.
+Sprint 1: Identity và Borrowing Core đã có Controllers/OpenAPI thật. Hợp đồng hiện hành: [Identity](IDENTITY_API_CONTRACT.md), [Borrowing](BORROWING_API_CONTRACT.md). Catalog/Inventory đã có controllers và migrations thật. Notification REST đã có list, mark-read và unread-count theo owner JWT; Redis consumer giữ proposal OD-04/05. Recommendation đã có backend Gemini, owner history và UI theo RECOMMENDATION_API_CONTRACT.md. Borrowing approve/handover/returns/timeline/dashboard vẫn PLANNED. Bằng chứng tích hợp Catalog thật được ghi riêng trong PR8_INTEGRATION_ACCEPTANCE.md. Không dùng HTTP 200 giả để thay CRUD.
 
 Swagger ở mỗi REST host: `/swagger`; schema `/swagger/v1/swagger.json`. Gateway allowlist xuất schema qua `/platform/<service>/openapi.json`. Health endpoints không được coi là CRUD operations. Khi thêm controller thực, viết response/status documentation và authorize ở chính service.
 
@@ -96,6 +96,6 @@ Tất cả endpoints cần JWT; owner lấy từ `sub`, không nhận userId t�
 
 NotificationDto: `{id,eventType,aggregateId,title,message,createdAt,readAt}` (readAt nullable). Consumer/migration của M3 được giữ nguyên; end-to-end Borrowing producer→Redis→Notification vẫn PLANNED theo OD-04/05.
 
-## Recommendation (planned bonus)
+## Recommendation (implemented bonus)
 
-`POST /api/recommendations` và `GET /api/recommendations/history` chưa có business controllers. Gateway prefix/health/Swagger host không chứng minh implementation. Không có Gemini call/billing trong PR8 integration.
+`POST /api/recommendations`, `GET /api/recommendations/history` và `GET /api/recommendations/{id}` đã triển khai cho STUDENT, ownership từ JWT sub. Xem [contract đầy đủ](RECOMMENDATION_API_CONTRACT.md), [demo/configuration](../demo/RECOMMENDATION_DEMO.md). Gemini disabled mặc định; chỉ backend gọi Google, kiểm tra Catalog và đọc Inventory CheckAvailability. Live Gemini verification được báo cáo riêng, không suy ra từ mock tests.

@@ -200,12 +200,22 @@ services:
       ASPNETCORE_ENVIRONMENT: "Development"
       Jwt__SigningKey: "${JWT_SIGNING_KEY:?Generate .env first}"
       ConnectionStrings__Database: "Host=postgres;Database=recommendation_db;Username=recommendation_user;Password=${RECOMMENDATION_DB_PASSWORD:?Generate .env first};Timeout=3"
-      Gemini__Enabled: "false"
+      Database__AutoMigrate: "true"
+      Gemini__Enabled: "${GEMINI_ENABLED:-false}"
+      Gemini__ApiKey: "${GEMINI_API_KEY:-}"
+      Gemini__Model: "${GEMINI_MODEL:-gemini-3.5-flash-lite}"
+      Gemini__TimeoutSeconds: "${GEMINI_TIMEOUT_SECONDS:-30}"
+      Gemini__MaxOutputTokens: "${GEMINI_MAX_OUTPUT_TOKENS:-4096}"
+      Recommendation__DailyLimit: "${RECOMMENDATION_DAILY_LIMIT:-20}"
+      Catalog__BaseAddress: "http://catalog:8080/"
+      Inventory__GrpcAddress: "http://inventory:8081"
+      Inventory__ServiceToken: "${INVENTORY_SERVICE_TOKEN:?Generate .env first}"
     depends_on:
       postgres:
         condition: "service_healthy"
     networks:
       - "backend"
+      - "edge"
     healthcheck:
       test:
         - "CMD"

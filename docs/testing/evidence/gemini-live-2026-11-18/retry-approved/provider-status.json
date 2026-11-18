@@ -1,0 +1,9 @@
+{
+  "ProviderEvents": [
+    {
+      "ProviderStatusCode": 200,
+      "CorrelationId": "3c4e4f67-0897-4e65-b849-fef6b54323b5"
+    }
+  ],
+  "ApiKeyInAnyFixtureLog": false
+}

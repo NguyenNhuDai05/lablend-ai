@@ -1,5 +1,3 @@
 # Recommendation Application
 
-Implement use cases / application services and repository interfaces here.
-Host -> Application -> Domain; Infrastructure implements interfaces.
-Sprint 0 contains no fabricated use cases. Review docs/api/REST_CONTRACTS.md before implementation.
+`RecommendationService` orchestrates input/budget validation, daily attempt admission, real Catalog candidates, Gemini reasoning, output validation, current Catalog verification, read-only Inventory enrichment and successful-session persistence. Ports and transport DTOs are in `Contracts.cs`. This layer references Domain and technical PagedResponse contracts only; provider/network/EF implementations stay in Infrastructure.
