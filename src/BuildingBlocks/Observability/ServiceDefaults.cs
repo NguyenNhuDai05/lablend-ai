@@ -138,7 +138,21 @@ public static class ServiceDefaults
         app.UseExceptionHandler();
         app.UseStatusCodePages();
         app.UseSwagger();
-        app.UseSwaggerUI(options => options.SwaggerEndpoint("v1/swagger.json", $"{service} v1"));
+        app.UseSwaggerUI(options =>
+        {
+            if (service.Equals("Gateway", StringComparison.OrdinalIgnoreCase))
+            {
+                options.SwaggerEndpoint("/platform/catalog/openapi.json", "Catalog v1");
+                options.SwaggerEndpoint("/platform/inventory/openapi.json", "Inventory v1");
+                options.SwaggerEndpoint("/platform/identity/openapi.json", "Identity v1");
+                options.SwaggerEndpoint("/platform/borrowing/openapi.json", "Borrowing v1");
+                options.SwaggerEndpoint("/platform/notification/openapi.json", "Notification v1");
+            }
+            else
+            {
+                options.SwaggerEndpoint("v1/swagger.json", $"{service} v1");
+            }
+        });
         app.UseAuthentication();
         app.UseAuthorization();
         app.MapControllers();

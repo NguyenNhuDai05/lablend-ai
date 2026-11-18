@@ -8,7 +8,7 @@ option csharp_namespace = "LabLend.Inventory.Contracts.V1";
 // - Every RPC requires metadata "authorization: Bearer <INVENTORY_SERVICE_TOKEN>" (UNAUTHENTICATED otherwise).
 //   grpc.health.v1.Health stays anonymous.
 // - IDs are UUID strings. One LoanItem = one physical unit; quantity N = N loan items.
-// - Statuses are the same strings as the REST API: asset AVAILABLE|RESERVED|ON_LOAN|MAINTENANCE|LOST|RETIRED,
+// - Statuses are the same strings as the REST API: assetS AVAILABLE|RESERVED|ON_LOAN|MAINTENANCE|LOST|RETIRED,
 //   reservation HELD|HANDED_OVER|RETURNED|RELEASED.
 // - Every RPC is safe to retry. ReserveAssets is idempotent by operation_id; the others by current state.
 // - Errors: INVALID_ARGUMENT (bad ids/items), NOT_FOUND (nothing to hand over/return),
