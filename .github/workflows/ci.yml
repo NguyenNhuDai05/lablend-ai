@@ -34,6 +34,13 @@ jobs:
         env:
           LABLEND_POSTGRES_TESTS: '1'
           LABLEND_BROWSER_TESTS: '1'
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: browser-failure-screenshots
+          path: .tmp/m3-browser/failure-*.png
+          if-no-files-found: ignore
+          retention-days: 7
       - run: ./scripts/Initialize-Environment.ps1
         shell: pwsh
       - run: docker compose config --quiet
