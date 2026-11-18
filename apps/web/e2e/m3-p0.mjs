@@ -132,22 +132,25 @@ try {
   await staff.goto(`${origin}/staff/inventory`);
   await staff.getByPlaceholder('Serial hoặc vị trí').fill(damagedAsset.serialNumber);
   await staff.getByRole('button', { name: 'Tìm', exact: true }).click();
-  await staff.getByRole('button', { name: 'Hoàn tất bảo trì', exact: true }).click();
+  // Other browser scenarios leave valid maintenance records in this collection's database.
+  // Filter results update asynchronously; always act on the exact physical serial, never a page-wide button.
+  const damagedRow = staff.getByRole('row').filter({ has: staff.getByRole('cell', { name: damagedAsset.serialNumber, exact: true }) });
+  await damagedRow.getByRole('button', { name: 'Hoàn tất bảo trì', exact: true }).click();
   await staff.getByLabel('Kết quả bảo trì').fill('Browser verified repair and inspection');
   await staff.getByRole('button', { name: 'Hoàn tất', exact: true }).click();
   await eventually(async () => (await asset(damagedAsset.id)).status === 'AVAILABLE');
-  await staff.getByRole('button', { name: 'Bảo trì', exact: true }).click();
+  await damagedRow.getByRole('button', { name: 'Bảo trì', exact: true }).click();
   await staff.getByLabel('Lý do', { exact: true }).fill('Browser scheduled inspection');
   await staff.getByRole('button', { name: 'Bắt đầu bảo trì', exact: true }).click();
   await eventually(async () => (await asset(damagedAsset.id)).status === 'MAINTENANCE');
-  await staff.getByRole('button', { name: 'Hoàn tất bảo trì', exact: true }).click();
+  await damagedRow.getByRole('button', { name: 'Hoàn tất bảo trì', exact: true }).click();
   await staff.getByLabel('Kết quả bảo trì').fill('Browser scheduled inspection complete');
   await staff.getByRole('button', { name: 'Hoàn tất', exact: true }).click();
   await eventually(async () => (await asset(damagedAsset.id)).status === 'AVAILABLE');
   const afterMovements = await fetch(`${env.LABLEND_E2E_GATEWAY}api/inventory/assets/${damagedAsset.id}/movements`, { headers: { Authorization: `Bearer ${staffSession.accessToken}` } }).then(r => r.json());
   assert.equal(afterMovements.length, beforeMovements.length + 3);
   for (const movement of beforeMovements) assert.deepEqual(afterMovements.find(m => m.id === movement.id), movement);
-  await staff.getByRole('button', { name: 'Lịch sử', exact: true }).click();
+  await damagedRow.getByRole('button', { name: 'Lịch sử', exact: true }).click();
   await staff.getByRole('heading', { name: `Lịch sử ${damagedAsset.serialNumber}`, exact: true }).waitFor();
   await staff.locator('dialog .timeline li').first().waitFor();
   await screenshot(staff, 'staff-maintenance-history');

@@ -8,11 +8,14 @@ public sealed class LoanExceptionHandler : IExceptionHandler
 {
     public async ValueTask<bool> TryHandleAsync(HttpContext context, Exception exception, CancellationToken ct)
     {
-        var status = exception switch { LoanFailure f => f.Status, LoanStateException => 409, ArgumentException => 400,
+        var status = exception switch { LoanFailure f => f.Status, InventoryFailure f => f.Status, LoanStateException => 409, ArgumentException => 400,
+            Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException => 409,
+            Microsoft.EntityFrameworkCore.DbUpdateException => 503,
             System.Data.Common.DbException => 503, _ => 500 };
         context.Response.StatusCode = status;
         await context.RequestServices.GetRequiredService<IProblemDetailsService>().WriteAsync(new()
-        { HttpContext = context, ProblemDetails = new() { Status = status, Title = status < 500 ? exception.Message : "Dependency unavailable." } });
+        { HttpContext = context, ProblemDetails = new() { Status = status, Title = status < 500 ? exception.Message : "Dependency unavailable.",
+            Extensions = { ["code"] = exception is LoanFailure failure ? failure.Code : exception is InventoryFailure inventory ? inventory.Message : "REQUEST_FAILED" } } });
         return true;
     }
 }

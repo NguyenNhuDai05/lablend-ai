@@ -10,6 +10,7 @@ import { PublicCatalogPage, EquipmentDetailPage } from './features/catalog/Catal
 import { CreateLoanPage, LoanDetailPage, LoansPage } from './features/loans/LoanPages';
 import { ProfilePage, AdminUsersPage, AdminUserDetailPage } from './features/account/AccountPages';
 import { RecommendationPage, RecommendationHistoryPage, RecommendationDetailPage } from './features/recommendations/RecommendationPages';
+import { IncidentListPage, IncidentDetailPage, NewIncidentPage } from './features/incidents/IncidentPages';
 
 export function App() {
   return <Routes><Route element={<AppLayout />}>
@@ -17,6 +18,9 @@ export function App() {
     <Route path="login" element={<LoginPage />} /><Route path="register" element={<RegisterPage />} />
     <Route element={<ProtectedRoute />}>
       <Route path="notifications" element={<NotificationsPage />} /><Route path="profile" element={<ProfilePage />} /><Route path="loans/:id" element={<LoanDetailPage />} />
+      <Route element={<RoleRoute allowed={['STUDENT']} />}><Route path="incidents" element={<IncidentListPage />} /><Route path="incidents/new" element={<NewIncidentPage />} /><Route path="incidents/:id" element={<IncidentDetailPage />} /></Route>
+      <Route element={<RoleRoute allowed={['LAB_STAFF', 'ADMIN']} />}><Route path="staff/incidents" element={<IncidentListPage staff />} /><Route path="staff/incidents/:id" element={<IncidentDetailPage />} /></Route>
+      <Route element={<RoleRoute allowed={['ADMIN']} />}><Route path="admin/incidents" element={<IncidentListPage admin />} /></Route>
       <Route element={<RoleRoute allowed={['STUDENT']} />}><Route path="loans" element={<LoansPage />} /><Route path="loans/new" element={<CreateLoanPage />} /><Route path="recommendations" element={<RecommendationPage />} /><Route path="recommendations/history" element={<RecommendationHistoryPage />} /><Route path="recommendations/:id" element={<RecommendationDetailPage />} /></Route>
       <Route element={<RoleRoute allowed={['LAB_STAFF', 'ADMIN']} />}><Route path="staff" element={<Navigate to="/staff/loans" replace />} /><Route path="staff/loans" element={<LoansPage staff />} /><Route path="staff/loans/:id" element={<LoanDetailPage />} /><Route path="staff/catalog" element={<StaffCatalogRoute />} /><Route path="staff/inventory" element={<StaffInventoryRoute />} /></Route>
       <Route element={<RoleRoute allowed={['ADMIN']} />}><Route path="admin/users" element={<AdminUsersPage />} /><Route path="admin/users/:id" element={<AdminUserDetailPage />} /></Route>

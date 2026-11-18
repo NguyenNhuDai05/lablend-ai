@@ -13,9 +13,15 @@ public sealed class InventoryDbContext(DbContextOptions<InventoryDbContext> opti
     public DbSet<Reservation> Reservations => Set<Reservation>();
     public DbSet<ReserveOperation> ReserveOperations => Set<ReserveOperation>();
     public DbSet<StockMovement> StockMovements => Set<StockMovement>();
+    public DbSet<ReplacementOperation> ReplacementOperations => Set<ReplacementOperation>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<ReplacementOperation>(b =>
+        {
+            b.HasKey(x => x.OperationId); b.Property(x => x.OperationId).ValueGeneratedNever();
+            b.Property(x => x.RequestHash).HasMaxLength(64).IsRequired(); b.Property(x => x.ResultJson).HasColumnType("jsonb");
+        });
         modelBuilder.Entity<AssetUnit>(entity =>
         {
             entity.Property(a => a.SerialNumber).HasMaxLength(64);

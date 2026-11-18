@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Borrowing.Api.Controllers;
 
 [ApiController, Route("api/loans"), Authorize, Produces("application/json")]
-public sealed class LoansController(LoanService service, ILoanLifecycle lifecycle) : ControllerBase
+public sealed class LoansController(LoanService service, ILoanLifecycle lifecycle, IInventoryIncidentClient inventory) : ControllerBase
 {
     private Guid Actor => Guid.Parse(User.FindFirst("sub")!.Value);
     private bool Staff => User.IsInRole(Roles.Admin) || User.IsInRole(Roles.LabStaff);
@@ -32,6 +32,12 @@ public sealed class LoansController(LoanService service, ILoanLifecycle lifecycl
         service.List(null, status, page, pageSize, ct);
     [HttpGet("{id:guid}"), ProducesResponseType<LoanDto>(200), ProducesResponseType<ProblemDetails>(404)]
     public Task<LoanDto> Detail(Guid id, CancellationToken ct) => service.Detail(id, Actor, Staff, ct);
+    [HttpGet("{id:guid}/asset-identities")]
+    public async Task<IReadOnlyList<InventoryAllocation>> Assets(Guid id, CancellationToken ct)
+    {
+        await service.Detail(id, Actor, Staff, ct);
+        return (await inventory.LoanAssets(id, HttpContext.TraceIdentifier, ct)).Allocations;
+    }
     [HttpPost("{id:guid}/cancel"), Authorize(Roles = Roles.Student), ProducesResponseType<LoanDto>(200), ProducesResponseType<ProblemDetails>(409)]
     public Task<LoanDto> Cancel(Guid id, CancellationToken ct) => service.Cancel(id, Actor, ct);
     [HttpPost("{id:guid}/reject"), Authorize(Policy = "StaffOrAdmin"), ProducesResponseType<LoanDto>(200), ProducesResponseType<ProblemDetails>(409)]

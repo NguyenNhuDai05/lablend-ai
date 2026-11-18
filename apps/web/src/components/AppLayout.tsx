@@ -23,9 +23,12 @@ export function AppLayout() {
           <NavLink to="/staff/loans"><Icon name="loans" />Phiếu mượn</NavLink>
           <NavLink to="/staff/catalog"><Icon name="catalog" />Danh mục</NavLink>
           <NavLink to="/staff/inventory"><Icon name="inventory" />Kho thiết bị</NavLink>
+          <NavLink to="/staff/incidents"><Icon name="equipment" />Sự cố thiết bị</NavLink>
         </>}
         <NavLink to="/catalog"><Icon name="equipment" />Thiết bị</NavLink>
         {user?.role === 'ADMIN' && <NavLink to="/admin/users"><Icon name="users" />Tài khoản</NavLink>}
+        {user?.role === 'ADMIN' && <NavLink to="/admin/incidents"><Icon name="catalog" />Thống kê sự cố</NavLink>}
+        {user?.role === 'STUDENT' && <NavLink to="/incidents"><Icon name="equipment" />Sự cố thiết bị</NavLink>}
         {user?.role === 'STUDENT' && <NavLink to="/loans"><Icon name="loans" />Phiếu mượn</NavLink>}
         {user?.role === 'STUDENT' && <NavLink to="/recommendations"><Icon name="sparkles" />AI tư vấn thiết bị</NavLink>}
       </nav>

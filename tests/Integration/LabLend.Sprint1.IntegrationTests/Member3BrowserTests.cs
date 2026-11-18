@@ -23,7 +23,12 @@ public sealed class BrowserPostgresCollection : ICollectionFixture<PostgresFixtu
 public sealed class Member3BrowserTests(PostgresFixture postgres, ITestOutputHelper output)
 {
     [BrowserFact]
-    public async Task P0_React_roles_catalog_loans_admin_profile_notifications_and_worker_use_real_services()
+    public Task P0_React_roles_catalog_loans_admin_profile_notifications_and_worker_use_real_services() => Run("m3-p0.mjs");
+
+    [BrowserFact]
+    public Task Incident_report_inspection_exchange_notifications_admin_and_maintenance_use_real_services() => Run("incidents.mjs");
+
+    private async Task Run(string script)
     {
         var listener = new TcpListener(IPAddress.Loopback, 0); listener.Start(); var port = ((IPEndPoint)listener.LocalEndpoint).Port; listener.Stop();
         var origin = $"http://localhost:{port}";
@@ -43,7 +48,7 @@ public sealed class Member3BrowserTests(PostgresFixture postgres, ITestOutputHel
         while (root != null && !File.Exists(Path.Combine(root.FullName, "LabLendAI.sln"))) root = root.Parent;
         var start = new ProcessStartInfo(Environment.GetEnvironmentVariable("LABLEND_NODE_EXECUTABLE") ?? "node")
         { WorkingDirectory = Path.Combine(root!.FullName, "apps", "web"), UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true, StandardOutputEncoding = Encoding.UTF8, StandardErrorEncoding = Encoding.UTF8 };
-        start.ArgumentList.Add("e2e/m3-p0.mjs");
+        start.ArgumentList.Add("e2e/" + script);
         foreach (var (name, value) in new Dictionary<string, string>
         {
             ["LABLEND_E2E_GATEWAY"] = gateway.Address, ["LABLEND_E2E_PORT"] = port.ToString(),
