@@ -1,0 +1,411 @@
+{
+  "version": 1,
+  "notes": "Danh mục tham khảo cho Import-EquipmentCatalog.ps1. Chỉ ghi thông số đã biết của model/chuẩn thật; thiết bị chung (không gắn model) chỉ mô tả đặc tính chung, thông số cụ thể xem nhãn thiết bị. imageUrl để null khi chưa có ảnh hợp pháp. demoStock/demoCode chỉ dùng khi chạy -WithDemoStock (serial DEMO-<demoCode>-NNN).",
+  "categories": [
+    { "name": "Vi điều khiển & Lập trình nhúng", "description": "Bo mạch vi điều khiển, máy tính nhúng và mạch nạp cho các môn lập trình nhúng, IoT và đồ án.", "demoLocation": "Phòng E103 - Tủ vi điều khiển" },
+    { "name": "Cảm biến & IoT", "description": "Cảm biến môi trường, chuyển động, khoảng cách, dòng điện và nhận dạng dùng trong bài thực hành IoT.", "demoLocation": "Phòng E103 - Kệ cảm biến" },
+    { "name": "Robot & Cơ cấu chấp hành", "description": "Động cơ, servo, relay, bơm và driver để điều khiển chuyển động và tải trong mô hình tự động hóa.", "demoLocation": "Phòng E104 - Kệ robot" },
+    { "name": "Module hiển thị & Truyền thông", "description": "Màn hình, đồng hồ thời gian thực, lưu trữ và module truyền thông không dây cho mạch nhúng.", "demoLocation": "Phòng E103 - Kệ module" },
+    { "name": "Đo lường điện tử", "description": "Máy hiện sóng, đồng hồ vạn năng, máy phát tín hiệu.", "demoLocation": "Phòng E101 - Tủ C" },
+    { "name": "Nguồn điện", "description": "Bộ nguồn DC và thiết bị cấp nguồn cho mạch thí nghiệm.", "demoLocation": "Phòng E102 - Kệ 3" },
+    { "name": "Mạng máy tính", "description": "Thiết bị và dụng cụ thực hành cấu hình, đi dây và kiểm tra mạng LAN.", "demoLocation": "Phòng C301 - Tủ mạng" },
+    { "name": "Thí nghiệm sinh học", "description": "Thiết bị cơ bản cho thí nghiệm sinh học, hóa sinh và vi sinh: pipet, ly tâm, khuấy, đo pH, cân.", "demoLocation": "Phòng B202 - Tủ thiết bị" },
+    { "name": "Kính hiển vi", "description": "Kính hiển vi quang học và phụ kiện.", "demoLocation": "Phòng B201 - Tủ kính" },
+    { "name": "Dụng cụ thực hành", "description": "Dụng cụ hàn, sửa chữa, breadboard, dây cắm và bộ linh kiện cho thực hành lắp mạch.", "demoLocation": "Phòng E104 - Tủ dụng cụ" }
+  ],
+  "equipmentTypes": [
+    {
+      "category": "Vi điều khiển & Lập trình nhúng", "name": "Arduino Uno R3",
+      "description": "Bo mạch vi điều khiển phổ biến nhất cho người mới học lập trình nhúng. Dùng trong bài nhập môn: điều khiển LED, đọc nút nhấn, đọc cảm biến analog, giao tiếp UART/I2C/SPI và các đồ án nhỏ. Lập trình bằng Arduino IDE qua cổng USB, tương thích hầu hết shield và module 5 V.",
+      "specifications": "Vi điều khiển ATmega328P; xung nhịp 16 MHz; mức logic 5 V; 14 chân digital I/O (6 chân PWM); 6 ngõ vào analog; Flash 32 KB; SRAM 2 KB; EEPROM 1 KB; cổng USB-B; nguồn ngoài khuyến nghị 7–12 V",
+      "tags": ["arduino", "microcontroller", "avr", "embedded", "beginner", "5v"], "imageUrl": null, "isActive": true, "demoStock": 5, "demoCode": "UNO"
+    },
+    {
+      "category": "Vi điều khiển & Lập trình nhúng", "name": "Arduino Nano",
+      "description": "Phiên bản nhỏ gọn của Arduino Uno, cắm trực tiếp lên breadboard. Phù hợp đồ án cần kích thước nhỏ như cảm biến cầm tay, xe robot mini hoặc mạch đo đặt trong hộp.",
+      "specifications": "Vi điều khiển ATmega328P; xung nhịp 16 MHz; mức logic 5 V; 14 chân digital I/O (6 chân PWM); 8 ngõ vào analog; Flash 32 KB; SRAM 2 KB; EEPROM 1 KB; cổng Mini-USB",
+      "tags": ["arduino", "microcontroller", "avr", "embedded", "breadboard-friendly"], "imageUrl": null, "isActive": true, "demoStock": 4, "demoCode": "NANO"
+    },
+    {
+      "category": "Vi điều khiển & Lập trình nhúng", "name": "Arduino Mega 2560 Rev3",
+      "description": "Bo Arduino nhiều chân I/O và bộ nhớ lớn, dùng khi đồ án cần nhiều cảm biến, nhiều UART hoặc điều khiển nhiều động cơ cùng lúc (máy in 3D mini, robot nhiều khớp, bảng điều khiển).",
+      "specifications": "Vi điều khiển ATmega2560; xung nhịp 16 MHz; mức logic 5 V; 54 chân digital I/O (15 chân PWM); 16 ngõ vào analog; 4 UART phần cứng; Flash 256 KB; SRAM 8 KB; EEPROM 4 KB; cổng USB-B",
+      "tags": ["arduino", "microcontroller", "avr", "embedded", "5v"], "imageUrl": null, "isActive": true, "demoStock": 3, "demoCode": "MEGA"
+    },
+    {
+      "category": "Vi điều khiển & Lập trình nhúng", "name": "ESP32 Development Board (ESP32-WROOM-32)",
+      "description": "Bo phát triển có sẵn Wi-Fi và Bluetooth, là lựa chọn chính cho bài thực hành IoT: gửi dữ liệu cảm biến lên server/MQTT, web server điều khiển thiết bị, hệ thống tưới cây hoặc nhà thông minh. Lập trình bằng Arduino IDE, ESP-IDF hoặc MicroPython.",
+      "specifications": "SoC ESP32 2 nhân Xtensa LX6, tối đa 240 MHz; SRAM 520 KB; Flash 4 MB (module ESP32-WROOM-32); Wi-Fi 802.11 b/g/n 2.4 GHz; Bluetooth 4.2 (Classic và BLE); ADC 12-bit; mức logic 3.3 V (GPIO không chịu 5 V); cấp nguồn và nạp code qua USB",
+      "tags": ["esp32", "microcontroller", "wifi", "bluetooth", "iot", "3v3"], "imageUrl": null, "isActive": true, "demoStock": 5, "demoCode": "ESP32"
+    },
+    {
+      "category": "Vi điều khiển & Lập trình nhúng", "name": "Raspberry Pi 4 Model B",
+      "description": "Máy tính nhúng chạy Linux, dùng cho bài thực hành hệ điều hành nhúng, xử lý ảnh/camera, gateway IoT, server nhỏ và lập trình Python điều khiển GPIO. Cần thẻ microSD đã cài hệ điều hành và nguồn USB-C đủ dòng.",
+      "specifications": "SoC Broadcom BCM2711, 4 nhân Arm Cortex-A72 64-bit; RAM LPDDR4 (1/2/4/8 GB tùy phiên bản); Wi-Fi 802.11ac 2.4/5 GHz; Bluetooth 5.0, BLE; Gigabit Ethernet; 2 cổng USB 3.0 và 2 cổng USB 2.0; 2 cổng micro-HDMI; 40 chân GPIO (3.3 V); khe thẻ microSD; nguồn USB-C 5 V/3 A",
+      "tags": ["raspberry-pi", "single-board-computer", "linux", "python", "iot", "3v3"], "imageUrl": null, "isActive": true, "demoStock": 3, "demoCode": "RPI4"
+    },
+    {
+      "category": "Vi điều khiển & Lập trình nhúng", "name": "Raspberry Pi Pico",
+      "description": "Bo vi điều khiển giá rẻ dùng chip RP2040, lập trình bằng MicroPython hoặc C/C++ SDK. Phù hợp bài học về PWM, ADC, giao tiếp ngoại vi và PIO (tạo giao thức tùy biến).",
+      "specifications": "Vi điều khiển RP2040, 2 nhân Arm Cortex-M0+ tối đa 133 MHz; SRAM 264 KB; Flash 2 MB; 26 chân GPIO (3 chân ADC 12-bit); 2 UART, 2 SPI, 2 I2C, 16 kênh PWM; 8 máy trạng thái PIO; mức logic 3.3 V; cổng micro-USB",
+      "tags": ["raspberry-pi", "rp2040", "microcontroller", "micropython", "embedded", "3v3"], "imageUrl": null, "isActive": true, "demoStock": 4, "demoCode": "PICO"
+    },
+    {
+      "category": "Vi điều khiển & Lập trình nhúng", "name": "Board STM32F103C8T6 (Blue Pill)",
+      "description": "Bo vi điều khiển ARM Cortex-M3 dùng trong môn vi xử lý nâng cao: lập trình thanh ghi, ngắt, timer, DMA với STM32CubeIDE. Cần mạch nạp ST-Link để nạp và gỡ lỗi.",
+      "specifications": "Vi điều khiển STM32F103C8T6, Arm Cortex-M3 72 MHz; Flash 64 KB; SRAM 20 KB; mức logic 3.3 V; nạp code qua SWD (ST-Link) hoặc UART bootloader",
+      "tags": ["stm32", "arm", "microcontroller", "embedded", "3v3"], "imageUrl": null, "isActive": true, "demoStock": 3, "demoCode": "STM32"
+    },
+    {
+      "category": "Vi điều khiển & Lập trình nhúng", "name": "Mạch nạp ST-Link V2",
+      "description": "Mạch nạp và gỡ lỗi cho vi điều khiển STM32/STM8, mượn kèm board STM32 để nạp firmware, đặt breakpoint và xem thanh ghi khi debug.",
+      "specifications": "Hỗ trợ SWD cho STM32 và SWIM cho STM8; kết nối máy tính qua USB; dùng với STM32CubeIDE/STM32CubeProgrammer",
+      "tags": ["stm32", "programmer", "debugger", "embedded"], "imageUrl": null, "isActive": true, "demoStock": 2, "demoCode": "STLINK"
+    },
+
+    {
+      "category": "Cảm biến & IoT", "name": "Cảm biến nhiệt độ – độ ẩm DHT22 (AM2302)",
+      "description": "Cảm biến nhiệt độ và độ ẩm không khí có độ chính xác tốt hơn DHT11. Dùng cho trạm thời tiết mini, giám sát phòng lab, nhà kính hoặc hệ thống tưới cây tự động.",
+      "specifications": "Nguồn 3.3–5.5 V; độ ẩm 0–100 %RH, sai số điển hình ±2 %RH; nhiệt độ −40 đến 80 °C, sai số ±0.5 °C; chu kỳ đọc tối thiểu 2 giây; giao tiếp 1 dây (single-bus)",
+      "tags": ["dht22", "temperature", "humidity", "sensor", "iot", "irrigation"], "imageUrl": null, "isActive": true, "demoStock": 5, "demoCode": "DHT22"
+    },
+    {
+      "category": "Cảm biến & IoT", "name": "Cảm biến nhiệt độ – độ ẩm DHT11",
+      "description": "Cảm biến nhiệt độ và độ ẩm cơ bản, giá rẻ, dùng cho bài nhập môn đọc cảm biến số. Độ chính xác thấp hơn DHT22, phù hợp khi chỉ cần xu hướng thay đổi.",
+      "specifications": "Nguồn 3.3–5.5 V; độ ẩm 20–90 %RH, sai số ±5 %RH; nhiệt độ 0–50 °C, sai số ±2 °C; chu kỳ đọc 1 giây; giao tiếp 1 dây (single-bus)",
+      "tags": ["dht11", "temperature", "humidity", "sensor", "beginner"], "imageUrl": null, "isActive": true, "demoStock": 5, "demoCode": "DHT11"
+    },
+    {
+      "category": "Cảm biến & IoT", "name": "Cảm biến khoảng cách siêu âm HC-SR04",
+      "description": "Đo khoảng cách bằng sóng siêu âm. Dùng cho xe robot tránh vật cản, đo mực nước trong bồn, cảm biến đỗ xe và bài học đo thời gian xung.",
+      "specifications": "Nguồn 5 V DC; dòng làm việc khoảng 15 mA; tầm đo 2–400 cm; góc đo khoảng 15°; tần số siêu âm 40 kHz; xung kích Trigger 10 µs; chân Echo xuất mức 5 V (cần chia áp khi nối board 3.3 V)",
+      "tags": ["hc-sr04", "ultrasonic", "distance", "sensor", "robot", "water-level"], "imageUrl": null, "isActive": true, "demoStock": 5, "demoCode": "SR04"
+    },
+    {
+      "category": "Cảm biến & IoT", "name": "Cảm biến độ ẩm đất kiểu điện dung",
+      "description": "Đo độ ẩm đất để quyết định khi nào cần tưới. Kiểu điện dung không để lộ điện cực kim loại nên bền hơn kiểu điện trở khi cắm lâu trong đất. Thành phần chính của bài thực hành hệ thống tưới cây tự động.",
+      "specifications": "Nguyên lý đo điện dung; ngõ ra analog; nguồn 3.3–5.5 V; cần hiệu chuẩn giá trị khô/ướt theo loại đất; không ngâm phần mạch điện tử phía trên vạch giới hạn",
+      "tags": ["soil-moisture", "sensor", "analog", "irrigation", "agriculture", "iot"], "imageUrl": null, "isActive": true, "demoStock": 5, "demoCode": "SOIL"
+    },
+    {
+      "category": "Cảm biến & IoT", "name": "Cảm biến nhiệt độ DS18B20 chống nước",
+      "description": "Đầu dò nhiệt độ bọc thép không gỉ, đo được trong nước, đất hoặc chất lỏng. Dùng cho bể cá, ủ men, giám sát nhiệt độ nước trong hệ thống tưới và bài học bus 1-Wire nhiều cảm biến.",
+      "specifications": "Dải đo −55 đến +125 °C; sai số ±0.5 °C trong khoảng −10 đến +85 °C; độ phân giải 9–12 bit; giao tiếp 1-Wire (nhiều cảm biến trên một chân); nguồn 3.0–5.5 V; cần điện trở kéo lên 4.7 kΩ",
+      "tags": ["ds18b20", "temperature", "waterproof", "sensor", "1-wire"], "imageUrl": null, "isActive": true, "demoStock": 4, "demoCode": "DS18B20"
+    },
+    {
+      "category": "Cảm biến & IoT", "name": "Cảm biến chuyển động hồng ngoại PIR HC-SR501",
+      "description": "Phát hiện người chuyển động bằng hồng ngoại thụ động. Dùng cho đèn tự bật, báo động chống trộm, đếm lượt ra vào và bài học xử lý ngắt ngoài.",
+      "specifications": "Nguồn 4.5–20 V DC; ngõ ra digital mức cao 3.3 V khi phát hiện; tầm phát hiện tối đa khoảng 7 m; góc quét dưới 120°; chỉnh độ nhạy và thời gian giữ bằng biến trở; chọn chế độ kích hoạt lặp/không lặp bằng jumper",
+      "tags": ["pir", "motion", "sensor", "security", "smart-home"], "imageUrl": null, "isActive": true, "demoStock": 4, "demoCode": "PIR"
+    },
+    {
+      "category": "Cảm biến & IoT", "name": "Cảm biến khí gas và khói MQ-2",
+      "description": "Phát hiện khí dễ cháy và khói, dùng cho bài thực hành báo cháy/báo rò rỉ gas. Chỉ thử nghiệm với lượng khí rất nhỏ (bật lửa chưa đánh lửa) dưới sự giám sát của giảng viên.",
+      "specifications": "Phát hiện LPG, propan, hydro, metan và khói; nguồn sấy 5 V; module có ngõ ra analog (AO) và digital (DO, chỉnh ngưỡng bằng biến trở); cần làm nóng cảm biến trước khi đọc ổn định",
+      "tags": ["mq-2", "gas", "smoke", "sensor", "safety", "analog"], "imageUrl": null, "isActive": true, "demoStock": 3, "demoCode": "MQ2"
+    },
+    {
+      "category": "Cảm biến & IoT", "name": "Cảm biến áp suất – nhiệt độ BMP280",
+      "description": "Đo áp suất khí quyển và nhiệt độ, dùng cho trạm thời tiết, tính độ cao tương đối cho drone/thiết bị bay mô hình và bài học giao tiếp I2C/SPI.",
+      "specifications": "Áp suất 300–1100 hPa; nhiệt độ −40 đến 85 °C; giao tiếp I2C hoặc SPI; chip hoạt động 1.71–3.6 V (dùng module có ổn áp khi cấp 5 V)",
+      "tags": ["bmp280", "pressure", "temperature", "sensor", "i2c", "weather"], "imageUrl": null, "isActive": true, "demoStock": 3, "demoCode": "BMP280"
+    },
+    {
+      "category": "Cảm biến & IoT", "name": "Cảm biến gia tốc – con quay MPU-6050",
+      "description": "Cảm biến quán tính 6 trục đo gia tốc và tốc độ góc. Dùng cho xe tự cân bằng, đo góc nghiêng, nhận dạng cử chỉ và bài học bộ lọc bù/Kalman.",
+      "specifications": "Gia tốc kế 3 trục (±2/±4/±8/±16 g); con quay hồi chuyển 3 trục (±250/±500/±1000/±2000 °/s); ADC 16-bit; giao tiếp I2C; có bộ xử lý chuyển động số (DMP)",
+      "tags": ["mpu-6050", "imu", "accelerometer", "gyroscope", "sensor", "i2c"], "imageUrl": null, "isActive": true, "demoStock": 4, "demoCode": "MPU6050"
+    },
+    {
+      "category": "Cảm biến & IoT", "name": "Cảm biến dòng điện ACS712 (5 A)",
+      "description": "Đo dòng điện qua tải bằng hiệu ứng Hall, có cách ly giữa mạch tải và mạch đo. Dùng cho bài giám sát điện năng tiêu thụ của bơm, động cơ hoặc thiết bị DC.",
+      "specifications": "Dải đo ±5 A (AC/DC); độ nhạy 185 mV/A; ngõ ra analog khoảng 2.5 V khi dòng bằng 0; nguồn 5 V; nối tiếp với tải qua cầu đấu vít",
+      "tags": ["acs712", "current", "sensor", "power-monitoring", "analog"], "imageUrl": null, "isActive": true, "demoStock": 3, "demoCode": "ACS712"
+    },
+    {
+      "category": "Cảm biến & IoT", "name": "Module RFID RC522 13.56 MHz",
+      "description": "Đọc/ghi thẻ RFID tần số 13.56 MHz, kèm thẻ và móc khóa mẫu. Dùng cho bài điểm danh, khóa cửa bằng thẻ và quản lý ra vào.",
+      "specifications": "Chip NXP MFRC522; tần số 13.56 MHz; hỗ trợ thẻ ISO/IEC 14443 A (MIFARE); giao tiếp SPI; nguồn 3.3 V; khoảng đọc vài cm",
+      "tags": ["rfid", "rc522", "nfc", "access-control", "spi"], "imageUrl": null, "isActive": true, "demoStock": 4, "demoCode": "RC522"
+    },
+
+    {
+      "category": "Robot & Cơ cấu chấp hành", "name": "Động cơ servo SG90",
+      "description": "Servo mini điều khiển góc quay chính xác bằng xung PWM. Dùng cho cánh tay robot nhỏ, cơ cấu mở cửa/van mô hình, xoay cảm biến và bài học PWM.",
+      "specifications": "Servo 9 g, bánh răng nhựa; điện áp 4.8–6 V; mô-men xoắn khoảng 1.8 kgf·cm (4.8 V); tốc độ khoảng 0.1 s/60°; góc quay khoảng 180°; điều khiển PWM 50 Hz (độ rộng xung khoảng 1–2 ms)",
+      "tags": ["servo", "sg90", "actuator", "pwm", "robot"], "imageUrl": null, "isActive": true, "demoStock": 5, "demoCode": "SG90"
+    },
+    {
+      "category": "Robot & Cơ cấu chấp hành", "name": "Động cơ servo MG996R",
+      "description": "Servo bánh răng kim loại có mô-men lớn hơn SG90, dùng cho khớp cánh tay robot, cơ cấu kẹp và mô hình chịu tải. Cần nguồn riêng, không cấp trực tiếp từ chân 5 V của board.",
+      "specifications": "Bánh răng kim loại; điện áp 4.8–7.2 V; mô-men xoắn khoảng 9.4 kgf·cm (4.8 V) và 11 kgf·cm (6 V); khối lượng khoảng 55 g; điều khiển PWM 50 Hz",
+      "tags": ["servo", "mg996r", "actuator", "pwm", "robot", "high-torque"], "imageUrl": null, "isActive": true, "demoStock": 3, "demoCode": "MG996R"
+    },
+    {
+      "category": "Robot & Cơ cấu chấp hành", "name": "Module relay 5V 1 kênh",
+      "description": "Công tắc điện từ cho phép vi điều khiển đóng/ngắt tải công suất lớn hơn như bơm nước, đèn, quạt. Dùng trong hệ thống tưới cây tự động và nhà thông minh. Sinh viên chỉ đấu tải điện áp thấp; tải điện lưới cần giảng viên hướng dẫn.",
+      "specifications": "Relay SRD-05VDC-SL-C, cuộn dây 5 V DC; tiếp điểm 10 A 250 VAC / 10 A 30 VDC; đầu ra COM/NO/NC; chân điều khiển IN mức logic",
+      "tags": ["relay", "actuator", "switch", "irrigation", "smart-home", "5v"], "imageUrl": null, "isActive": true, "demoStock": 5, "demoCode": "RELAY1"
+    },
+    {
+      "category": "Robot & Cơ cấu chấp hành", "name": "Bơm nước mini DC 3–6 V (bơm chìm)",
+      "description": "Bơm chìm cỡ nhỏ dùng cho mô hình tưới cây tự động, bể thủy canh và đài phun nước mini. Điều khiển bật/tắt qua relay hoặc MOSFET, không nối trực tiếp vào chân vi điều khiển.",
+      "specifications": "Bơm chìm mini; điện áp 3–6 V DC; dùng kèm ống mềm; không chạy khô (phải ngập nước khi chạy); lưu lượng tùy loại, xem nhãn sản phẩm",
+      "tags": ["water-pump", "pump", "actuator", "irrigation", "dc-motor"], "imageUrl": null, "isActive": true, "demoStock": 4, "demoCode": "PUMP"
+    },
+    {
+      "category": "Robot & Cơ cấu chấp hành", "name": "Động cơ bước 28BYJ-48 kèm driver ULN2003",
+      "description": "Động cơ bước nhỏ có hộp số, kèm mạch driver. Dùng cho chuyển động chậm, có kiểm soát vị trí như rèm cửa tự động, kim đồng hồ, bàn xoay và bài học điều khiển bước.",
+      "specifications": "Động cơ bước đơn cực 4 pha, 5 dây; điện áp 5 V; hộp số giảm tốc khoảng 1:64; driver ULN2003 có LED báo pha",
+      "tags": ["stepper", "28byj-48", "uln2003", "actuator", "robot"], "imageUrl": null, "isActive": true, "demoStock": 4, "demoCode": "STEP28"
+    },
+    {
+      "category": "Robot & Cơ cấu chấp hành", "name": "Module điều khiển động cơ L298N",
+      "description": "Mạch cầu H kép điều khiển chiều quay và tốc độ động cơ DC. Dùng cho xe robot 2WD/4WD, băng tải mô hình và bài học PWM điều tốc.",
+      "specifications": "IC cầu H kép L298N; điều khiển 2 động cơ DC hoặc 1 động cơ bước; điện áp động cơ 5–35 V; dòng tối đa 2 A mỗi kênh; có ổn áp 5 V trên module; điều tốc PWM qua chân ENA/ENB",
+      "tags": ["l298n", "motor-driver", "h-bridge", "robot", "pwm"], "imageUrl": null, "isActive": true, "demoStock": 4, "demoCode": "L298N"
+    },
+    {
+      "category": "Robot & Cơ cấu chấp hành", "name": "Động cơ DC giảm tốc TT kèm bánh xe",
+      "description": "Động cơ DC có hộp số nhựa và bánh xe, là bộ truyền động tiêu chuẩn của xe robot học tập. Dùng cùng driver L298N.",
+      "specifications": "Điện áp 3–6 V DC; hộp số nhựa tỉ số 1:48; trục đôi; kèm bánh xe cao su",
+      "tags": ["dc-motor", "gear-motor", "robot", "wheel"], "imageUrl": null, "isActive": true, "demoStock": 4, "demoCode": "TTMOTOR"
+    },
+    {
+      "category": "Robot & Cơ cấu chấp hành", "name": "Bộ khung xe robot 2WD",
+      "description": "Khung xe robot 2 bánh chủ động để lắp ráp xe dò line, xe tránh vật cản hoặc xe điều khiển qua Bluetooth/Wi-Fi. Chưa gồm vi điều khiển, driver và cảm biến.",
+      "specifications": "Khung mica; 2 động cơ TT kèm bánh xe; 1 bánh xe đa hướng; hộp đế pin; ốc vít lắp ráp; thành phần cụ thể kiểm tra theo phiếu kèm bộ",
+      "tags": ["robot", "car-kit", "chassis", "2wd"], "imageUrl": null, "isActive": true, "demoStock": 3, "demoCode": "CAR2WD"
+    },
+
+    {
+      "category": "Module hiển thị & Truyền thông", "name": "Màn hình LCD 16x2 (HD44780) kèm module I2C",
+      "description": "Màn hình ký tự hiển thị giá trị cảm biến, menu và trạng thái hệ thống. Module I2C giúp chỉ cần 2 dây tín hiệu, tiết kiệm chân vi điều khiển.",
+      "specifications": "Hiển thị 16 ký tự × 2 dòng; bộ điều khiển tương thích HD44780; nguồn 5 V; đèn nền LED; giao tiếp I2C qua module PCF8574 (địa chỉ thường 0x27 hoặc 0x3F); chỉnh tương phản bằng biến trở",
+      "tags": ["lcd", "lcd1602", "display", "i2c", "hd44780"], "imageUrl": null, "isActive": true, "demoStock": 5, "demoCode": "LCD1602"
+    },
+    {
+      "category": "Module hiển thị & Truyền thông", "name": "Màn hình OLED 0.96 inch SSD1306 (I2C)",
+      "description": "Màn hình đồ họa nhỏ, tương phản cao, vẽ được chữ, biểu đồ và biểu tượng. Dùng cho thiết bị đeo, đồng hồ, máy đo cầm tay.",
+      "specifications": "Độ phân giải 128×64 điểm, đơn sắc; driver SSD1306; giao tiếp I2C; không cần đèn nền; nguồn 3.3–5 V tùy module",
+      "tags": ["oled", "ssd1306", "display", "i2c"], "imageUrl": null, "isActive": true, "demoStock": 4, "demoCode": "OLED096"
+    },
+    {
+      "category": "Module hiển thị & Truyền thông", "name": "Module thời gian thực RTC DS3231",
+      "description": "Giữ ngày giờ chính xác kể cả khi mất nguồn. Dùng cho hệ thống tưới theo lịch, ghi log dữ liệu có thời gian và đồng hồ báo thức.",
+      "specifications": "Đồng hồ thời gian thực có bù nhiệt; độ chính xác ±2 ppm trong 0–40 °C; giao tiếp I2C; pin dự phòng giữ giờ khi mất nguồn; 2 báo thức lập trình được",
+      "tags": ["rtc", "ds3231", "clock", "i2c", "data-logging"], "imageUrl": null, "isActive": true, "demoStock": 3, "demoCode": "DS3231"
+    },
+    {
+      "category": "Module hiển thị & Truyền thông", "name": "Module đọc thẻ microSD (SPI)",
+      "description": "Lưu dữ liệu cảm biến ra thẻ nhớ để phân tích sau (data logger), hoặc đọc file cấu hình/âm thanh cho mạch nhúng.",
+      "specifications": "Giao tiếp SPI; dùng thẻ microSD định dạng FAT16/FAT32; module thường có ổn áp và chuyển mức để dùng với board 5 V",
+      "tags": ["microsd", "storage", "spi", "data-logging"], "imageUrl": null, "isActive": true, "demoStock": 3, "demoCode": "SDCARD"
+    },
+    {
+      "category": "Module hiển thị & Truyền thông", "name": "Module Bluetooth HC-05",
+      "description": "Kết nối không dây giữa vi điều khiển và điện thoại/máy tính qua cổng nối tiếp ảo. Dùng cho xe robot điều khiển bằng điện thoại và truyền dữ liệu cảm biến tầm gần.",
+      "specifications": "Bluetooth 2.0 + EDR, cấu hình SPP (cổng nối tiếp ảo); giao tiếp UART với vi điều khiển; hỗ trợ chế độ master/slave; cấu hình bằng lệnh AT; mức logic 3.3 V",
+      "tags": ["bluetooth", "hc-05", "wireless", "uart", "robot"], "imageUrl": null, "isActive": true, "demoStock": 4, "demoCode": "HC05"
+    },
+    {
+      "category": "Module hiển thị & Truyền thông", "name": "Module LoRa Ra-02 (SX1278, 433 MHz)",
+      "description": "Truyền dữ liệu không dây tầm xa, công suất thấp. Dùng cho bài IoT nông nghiệp (cảm biến ngoài đồng gửi về trạm), mạng cảm biến và so sánh LoRa với Wi-Fi.",
+      "specifications": "Chip Semtech SX1278; băng tần 433 MHz; giao tiếp SPI; nguồn 3.3 V; phải gắn anten trước khi phát; tuân thủ quy định tần số tại địa phương",
+      "tags": ["lora", "sx1278", "wireless", "iot", "agriculture", "spi"], "imageUrl": null, "isActive": true, "demoStock": 2, "demoCode": "LORA"
+    },
+
+    {
+      "category": "Đo lường điện tử", "name": "Máy phân tích logic USB 8 kênh",
+      "description": "Ghi và giải mã tín hiệu số để gỡ lỗi giao tiếp I2C, SPI, UART giữa vi điều khiển và module. Bổ sung cho máy hiện sóng khi cần xem nhiều đường tín hiệu số cùng lúc.",
+      "specifications": "8 kênh digital; tốc độ lấy mẫu tối đa 24 MS/s; kết nối USB; dùng với phần mềm mã nguồn mở sigrok/PulseView; giải mã I2C, SPI, UART",
+      "tags": ["logic-analyzer", "measurement", "debugging", "i2c", "spi", "uart"], "imageUrl": null, "isActive": true, "demoStock": 3, "demoCode": "LOGIC8"
+    },
+    {
+      "category": "Đo lường điện tử", "name": "Ampe kìm số",
+      "description": "Đo dòng điện xoay chiều bằng hàm kẹp mà không cần ngắt mạch, dùng trong bài đo điện năng thiết bị và kiểm tra tải. Kiểm tra cấp an toàn CAT và dải đo ghi trên thiết bị trước khi dùng.",
+      "specifications": "Đo dòng AC bằng hàm kẹp không cần ngắt mạch; dải đo và cấp an toàn CAT xem nhãn thiết bị",
+      "tags": ["clamp-meter", "current", "measurement", "electrical"], "imageUrl": null, "isActive": true, "demoStock": 2, "demoCode": "CLAMP"
+    },
+    {
+      "category": "Đo lường điện tử", "name": "Máy đo LCR cầm tay",
+      "description": "Đo điện cảm, điện dung và điện trở của linh kiện, dùng trong bài nhận biết linh kiện, kiểm tra tụ/cuộn cảm và thí nghiệm mạch RLC.",
+      "specifications": "Đo điện cảm (L), điện dung (C), điện trở (R); tần số đo và dải đo xem nhãn thiết bị",
+      "tags": ["lcr-meter", "measurement", "components", "electronics"], "imageUrl": null, "isActive": true, "demoStock": 2, "demoCode": "LCR"
+    },
+    {
+      "category": "Đo lường điện tử", "name": "Nhiệt kế hồng ngoại cầm tay",
+      "description": "Đo nhiệt độ bề mặt không tiếp xúc, dùng kiểm tra linh kiện nóng, tản nhiệt, động cơ và so sánh với cảm biến nhiệt trong bài thực hành. Không chiếu tia laser định vị vào mắt.",
+      "specifications": "Đo nhiệt độ bề mặt không tiếp xúc; có tia laser định vị; kết quả phụ thuộc hệ số phát xạ bề mặt; dải đo xem nhãn thiết bị",
+      "tags": ["infrared-thermometer", "temperature", "measurement"], "imageUrl": null, "isActive": true, "demoStock": 2, "demoCode": "IRTHERM"
+    },
+
+    {
+      "category": "Nguồn điện", "name": "Module hạ áp DC-DC LM2596",
+      "description": "Mạch hạ áp chỉnh được, chuyển nguồn 12 V/24 V xuống 5 V hoặc 3.3 V cho vi điều khiển và cảm biến. Dùng khi một hệ thống có cả tải 12 V (bơm, relay) và mạch điều khiển.",
+      "specifications": "Điện áp vào 4–40 V DC; điện áp ra chỉnh 1.25–37 V (thấp hơn điện áp vào ít nhất khoảng 1.5 V); dòng tối đa 3 A (cần tản nhiệt khi dòng lớn); chỉnh điện áp bằng biến trở",
+      "tags": ["lm2596", "buck-converter", "dc-dc", "power"], "imageUrl": null, "isActive": true, "demoStock": 4, "demoCode": "LM2596"
+    },
+    {
+      "category": "Nguồn điện", "name": "Module nguồn breadboard MB102",
+      "description": "Cấp nguồn 3.3 V và 5 V trực tiếp lên hai ray nguồn của breadboard, tiện cho bài lắp mạch không cần nguồn để bàn.",
+      "specifications": "Điện áp vào 6.5–12 V DC (jack) hoặc USB 5 V; điện áp ra 3.3 V hoặc 5 V chọn bằng jumper cho từng ray; dòng ra tối đa khoảng 700 mA; cắm trực tiếp lên breadboard 830 lỗ",
+      "tags": ["mb102", "breadboard", "power", "3v3", "5v"], "imageUrl": null, "isActive": true, "demoStock": 4, "demoCode": "MB102"
+    },
+    {
+      "category": "Nguồn điện", "name": "Module sạc pin Li-ion TP4056",
+      "description": "Sạc pin Li-ion/Li-Po 1 cell cho thiết bị IoT chạy pin, trạm cảm biến ngoài trời và bài học quản lý nguồn.",
+      "specifications": "Sạc 1 cell Li-ion/Li-Po; điện áp ngắt 4.2 V; dòng sạc mặc định 1 A (chỉnh bằng điện trở RPROG); nguồn vào 5 V; LED báo đang sạc/đầy; nên dùng bản có mạch bảo vệ pin",
+      "tags": ["tp4056", "battery-charger", "li-ion", "power"], "imageUrl": null, "isActive": true, "demoStock": 4, "demoCode": "TP4056"
+    },
+    {
+      "category": "Nguồn điện", "name": "Adapter nguồn 12 V 2 A (jack DC 5.5×2.1 mm)",
+      "description": "Nguồn cắm tường cấp 12 V DC cho bơm nước, LED dây, động cơ nhỏ hoặc board Arduino qua jack DC. Thường dùng cùng module relay và module hạ áp trong hệ thống tưới cây.",
+      "specifications": "Vào 100–240 VAC 50/60 Hz; ra 12 V DC, tối đa 2 A; jack DC 5.5×2.1 mm",
+      "tags": ["adapter", "12v", "power", "irrigation"], "imageUrl": null, "isActive": true, "demoStock": 4, "demoCode": "ADP12V"
+    },
+    {
+      "category": "Nguồn điện", "name": "Nguồn tổ ong 12 V 5 A",
+      "description": "Nguồn xung công suất lớn cho mô hình có nhiều tải 12 V như LED dây, nhiều bơm hoặc động cơ. Đầu vào điện lưới hở nên chỉ đấu nối khi có giảng viên hướng dẫn và phải có vỏ che.",
+      "specifications": "Vào AC 220 V; ra 12 V DC, tối đa 5 A; đấu nối bằng cầu đấu vít; có biến trở tinh chỉnh điện áp ra",
+      "tags": ["switching-power-supply", "12v", "power"], "imageUrl": null, "isActive": true, "demoStock": 0, "demoCode": "PSU12V5"
+    },
+
+    {
+      "category": "Mạng máy tính", "name": "Router Wi-Fi băng tần kép",
+      "description": "Router dùng cho bài thực hành cấu hình mạng gia đình/văn phòng nhỏ: DHCP, NAT, port forwarding, Wi-Fi bảo mật WPA2 và làm điểm truy cập cho thiết bị IoT.",
+      "specifications": "Wi-Fi 2.4 GHz và 5 GHz; 1 cổng WAN và các cổng LAN Ethernet; hỗ trợ DHCP, NAT, cấu hình qua giao diện web; chuẩn Wi-Fi và tốc độ xem nhãn thiết bị",
+      "tags": ["router", "wifi", "networking", "lan"], "imageUrl": null, "isActive": true, "demoStock": 4, "demoCode": "ROUTER"
+    },
+    {
+      "category": "Mạng máy tính", "name": "Switch Layer 2 quản lý được 24 cổng",
+      "description": "Switch có quản lý dùng cho bài thực hành VLAN, trunking, Spanning Tree và cấu hình qua CLI trong môn mạng máy tính.",
+      "specifications": "24 cổng Ethernet RJ45; hỗ trợ VLAN 802.1Q, STP; cấu hình qua cổng console (CLI) hoặc web; tốc độ cổng và cổng uplink xem nhãn thiết bị",
+      "tags": ["switch", "managed-switch", "vlan", "networking", "cli"], "imageUrl": null, "isActive": true, "demoStock": 2, "demoCode": "SW24M"
+    },
+    {
+      "category": "Mạng máy tính", "name": "Switch Gigabit không quản lý 8 cổng",
+      "description": "Switch cắm là chạy để nối máy tính, Raspberry Pi và router trong bài dựng mạng LAN nhỏ.",
+      "specifications": "8 cổng RJ45 10/100/1000 Mbps; không cần cấu hình; cấp nguồn qua adapter",
+      "tags": ["switch", "unmanaged-switch", "gigabit", "networking", "lan"], "imageUrl": null, "isActive": true, "demoStock": 4, "demoCode": "SW8"
+    },
+    {
+      "category": "Mạng máy tính", "name": "Kìm bấm mạng RJ45",
+      "description": "Bấm đầu cáp mạng trong bài thực hành làm cáp thẳng/chéo theo chuẩn T568A/T568B.",
+      "specifications": "Bấm đầu RJ45 (8P8C), thường kèm khe RJ11; có lưỡi cắt và tuốt vỏ cáp",
+      "tags": ["crimping-tool", "rj45", "cabling", "networking"], "imageUrl": null, "isActive": true, "demoStock": 5, "demoCode": "CRIMP"
+    },
+    {
+      "category": "Mạng máy tính", "name": "Máy test cáp mạng RJ45/RJ11",
+      "description": "Kiểm tra cáp mạng vừa bấm có thông mạch và đúng thứ tự dây hay không, dùng ngay sau bài làm cáp.",
+      "specifications": "Kiểm tra thông mạch và thứ tự từng sợi bằng đèn LED; bộ phát và bộ thu tách rời; dùng pin",
+      "tags": ["cable-tester", "rj45", "cabling", "networking"], "imageUrl": null, "isActive": true, "demoStock": 4, "demoCode": "CABLETEST"
+    },
+    {
+      "category": "Mạng máy tính", "name": "Cáp console USB to RJ45",
+      "description": "Kết nối laptop với cổng console của switch/router để cấu hình ban đầu bằng phần mềm terminal (PuTTY, Tera Term).",
+      "specifications": "Một đầu USB-A, một đầu RJ45 console theo sơ đồ chân Cisco; cần driver USB-serial; thông số terminal mặc định của thiết bị Cisco: 9600 baud, 8N1",
+      "tags": ["console-cable", "usb", "rj45", "networking", "cli"], "imageUrl": null, "isActive": true, "demoStock": 4, "demoCode": "CONSOLE"
+    },
+
+    {
+      "category": "Thí nghiệm sinh học", "name": "Micropipet đơn kênh 100–1000 µL",
+      "description": "Hút và chuyển chính xác thể tích chất lỏng trong thí nghiệm sinh học phân tử, hóa sinh và pha dung dịch. Không hút chất lỏng vào thân pipet; luôn dùng đầu tip.",
+      "specifications": "Dải thể tích 100–1000 µL, chỉnh liên tục; dùng đầu tip 1000 µL; cần hiệu chuẩn định kỳ",
+      "tags": ["micropipette", "pipette", "biology", "liquid-handling"], "imageUrl": null, "isActive": true, "demoStock": 4, "demoCode": "PIP1000"
+    },
+    {
+      "category": "Thí nghiệm sinh học", "name": "Micropipet đơn kênh 10–100 µL",
+      "description": "Hút thể tích nhỏ cho thí nghiệm PCR, ELISA và pha loãng mẫu. Không hút chất lỏng vào thân pipet; luôn dùng đầu tip.",
+      "specifications": "Dải thể tích 10–100 µL, chỉnh liên tục; dùng đầu tip 200 µL; cần hiệu chuẩn định kỳ",
+      "tags": ["micropipette", "pipette", "biology", "liquid-handling"], "imageUrl": null, "isActive": true, "demoStock": 4, "demoCode": "PIP100"
+    },
+    {
+      "category": "Thí nghiệm sinh học", "name": "Máy ly tâm mini",
+      "description": "Ly tâm nhanh ống nhỏ để gom mẫu xuống đáy, tách cặn đơn giản trong thí nghiệm sinh học phân tử. Phải xếp ống cân bằng đối xứng trước khi chạy.",
+      "specifications": "Dùng ống 1.5/2.0 mL; tốc độ tối đa và adapter ống PCR xem nhãn thiết bị; xếp ống cân bằng đối xứng trước khi chạy",
+      "tags": ["centrifuge", "biology", "sample-prep"], "imageUrl": null, "isActive": true, "demoStock": 2, "demoCode": "CENTRI"
+    },
+    {
+      "category": "Thí nghiệm sinh học", "name": "Máy khuấy từ gia nhiệt",
+      "description": "Khuấy đều và gia nhiệt dung dịch khi pha môi trường nuôi cấy, hòa tan hóa chất hoặc thí nghiệm động học. Mặt đế còn nóng sau khi tắt.",
+      "specifications": "Khuấy bằng cá từ và gia nhiệt mặt đế; chỉnh tốc độ khuấy và nhiệt độ; dải nhiệt và tốc độ xem nhãn thiết bị",
+      "tags": ["magnetic-stirrer", "hotplate", "biology", "chemistry"], "imageUrl": null, "isActive": true, "demoStock": 2, "demoCode": "STIRRER"
+    },
+    {
+      "category": "Thí nghiệm sinh học", "name": "Máy đo pH để bàn",
+      "description": "Đo pH của dung dịch, môi trường nuôi cấy hoặc mẫu nước. Phải hiệu chuẩn bằng dung dịch đệm trước mỗi buổi đo và bảo quản điện cực ẩm.",
+      "specifications": "Dải đo pH 0–14; điện cực thủy tinh; hiệu chuẩn bằng dung dịch đệm chuẩn (ví dụ pH 4.01, 7.00, 10.01); bảo quản điện cực trong dung dịch KCl",
+      "tags": ["ph-meter", "biology", "chemistry", "water-quality"], "imageUrl": null, "isActive": true, "demoStock": 2, "demoCode": "PHMETER"
+    },
+    {
+      "category": "Thí nghiệm sinh học", "name": "Cân phân tích điện tử 0.1 mg",
+      "description": "Cân khối lượng nhỏ với độ chính xác cao khi pha dung dịch chuẩn và cân hóa chất. Đặt trên bàn chống rung, cân bằng bọt thủy và đóng cửa lồng chắn gió khi cân.",
+      "specifications": "Độ đọc 0.1 mg; có lồng chắn gió; tải trọng tối đa xem nhãn thiết bị; cần cân bằng và hiệu chuẩn trước khi dùng",
+      "tags": ["analytical-balance", "balance", "biology", "chemistry"], "imageUrl": null, "isActive": true, "demoStock": 0, "demoCode": "BALANCE"
+    },
+
+    {
+      "category": "Kính hiển vi", "name": "Kính hiển vi soi nổi",
+      "description": "Quan sát mẫu vật dạng khối (côn trùng, lá, hạt, mạch in) dưới ảnh nổi 3D với khoảng làm việc rộng, thuận tiện khi vừa quan sát vừa thao tác.",
+      "specifications": "Ảnh nổi hai mắt; độ phóng đại thấp, xem nhãn thiết bị; khoảng làm việc lớn; có đèn chiếu trên/dưới tùy model",
+      "tags": ["stereo-microscope", "microscope", "biology"], "imageUrl": null, "isActive": true, "demoStock": 2, "demoCode": "STEREO"
+    },
+
+    {
+      "category": "Dụng cụ thực hành", "name": "Trạm hàn điều chỉnh nhiệt độ",
+      "description": "Hàn linh kiện xuyên lỗ và dây nối khi hoàn thiện mạch. Đặt nhiệt độ phù hợp loại thiếc, dùng giá đỡ và hút khói khi hàn.",
+      "specifications": "Mỏ hàn điều chỉnh và ổn định nhiệt độ; giá đỡ mỏ hàn và bọt biển lau mũi; dải nhiệt và công suất xem nhãn thiết bị",
+      "tags": ["soldering", "soldering-station", "tools", "electronics"], "imageUrl": null, "isActive": true, "demoStock": 4, "demoCode": "SOLDER"
+    },
+    {
+      "category": "Dụng cụ thực hành", "name": "Máy khò nhiệt",
+      "description": "Thổi khí nóng để tháo/hàn linh kiện dán (SMD) và co ống gen co nhiệt. Chỉ dùng khi đã được hướng dẫn; đầu khò rất nóng.",
+      "specifications": "Thổi khí nóng chỉnh nhiệt độ và lưu lượng gió; dải nhiệt xem nhãn thiết bị",
+      "tags": ["hot-air", "rework", "smd", "tools"], "imageUrl": null, "isActive": true, "demoStock": 2, "demoCode": "HOTAIR"
+    },
+    {
+      "category": "Dụng cụ thực hành", "name": "Bộ tua vít sửa chữa chính xác",
+      "description": "Bộ tua vít đầu nhỏ để tháo lắp vỏ thiết bị điện tử, chỉnh biến trở và siết cầu đấu vít trên module.",
+      "specifications": "Nhiều đầu vít nhỏ (dẹt, bake, lục giác, sao); số đầu vít kiểm tra theo hộp",
+      "tags": ["screwdriver", "tools", "repair"], "imageUrl": null, "isActive": true, "demoStock": 5, "demoCode": "SCREWDRV"
+    },
+    {
+      "category": "Dụng cụ thực hành", "name": "Kìm cắt chân linh kiện",
+      "description": "Cắt chân linh kiện sau khi hàn và cắt dây điện nhỏ. Không dùng cắt dây thép cứng.",
+      "specifications": "Lưỡi cắt sát; dùng cho chân linh kiện và dây đồng nhỏ",
+      "tags": ["cutter", "pliers", "tools"], "imageUrl": null, "isActive": true, "demoStock": 5, "demoCode": "CUTTER"
+    },
+    {
+      "category": "Dụng cụ thực hành", "name": "Kính lúp kẹp bàn có đèn LED",
+      "description": "Phóng to và chiếu sáng vùng làm việc khi hàn, kiểm tra mối hàn hoặc đọc ký hiệu linh kiện nhỏ.",
+      "specifications": "Kẹp cạnh bàn, cần điều chỉnh linh hoạt; đèn LED quanh thấu kính; độ phóng đại xem nhãn thiết bị",
+      "tags": ["magnifier", "inspection", "tools"], "imageUrl": null, "isActive": true, "demoStock": 3, "demoCode": "MAGNIFIER"
+    },
+    {
+      "category": "Dụng cụ thực hành", "name": "Breadboard 830 lỗ",
+      "description": "Bảng cắm thử mạch không cần hàn, dùng trong hầu hết bài thực hành điện tử và vi điều khiển.",
+      "specifications": "830 điểm cắm (630 điểm vùng linh kiện và 200 điểm ray nguồn); bước chân 2.54 mm; 2 ray nguồn mỗi bên",
+      "tags": ["breadboard", "prototyping", "electronics", "beginner"], "imageUrl": null, "isActive": true, "demoStock": 5, "demoCode": "BB830"
+    },
+    {
+      "category": "Dụng cụ thực hành", "name": "Breadboard mini 400 lỗ",
+      "description": "Bảng cắm thử cỡ nửa, gọn cho mạch cảm biến nhỏ hoặc lắp trên khung xe robot.",
+      "specifications": "400 điểm cắm (300 điểm vùng linh kiện và 100 điểm ray nguồn); bước chân 2.54 mm",
+      "tags": ["breadboard", "prototyping", "electronics"], "imageUrl": null, "isActive": true, "demoStock": 5, "demoCode": "BB400"
+    },
+    {
+      "category": "Dụng cụ thực hành", "name": "Bộ dây cắm jumper (đực–đực, đực–cái, cái–cái)",
+      "description": "Dây nối nhanh giữa board, breadboard và module cảm biến. Mượn kèm vi điều khiển trong mọi bài lắp mạch.",
+      "specifications": "Dây Dupont bước 2.54 mm; ba loại đầu đực–đực, đực–cái, cái–cái; số lượng và chiều dài kiểm tra theo túi",
+      "tags": ["jumper-wire", "dupont", "prototyping", "electronics"], "imageUrl": null, "isActive": true, "demoStock": 5, "demoCode": "JUMPER"
+    },
+    {
+      "category": "Dụng cụ thực hành", "name": "Bộ điện trở 1/4 W nhiều giá trị",
+      "description": "Hộp điện trở phân loại sẵn theo giá trị cho bài định luật Ohm, mạch chia áp, hạn dòng LED và kéo lên/kéo xuống.",
+      "specifications": "Điện trở 1/4 W, nhiều giá trị chuẩn; phân loại theo ngăn; giá trị và số lượng kiểm tra theo bảng kèm hộp",
+      "tags": ["resistor", "components", "kit", "electronics", "beginner"], "imageUrl": null, "isActive": true, "demoStock": 3, "demoCode": "RESKIT"
+    }
+  ]
+}
