@@ -22,6 +22,273 @@ namespace Borrowing.Infrastructure.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.HasSequence("IncidentNumber");
+
+            modelBuilder.Entity("Borrowing.Domain.EquipmentIncident", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<Guid>("EquipmentTypeId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("LoanId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("LoanItemId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("OriginalAssetUnitId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("PendingOperationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ProblemCategory")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<bool>("ReplacementRequested")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("RequestHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Resolution")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<DateTimeOffset?>("ResolvedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("ResolvedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("SerialNumber")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.Property<Guid>("StudentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("SubmissionKey")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.Property<bool>("WaitingConsented")
+                        .HasColumnType("boolean");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.HasIndex("LoanId");
+
+                    b.HasIndex("LoanItemId")
+                        .IsUnique()
+                        .HasFilter("\"Status\" NOT IN ('RESOLVED_REPLACED','RESOLVED_NO_FAULT','RESOLVED_REPAIRED','RESOLVED_NO_REPLACEMENT','CANCELLED')");
+
+                    b.HasIndex("EquipmentTypeId", "CreatedAt");
+
+                    b.HasIndex("Status", "CreatedAt");
+
+                    b.HasIndex("StudentId", "SubmissionKey")
+                        .IsUnique();
+
+                    b.ToTable("EquipmentIncidents", t =>
+                        {
+                            t.HasCheckConstraint("CK_Incident_Category", "\"ProblemCategory\" IN ('POWER_FAILURE','PHYSICAL_DAMAGE','FUNCTIONAL_ERROR','MISSING_COMPONENT','OTHER')");
+
+                            t.HasCheckConstraint("CK_Incident_Description", "length(btrim(\"Description\")) BETWEEN 10 AND 2000");
+
+                            t.HasCheckConstraint("CK_Incident_Status", "\"Status\" IN ('REPORTED','INSPECTING','CONFIRMED_DEFECT','WAITING_REPLACEMENT','REPLACEMENT_IN_PROGRESS','RESOLVED_REPLACED','RESOLVED_NO_FAULT','RESOLVED_REPAIRED','RESOLVED_NO_REPLACEMENT','CANCELLED','MANUAL_REVIEW')");
+                        });
+                });
+
+            modelBuilder.Entity("Borrowing.Domain.EquipmentReplacement", b =>
+                {
+                    b.Property<Guid>("OperationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("IncidentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("ReplacedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("ReplacedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("ReplacementAssetUnitId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ReplacementLoanId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ReplacementLoanItemId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("SerialNumber")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.HasKey("OperationId");
+
+                    b.HasIndex("IncidentId")
+                        .IsUnique()
+                        .HasFilter("\"ReplacementAssetUnitId\" IS NOT NULL");
+
+                    b.HasIndex("ReplacementLoanId");
+
+                    b.ToTable("EquipmentReplacements");
+                });
+
+            modelBuilder.Entity("Borrowing.Domain.IncidentEvidence", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<byte[]>("Content")
+                        .IsRequired()
+                        .HasColumnType("bytea");
+
+                    b.Property<string>("ContentHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("IncidentId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IncidentId", "ContentHash")
+                        .IsUnique();
+
+                    b.ToTable("IncidentEvidence", t =>
+                        {
+                            t.HasCheckConstraint("CK_IncidentEvidence_Size", "octet_length(\"Content\") BETWEEN 1 AND 5242880");
+                        });
+                });
+
+            modelBuilder.Entity("Borrowing.Domain.IncidentHistory", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.Property<Guid>("ActorUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("FromStatus")
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.Property<Guid>("IncidentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<DateTimeOffset>("OccurredAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ToStatus")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IncidentId", "OccurredAt");
+
+                    b.ToTable("IncidentHistories");
+                });
+
+            modelBuilder.Entity("Borrowing.Domain.IncidentInspection", b =>
+                {
+                    b.Property<Guid>("IncidentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("CorrectiveAction")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<DateTimeOffset>("InspectedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("InspectedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Notes")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<string>("Outcome")
+                        .IsRequired()
+                        .HasMaxLength(24)
+                        .HasColumnType("character varying(24)");
+
+                    b.Property<DateTimeOffset?>("PhysicallyReceivedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("VerifiedSerialNumber")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.HasKey("IncidentId");
+
+                    b.ToTable("IncidentInspections", t =>
+                        {
+                            t.HasCheckConstraint("CK_Inspection_Physical", "\"Outcome\" = 'LOST' OR (\"PhysicallyReceivedAt\" IS NOT NULL AND \"VerifiedSerialNumber\" IS NOT NULL)");
+                        });
+                });
+
             modelBuilder.Entity("Borrowing.Domain.InventoryOperation", b =>
                 {
                     b.Property<Guid>("OperationId")
@@ -129,10 +396,17 @@ namespace Borrowing.Infrastructure.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("AssetSerialNumber")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
                     b.Property<Guid?>("AssetUnitId")
                         .HasColumnType("uuid");
 
                     b.Property<Guid>("EquipmentTypeId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("IncidentId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("ItemStatus")
@@ -141,6 +415,9 @@ namespace Borrowing.Infrastructure.Migrations
                         .HasColumnType("character varying(32)");
 
                     b.Property<Guid>("LoanRequestId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("ReplacesLoanItemId")
                         .HasColumnType("uuid");
 
                     b.Property<Guid?>("ReservationId")
@@ -157,7 +434,11 @@ namespace Borrowing.Infrastructure.Migrations
 
                     b.HasIndex("EquipmentTypeId");
 
+                    b.HasIndex("IncidentId");
+
                     b.HasIndex("LoanRequestId");
+
+                    b.HasIndex("ReplacesLoanItemId");
 
                     b.ToTable("LoanItems", t =>
                         {
@@ -341,6 +622,69 @@ namespace Borrowing.Infrastructure.Migrations
                     b.ToTable("ReminderDispatches");
                 });
 
+            modelBuilder.Entity("Borrowing.Domain.EquipmentIncident", b =>
+                {
+                    b.HasOne("Borrowing.Domain.LoanRequest", null)
+                        .WithMany()
+                        .HasForeignKey("LoanId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Borrowing.Domain.LoanItem", null)
+                        .WithMany()
+                        .HasForeignKey("LoanItemId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Borrowing.Domain.EquipmentReplacement", b =>
+                {
+                    b.HasOne("Borrowing.Domain.EquipmentIncident", null)
+                        .WithMany("Replacements")
+                        .HasForeignKey("IncidentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Borrowing.Domain.InventoryOperation", null)
+                        .WithMany()
+                        .HasForeignKey("OperationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Borrowing.Domain.LoanRequest", null)
+                        .WithMany()
+                        .HasForeignKey("ReplacementLoanId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Borrowing.Domain.IncidentEvidence", b =>
+                {
+                    b.HasOne("Borrowing.Domain.EquipmentIncident", null)
+                        .WithMany("Evidence")
+                        .HasForeignKey("IncidentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Borrowing.Domain.IncidentHistory", b =>
+                {
+                    b.HasOne("Borrowing.Domain.EquipmentIncident", null)
+                        .WithMany("History")
+                        .HasForeignKey("IncidentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Borrowing.Domain.IncidentInspection", b =>
+                {
+                    b.HasOne("Borrowing.Domain.EquipmentIncident", null)
+                        .WithOne("Inspection")
+                        .HasForeignKey("Borrowing.Domain.IncidentInspection", "IncidentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Borrowing.Domain.InventoryOperation", b =>
                 {
                     b.HasOne("Borrowing.Domain.LoanRequest", null)
@@ -361,11 +705,21 @@ namespace Borrowing.Infrastructure.Migrations
 
             modelBuilder.Entity("Borrowing.Domain.LoanItem", b =>
                 {
+                    b.HasOne("Borrowing.Domain.EquipmentIncident", null)
+                        .WithMany()
+                        .HasForeignKey("IncidentId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("Borrowing.Domain.LoanRequest", null)
                         .WithMany("Items")
                         .HasForeignKey("LoanRequestId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("Borrowing.Domain.LoanItem", null)
+                        .WithMany()
+                        .HasForeignKey("ReplacesLoanItemId")
+                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("Borrowing.Domain.LoanSubmission", b =>
@@ -384,6 +738,17 @@ namespace Borrowing.Infrastructure.Migrations
                         .HasForeignKey("LoanId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Borrowing.Domain.EquipmentIncident", b =>
+                {
+                    b.Navigation("Evidence");
+
+                    b.Navigation("History");
+
+                    b.Navigation("Inspection");
+
+                    b.Navigation("Replacements");
                 });
 
             modelBuilder.Entity("Borrowing.Domain.LoanRequest", b =>

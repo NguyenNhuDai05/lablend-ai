@@ -104,6 +104,41 @@ public sealed class LoanRequest
         Transition(actor, LoanStatus.EXPIRED, "EXPIRED", now, null);
     }
 
+    public void ReplaceItem(Guid originalItemId, Guid newItemId, Guid assetId, string serial, Guid incidentId, Guid actor, DateTimeOffset now, DateTimeOffset? authorizedAt = null)
+    {
+        if (Status != LoanStatus.BORROWED || DueAt <= (authorizedAt ?? now)) throw new LoanStateException("Chỉ cấp đổi trên phiếu đang mượn và còn hạn khi xác nhận cấp đổi.");
+        var old = Items.Single(i => i.Id == originalItemId);
+        if (newItemId == Guid.Empty || assetId == Guid.Empty || old.AssetUnitId == null || old.AssetUnitId == assetId
+            || string.IsNullOrWhiteSpace(serial) || Items.Any(i => i.Id == newItemId || i.ReplacesLoanItemId == old.Id))
+            throw new LoanStateException("Danh tính thiết bị cấp đổi không hợp lệ hoặc mục này đã được cấp đổi.");
+        if (old.ItemStatus == ItemStatus.BORROWED)
+        {
+            old.ItemStatus = ItemStatus.DAMAGED; old.ReturnCondition = "DAMAGED"; old.ReturnedAt = now;
+        }
+        else if (old.ItemStatus != ItemStatus.DAMAGED) throw new LoanStateException("Thiết bị gốc không đủ điều kiện đổi.");
+        Items.Add(new() { Id = newItemId, LoanRequestId = Id, EquipmentTypeId = old.EquipmentTypeId, AssetUnitId = assetId,
+            AssetSerialNumber = serial, ItemStatus = ItemStatus.BORROWED, IncidentId = incidentId, ReplacesLoanItemId = old.Id });
+        Transition(actor, LoanStatus.BORROWED, "EQUIPMENT_REPLACED", now, $"Sự cố {incidentId}: mục mới {newItemId}, giữ lịch sử mục {old.Id}.");
+    }
+    public static LoanRequest ReplacementFollowUp(Guid id, Guid itemId, LoanRequest original, Guid incidentId, Guid oldItemId, Guid actor, DateTimeOffset now)
+    {
+        if (original.Status != LoanStatus.RETURNED || original.DueAt <= now) throw new LoanStateException("Phiếu tiếp nối yêu cầu phiếu gốc đã trả và hạn trả vẫn còn hiệu lực.");
+        var old = original.Items.Single(i => i.Id == oldItemId);
+        if (old.ItemStatus != ItemStatus.DAMAGED || old.ReturnedAt == null) throw new LoanStateException("Phiếu tiếp nối chỉ áp dụng cho thiết bị đã nhận trả lỗi.");
+        var loan = Create(original.StudentId, $"Cấp đổi cho sự cố {incidentId}", original.DueAt, [old.EquipmentTypeId], now);
+        loan.Id = id; loan.Items.Clear(); loan.Histories.Clear(); loan.Status = LoanStatus.APPROVING;
+        loan.Items.Add(new() { Id = itemId, LoanRequestId = id, EquipmentTypeId = old.EquipmentTypeId, IncidentId = incidentId, ReplacesLoanItemId = oldItemId });
+        loan.Transition(actor, LoanStatus.APPROVING, "REPLACEMENT_FOLLOWUP_PENDING", now, $"Phiếu gốc {original.Id}; không mở lại phiếu đã trả.");
+        return loan;
+    }
+    public void FulfillFollowUp(Guid assetId, string serial, Guid actor, DateTimeOffset now)
+    {
+        if (Status != LoanStatus.APPROVING || Items.Count != 1 || Items[0].IncidentId == null) throw new LoanStateException("Phiếu tiếp nối không hợp lệ.");
+        Items[0].AssetUnitId = assetId; Items[0].AssetSerialNumber = serial; Items[0].ItemStatus = ItemStatus.BORROWED;
+        ReviewedBy = HandedOverBy = actor; ReviewedAt = HandedOverAt = now;
+        Transition(actor, LoanStatus.BORROWED, "REPLACEMENT_FULFILLED", now, "Đã bàn giao thiết bị thay thế trên phiếu tiếp nối.");
+    }
+
     private void Transition(Guid actor, LoanStatus next, string action, DateTimeOffset now, string? note)
     {
         Histories.Add(new() { LoanRequestId = Id, ActorUserId = actor, Action = action, FromStatus = Status,
@@ -119,6 +154,9 @@ public sealed class LoanItem
     public Guid EquipmentTypeId { get; set; }
     public Guid? AssetUnitId { get; set; }
     public Guid? ReservationId { get; set; }
+    public string? AssetSerialNumber { get; set; }
+    public Guid? IncidentId { get; set; }
+    public Guid? ReplacesLoanItemId { get; set; }
     public string? ReturnCondition { get; set; }
     public DateTimeOffset? ReturnedAt { get; set; }
     public ItemStatus ItemStatus { get; set; } = ItemStatus.REQUESTED;

@@ -28,11 +28,11 @@ public static class ServiceDefaults
         builder.Services.AddProblemDetails(options => options.CustomizeProblemDetails = context =>
         {
             context.ProblemDetails.Extensions["correlationId"] = context.HttpContext.TraceIdentifier;
-            context.ProblemDetails.Extensions["code"] = context.ProblemDetails.Status switch
+            context.ProblemDetails.Extensions.TryAdd("code", context.ProblemDetails.Status switch
             {
                 400 => "VALIDATION_ERROR", 401 => "UNAUTHENTICATED", 403 => "FORBIDDEN",
                 404 => "NOT_FOUND", 409 => "CONFLICT", 429 => "RATE_LIMITED", 503 => "SERVICE_UNAVAILABLE", _ => "HTTP_ERROR"
-            };
+            });
             if (context.ProblemDetails.Status >= 500)
             {
                 context.ProblemDetails.Title = "The service could not complete the request.";

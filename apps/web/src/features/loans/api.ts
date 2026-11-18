@@ -1,7 +1,7 @@
 import { apiRequest } from '../../lib/api';
 import { query, validateLoan, type LoanStatus } from '../../lib/workflows';
 import type { Paged } from '../catalog/api';
-export type LoanItem = { id: string; equipmentTypeId: string; assetUnitId: string | null; reservationId: string | null; itemStatus: string; returnCondition: string | null; returnedAt: string | null };
+export type LoanItem = { id: string; equipmentTypeId: string; assetUnitId: string | null; reservationId: string | null; itemStatus: string; returnCondition: string | null; returnedAt: string | null; assetSerialNumber?: string | null; incidentId?: string | null; replacesLoanItemId?: string | null };
 export type Loan = { id: string; studentId: string; purpose: string; status: LoanStatus; isOverdue: boolean; requestedAt: string; dueAt: string; reviewedBy: string | null; reviewedAt: string | null; rejectionReason: string | null; handedOverBy: string | null; handedOverAt: string | null; items: LoanItem[]; history: { id: string; actorUserId: string; action: string; fromStatus: string | null; toStatus: string; occurredAt: string; note: string | null }[] };
 export type LoanSelection = { equipmentTypeId: string; quantity: number };
 export type ReturnCondition = 'NORMAL' | 'DAMAGED' | 'LOST';

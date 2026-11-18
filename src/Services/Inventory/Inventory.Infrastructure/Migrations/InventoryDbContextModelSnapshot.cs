@@ -246,6 +246,28 @@ namespace Inventory.Infrastructure.Migrations
                     b.ToTable("MaintenanceRecords");
                 });
 
+            modelBuilder.Entity("Inventory.Domain.ReplacementOperation", b =>
+                {
+                    b.Property<Guid>("OperationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("RequestHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("ResultJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.HasKey("OperationId");
+
+                    b.ToTable("ReplacementOperations");
+                });
+
             modelBuilder.Entity("Inventory.Domain.Reservation", b =>
                 {
                     b.Property<Guid>("Id")

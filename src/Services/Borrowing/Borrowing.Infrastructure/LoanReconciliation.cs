@@ -6,7 +6,7 @@ using Microsoft.Extensions.Options;
 
 namespace Borrowing.Infrastructure;
 
-public sealed class LoanReconciliation(BorrowingDbContext db, LoanLifecycle lifecycle, TimeProvider clock,
+public sealed class LoanReconciliation(BorrowingDbContext db, LoanLifecycle lifecycle, IncidentWorkflow incidents, TimeProvider clock,
     IOptions<BorrowingWorkflowOptions> options, ILogger<LoanReconciliation> logger)
 {
     public async Task Run(CancellationToken ct)
@@ -25,7 +25,8 @@ public sealed class LoanReconciliation(BorrowingDbContext db, LoanLifecycle life
                 db.ChangeTracker.Clear();
                 var operation = await db.InventoryOperations.SingleAsync(o => o.OperationId == record.OperationId, ct);
                 if (operation.State is not ("PENDING" or "RETRY" or "COMPENSATING") || operation.NextRetryAt > clock.GetUtcNow()) continue;
-                await lifecycle.Apply(operation, ct);
+                if (operation.OperationType.StartsWith("INC_", StringComparison.Ordinal)) await incidents.Apply(operation, ct);
+                else await lifecycle.Apply(operation, ct);
             }
             catch (OperationCanceledException) when (ct.IsCancellationRequested) { throw; }
             catch (Exception e) { logger.LogWarning("Reconciliation deferred loan {LoanId}; errorType={ErrorType}", record.LoanId, e.GetType().Name); }

@@ -1,5 +1,24 @@
 # Ma trận phân quyền
 
+## Bổ sung Flow 3 — 18/11/2026
+
+| Hành động sự cố | STUDENT | LAB_STAFF | ADMIN |
+|---|---|---|---|
+| Báo thiết bị BORROWED của mình | Có, JWT owner | 403 | 403 |
+| Xem báo cáo/ảnh riêng tư | Chỉ của mình, người khác 404 | Mọi sự cố | Mọi sự cố |
+| Hủy báo cáo chưa kiểm tra hoặc hủy chờ | Chỉ chủ báo cáo, đúng trạng thái | 403 | 403 |
+| Đồng ý chờ cấp đổi sau trả lỗi | Chỉ chủ báo cáo, còn hạn | 403 | 403 |
+| Bắt đầu kiểm tra, kết luận, nhận trả lỗi/thất lạc | 403 | Có, kiểm tra vật lý và serial theo kết luận | Có, cùng ràng buộc |
+| Cấp đổi cùng loại và bàn giao | 403 | Có, chỉ sau kiểm tra và đúng trạng thái | Có, cùng ràng buộc |
+| Đối soát operation và đóng sự cố | 403 | Có | Có |
+| Thống kê toàn cục | 403 | 403 | Có, dữ liệu DB thật |
+
+Tất cả yêu cầu ẩn danh trả 401. Gateway bảo vệ `/api/incidents/**`; Borrowing kiểm tra lại quyền/ownership, không tin role/studentId/serial hoặc asset status từ trình duyệt. Upload chỉ cho owner STUDENT khi chưa bắt đầu kiểm tra; download chỉ cho owner/Staff/Admin, không có URL public. Internal RPC không qua Gateway và vẫn dùng service credential hiện có.
+
+Trang `/incidents`, `/incidents/new`, `/incidents/:id` chỉ STUDENT; `/staff/incidents`, `/staff/incidents/:id` cho Staff/Admin; `/admin/incidents` chỉ ADMIN. Nút Báo sự cố chỉ trên mục BORROWED của chính Student. ADMIN không vượt điều kiện đã nhận máy/đúng serial, tồn kho AVAILABLE, cùng loại hoặc hạn trả. Mọi trạng thái đã đóng là bất biến ở API. Thiết kế và kiểm thử: [Flow 3](../features/EQUIPMENT_INCIDENT_WORKFLOW.md), [contract](../api/INCIDENT_API_CONTRACT.md).
+
+Phần kiểm toán nền tảng bên dưới được giữ nguyên theo mốc lịch sử đã ghi.
+
 Mô tả hành vi **đang có** trên `main` tại `f85c357` (17/11/2026), đọc trực tiếp từ mã nguồn. Kết quả rà soát và bằng chứng kiểm thử: [AUTHORIZATION_AUDIT](AUTHORIZATION_AUDIT.md).
 
 ## 1. Vai trò

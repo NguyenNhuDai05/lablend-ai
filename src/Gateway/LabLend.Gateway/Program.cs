@@ -16,7 +16,10 @@ builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
     options.AddPolicy("api", context => RateLimitPartition.GetFixedWindowLimiter(
-        context.Connection.RemoteIpAddress?.ToString() ?? "unknown", _ => new FixedWindowRateLimiterOptions
+        // Shared laboratory networks and the web reverse proxy must not put all signed-in roles
+        // in one 120-request bucket. Identity comes only from the validated JWT, never a client header.
+        context.User.Identity?.IsAuthenticated == true && context.User.FindFirst("sub") is { } subject
+            ? "user:" + subject.Value : "ip:" + (context.Connection.RemoteIpAddress?.ToString() ?? "unknown"), _ => new FixedWindowRateLimiterOptions
         {
             PermitLimit = 120, Window = TimeSpan.FromMinutes(1), QueueLimit = 0
         }));

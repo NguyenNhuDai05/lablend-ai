@@ -21,6 +21,10 @@ public sealed class LoanLifecycle(BorrowingDbContext db, IInventoryClient invent
             var loan = await Load(loanId, ct);
             operation = await db.InventoryOperations.SingleOrDefaultAsync(o => o.LoanId == loanId && o.State != "COMPLETED" && o.State != "FAILED", ct);
             var returns = type == "RETURN" ? ValidateReturns(loan, request) : new Dictionary<Guid, string>();
+            if (type == "RETURN" && await db.EquipmentIncidents.AnyAsync(i => i.LoanId == loanId && returns.Keys.Contains(i.LoanItemId)
+                && i.Status != IncidentStatus.CANCELLED && i.Status != IncidentStatus.RESOLVED_REPLACED && i.Status != IncidentStatus.RESOLVED_NO_FAULT
+                && i.Status != IncidentStatus.RESOLVED_REPAIRED && i.Status != IncidentStatus.RESOLVED_NO_REPLACEMENT, ct))
+                throw new LoanFailure(409, "Thiết bị có sự cố đang xử lý; nhận trả từ màn hình sự cố để giữ kết quả kiểm tra nhất quán.", "OPEN_INCIDENT");
             if (operation != null)
             {
                 if (operation.OperationType != type || operation.State is "MANUAL_REVIEW" or "COMPENSATING"
@@ -81,7 +85,9 @@ public sealed class LoanLifecycle(BorrowingDbContext db, IInventoryClient invent
         db.EventCorrelationId = operation.CorrelationId;
         try
         {
-            var status = await inventory.Status(loan.ApprovalOperationId ?? operation.OperationId, operation.CorrelationId, ct);
+            var status = operation.OperationType == "RETURN"
+                ? await inventory.LoanStatus(loan.Id, loan.ApprovalOperationId ?? operation.OperationId, operation.CorrelationId, ct)
+                : await inventory.Status(loan.ApprovalOperationId ?? operation.OperationId, operation.CorrelationId, ct);
             if (operation.State == "COMPENSATING" || operation.OperationType == "RELEASE"
                 || operation.OperationType == "APPROVE" && loan.DueAt <= clock.GetUtcNow())
             {
@@ -99,6 +105,7 @@ public sealed class LoanLifecycle(BorrowingDbContext db, IInventoryClient invent
                     {
                         var item = loan.Items.Single(i => i.Id == allocation.LoanItemId);
                         item.AssetUnitId = allocation.AssetUnitId; item.ItemStatus = ItemStatus.RESERVED;
+                        item.AssetSerialNumber = allocation.SerialNumber;
                         // v1 does not expose reservation IDs; do not invent one.
                     }
                     loan.Approve(operation.ActorId, clock.GetUtcNow());
