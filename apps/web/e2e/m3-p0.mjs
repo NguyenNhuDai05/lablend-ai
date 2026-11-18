@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { mkdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import { createServer } from 'vite';
+import { build, preview } from 'vite';
 import { chromium } from 'playwright';
 
 const env = process.env;
@@ -9,9 +9,14 @@ const required = ['LABLEND_E2E_GATEWAY', 'LABLEND_E2E_PORT', 'LABLEND_E2E_STUDEN
 for (const name of required) if (!env[name]) throw new Error(`Run through Member3BrowserTests; missing private fixture setting ${name}.`);
 const origin = `http://localhost:${env.LABLEND_E2E_PORT}`;
 const evidence = resolve('../../.tmp/m3-browser'); await mkdir(evidence, { recursive: true });
-const server = await createServer({ configFile: resolve('vite.config.ts'), define: { 'import.meta.env.VITE_API_BASE_URL': JSON.stringify('') },
-  server: { host: 'localhost', port: Number(env.LABLEND_E2E_PORT), strictPort: true, proxy: { '/api': { target: env.LABLEND_E2E_GATEWAY, changeOrigin: false } } } });
-await server.listen();
+// Serve a fresh production bundle: cold dev-server transforms/dependency optimization
+// must not race the first browser navigation on CI. Keep API calls on the real Gateway.
+const config = { configFile: resolve('vite.config.ts'),
+  define: { 'import.meta.env.VITE_API_BASE_URL': JSON.stringify('') },
+  build: { outDir: resolve(evidence, 'web'), emptyOutDir: true } };
+await build(config);
+const server = await preview({ ...config,
+  preview: { host: 'localhost', port: Number(env.LABLEND_E2E_PORT), strictPort: true, proxy: { '/api': { target: env.LABLEND_E2E_GATEWAY, changeOrigin: false } } } });
 let browser;
 const errors = []; const secretValues = [env.LABLEND_E2E_PASSWORD, env.LABLEND_E2E_ADMIN_PASSWORD, env.LABLEND_E2E_PASSWORD + 'Changed1!'];
 const redact = value => secretValues.reduce((text, secret) => text.replaceAll(secret, '[redacted]'), String(value));
@@ -40,7 +45,19 @@ try {
   const staffContext = await browser.newContext({ viewport: { width: 1280, height: 900 } });
   const adminContext = await browser.newContext({ viewport: { width: 1280, height: 900 } });
   const student = await studentContext.newPage(); const staff = await staffContext.newPage(); const admin = await adminContext.newPage();
-  for (const page of [student, staff, admin]) page.on('pageerror', e => errors.push(e.message));
+  for (const [role, page] of [['student', student], ['staff', staff], ['admin', admin]]) {
+    page.on('pageerror', error => {
+      errors.push(error.message);
+      console.error(redact(`[${role}] pageerror: ${error.stack ?? error.message}`));
+    });
+    page.on('requestfailed', request => {
+      console.error(redact(`[${role}] requestfailed: ${request.method()} ${new URL(request.url()).pathname}: ${request.failure()?.errorText}`));
+    });
+    page.on('response', response => {
+      if (response.status() >= 400 && ['document', 'script', 'stylesheet'].includes(response.request().resourceType()))
+        console.error(redact(`[${role}] resource HTTP ${response.status()}: ${new URL(response.url()).pathname}`));
+    });
+  }
 
   await student.goto(`${origin}/catalog`);
   await student.getByRole('heading', { name: 'Danh mục thiết bị', exact: true }).waitFor();
